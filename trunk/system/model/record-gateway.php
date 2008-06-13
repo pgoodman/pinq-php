@@ -30,6 +30,14 @@ abstract class RecordGateway {
 	 * abstract query isn't being used, the type can stille be helpful.
 	 */
 	protected function getQuery($query, $type) {
+		
+		// the query object actually returns a predicates object at once point
+		// so we need to get it out of the predicates object
+		if($query instanceof AbstractPredicates)
+			$query = $query->getQuery();
+		
+		// if we were given or derived an abstract query object then we need
+		// to compile it.
 		if($query instanceof AbstractQuery)
 			return $this->compileQuery($query, $type);
 		

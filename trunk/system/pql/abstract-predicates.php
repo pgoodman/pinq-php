@@ -46,8 +46,9 @@ class AbstractPredicates {
 	const VALUE_CONSTANT  = 4, // immediate constants: strings, integers, etc.
 		  VALUE_REFERENCE = 8; // equivalent of sql columns / fields
 
-	public $predicates = array(), // array of predicates
-	       $sources;
+	
+	protected $predicates = array(), // array of predicates
+	          $query; // the AbstractQuery object
 	
 	// mappings of some possible operators to simpler versions of themselves
 	// and an array mapping operator names to their values.
@@ -57,47 +58,47 @@ class AbstractPredicates {
 	/**
 	 * Constructor, bring in a reference to the query's sources array.
 	 */
-	public function __construct(array &$sources) {
+	public function __construct(AbstractQuery $query) {
 		
-		$this->sources = &$sources;
+		$this->query = &$query;
 		
 		// a list of basic operators. note: operators can also be concatenated
 		// with underscores through __get and __call
 		if(NULL === self::$operator_names) {
 			
 			self::$operator_names = array(
-				'eq'  => parent::LOG_EQ,
-				'neq' => parent::LOG_EQ | parent::LOG_NOT,
+				'eq'  => self::LOG_EQ,
+				'neq' => self::LOG_EQ | self::LOG_NOT,
 				
-				'gt'   => parent::LOG_GT,
-				'gteq' => parent::LOG_GT | parent::LOG_EQ,
+				'gt'   => self::LOG_GT,
+				'gteq' => self::LOG_GT | self::LOG_EQ,
 				
-				'lt'   => parent::LOG_LT,
-				'lteq' => parent::LOG_LT | parent::LOG_EQ,
+				'lt'   => self::LOG_LT,
+				'lteq' => self::LOG_LT | self::LOG_EQ,
 				
 				// the eq in here is to make it easy for implementations that
 				// don't support identity
-				'is'   => parent::LOG_IS | parent::LOG_EQ,
-				'isnt' => parent::LOG_IS | parent::LOG_NOT | parent::LOG_EQ,
+				'is'   => self::LOG_IS | self::LOG_EQ,
+				'isnt' => self::LOG_IS | self::LOG_NOT | self::LOG_EQ,
 				
-				'and'  => parent::LOG_AND,
-				'nand' => parent::LOG_AND | parent::LOG_NOT,
+				'and'  => self::LOG_AND,
+				'nand' => self::LOG_AND | self::LOG_NOT,
 				
-				'or'  => parent::LOG_OR,
-				'nor' => parent::LOG_OR | parent::LOG_NOT,
+				'or'  => self::LOG_OR,
+				'nor' => self::LOG_OR | self::LOG_NOT,
 				
-				'not' => parent::LOG_NOT,
+				'not' => self::LOG_NOT,
 				
-				'open'	=> parent::OPEN_SUBSET,
-				'close' => parent::CLOSE_SUBSET,
+				'open'	=> self::OPEN_SUBSET,
+				'close' => self::CLOSE_SUBSET,
 				
-				'group' => parent::GROUP_BY,
-				'limit' => parent::LIMIT,
-				'order' => parent::ORDER_BY,
-				'asc' => parent::ORDER_ASC,
-				'desc' => parent::ORDER_DESC,
+				'group' => self::GROUP_BY,
+				'limit' => self::LIMIT,
+				'order' => self::ORDER_BY,
+				'asc' => self::ORDER_ASC,
+				'desc' => self::ORDER_DESC,
 				
-				'where' => parent::WHERE,
+				'where' => self::WHERE,
 			);
 			
 			// set the operator mappings
@@ -132,8 +133,8 @@ class AbstractPredicates {
 			$add = self::$operator_names[$op];
 			
 			// negate previously used NOT operators
-			if($add & parent::LOG_NOT && $operator & parent::LOG_NOT)
-				$operator = $operator & ~parent::LOG_NOT;
+			if($add & self::LOG_NOT && $operator & self::LOG_NOT)
+				$operator = $operator & ~self::LOG_NOT;
 			
 			// otherwise, OR in the operator
 			else
@@ -179,16 +180,16 @@ class AbstractPredicates {
 	public function __call($fn, array $args = array()) {
 		
 		// is this an aliased item?
-		if(isset($this->sources[$fn])) {
+		if(isset($this->query->sources[$fn])) {
 			$this->addOperand(
-				parent::VALUE_REFERENCE, 
+				self::VALUE_REFERENCE, 
 				array($fn, $args[0])
 			);
 			
 		// is this an operator+value?
 		} else if($this->parseOperator($fn)) {
 			$this->addOperand(
-				parent::VALUE_CONSTANT, 
+				self::VALUE_CONSTANT, 
 				$fn == 'limit' ? $args : $args[0]
 			);
 		}
@@ -202,6 +203,18 @@ class AbstractPredicates {
 	public function __get($operator) {
 		$this->parseOperator($operator);		
 		return $this;
+	}
+	
+	/**
+	 * Get the AbstractQuery out of the predicates. This is usually called
+	 * when the query needs to be compiled.
+	 * @internal
+	 */
+	public function getQuery() {
+		
+		// give the query the built-up predicates and return
+		$this->query->setPredicates($this->predicates);
+		return $this->query;
 	}
 }
 
