@@ -91,7 +91,33 @@ interface Continuation {
  * Interface for finders.
  * @author Peter Goodman
  */
-interface Finder {
+abstract class Finder {
+	
+	// the data source
+	protected $ds;
+	
+	/**
+	 * Constructor, bring in the data source.
+	 */
+	public function __construct(DataSource $ds) {
+		$this->ds = $ds;
+	}
+	
+	/**
+	 * Compile a query for a specific data source.
+	 */
+	abstract protected function compileQuery(AbstractQuery $query);
+	
+	/**
+	 * Get a string representation for a datasource-specic query.
+	 */
+	protected function getQuery($query) {
+		if($query instanceof AbstractQuery)
+			return $this->compileQuery($query);
+		
+		return (string)$query;
+	}
+	
 	
 }
 
@@ -261,6 +287,20 @@ abstract class OuterRecord extends Record {
 	 */
 	public function getInnerRecord() {
 		return $this->record;
+	}
+	
+	/**
+	 * Record methods.
+	 */
+	public function offsetGet($key) { return $this->record->offsetGet($key); }
+	public function offsetSet($key, $val) { 
+		return $this->record->offsetSet($key, $val); 
+	}
+	public function offsetExists($key) { 
+		return $this->record->offsetExists($key); 
+	}
+	public function offsetUnset($key) {
+		return $this->record->offsetUnset($key);
 	}
 }
 
