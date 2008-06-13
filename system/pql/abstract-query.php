@@ -51,7 +51,7 @@ abstract class AbstractQuery {
 		   $counts		 = array(), // things in the datasources to count
 		   $values		 = array(), // values for a create / delete / update
 		   $relations	 = array(),
-		   $predicates;				// conditions to be met on the data 
+		   $predicates   = array(); // conditions to be met on the data 
 									// returned
 	
 	/** 
@@ -219,6 +219,15 @@ abstract class AbstractQuery {
 	public function getPredicates() {
 		return $this->predicates;
 	}
+	
+	/**
+	 * Set the predicates array. This is usually called by AbstractPredicates
+	 * right before the query is compiled.
+	 * @internal
+	 */
+	public function setPredicates(array &$predicates) {
+		$this->predicates = &$predicates;
+	}
 }
 
 /**
@@ -251,9 +260,8 @@ class AbstractQueryLanguage extends AbstractQuery {
 				$class = 'AbstractSingleSourcePredicates';
 			
 			// reference into the predicates array and return
-			$predicates = new $class(&$this->sources);
+			$predicates = new $class($this);
 			$predicates->addOperator('where');
-			$this->predicates = &$predicates->predicates;
 			return $predicates;
 		}
 

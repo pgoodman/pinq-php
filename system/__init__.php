@@ -44,6 +44,7 @@ require_once DIR_SYSTEM .'/interfaces.php';
 require_once DIR_SYSTEM .'/exceptions.php';
 
 // bring in the model stuff (not quite a "model layer")
+require_once DIR_SYSTEM .'/pql/__init__.php';
 require_once DIR_SYSTEM .'/model/__init__.php';
 
 // stuff needed to get up and running
