@@ -8,8 +8,39 @@
  * A data record.
  */
 abstract class Record extends Dictionary {
-	abstract public function save();
-	abstract public function delete();
+	
+	protected $is_saved = FALSE,
+	          $is_deleted = FALSE;
+	
+	/**
+	 * Is this record saved to a data source?
+	 */
+	public function isSaved() {
+		return $this->is_saved;
+	}
+	
+	/**
+	 * Is this record deleted? (but just lingering until it is garbage-
+	 * collected).
+	 */
+	public function isDeleted() {
+		return $this->is_deleted;
+	}
+	
+	/**
+	 * Save this record to the data source.
+	 */
+	public function save() {
+		$this->is_saved = TRUE;
+	}
+	
+	/**
+	 * Delete this record from a data source.
+	 */
+	public function delete() {
+		if($this->isSaved())
+			$this->is_deleted = TRUE;
+	}
 }
 
 /**
