@@ -113,10 +113,9 @@ function pinq($script_file, $app_dir) {
 		));
 
 		// parse the URI, if it can't be parsed a 404 error will occur.
-		if(!$router->parse(get_route())) {
+		if(!$router->parse(get_route()))
 			set_http_status(404);
-		}
-
+		
 		// get the controller, method, and arguments form the route parser
 		list($dir, $controller, $method, $arguments) = $router->getPathInfo();
 

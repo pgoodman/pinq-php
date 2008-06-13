@@ -8,7 +8,7 @@ require_once DIR_SYSTEM .'/handler.php';
  * @author Peter Goodman
  * @internal
  */
-final class TemplateTagStack extends Stack implements Printable {
+final class TemplateTagStack extends Stack implements Printer {
 	
 	// the dummy name for the root node. it just needs to be something that
 	// wouldn't be found in an actual template document
