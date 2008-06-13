@@ -39,10 +39,8 @@ if(!function_exists("from")) {
  * A language to query a hypothetical data structure.
  * @author Peter Goodman
  */
-abstract class AbstractQuery {
-	
-	protected $stack;
-	
+abstract class AbstractQuery extends Stack {
+		
 	public $aliases		 = array(), // maps aliases to source names
 		   $sources		 = array(), // the data sources being used
 		   $items		 = array(), // what do we want to find from each 
@@ -58,7 +56,7 @@ abstract class AbstractQuery {
 	 * Constructor, very little to set up.
 	 */
 	public function __construct() {
-		$this->stack = new Stack;
+		//$this->stack = new Stack;
 	}
 	
 	/**
@@ -105,7 +103,7 @@ abstract class AbstractQuery {
 		$this->counts[$alias] = array();
 		$this->values[$alias] = array();
 		$this->relations[$alias] = array();
-		$this->stack->push($alias);
+		$this->push($alias);
 	}
 	
 	/**
@@ -115,7 +113,7 @@ abstract class AbstractQuery {
 	public function setDataSource($ds, $alias = NULL) {
 		
 		// pop whatever is on the stack off
-		$this->stack->silentPop();
+		$this->silentPop();
 		
 		// no alias, default to casting the datasource to a string
 		if(NULL === $alias)
@@ -127,7 +125,7 @@ abstract class AbstractQuery {
 		
 		// this data source exists, push its alias the stack
 		else
-			$this->stack->push($alias);
+			$this->push($alias);
 	}
 	
 	/**
@@ -155,7 +153,7 @@ abstract class AbstractQuery {
 	 * data source to look in.
 	 */
 	public function addItemsToFind(array $items = array()) {
-		$alias = $this->stack->top();
+		$alias = $this->top();
 		$this->addTo($this->items, $alias, $items);
 	}
 	
@@ -165,7 +163,7 @@ abstract class AbstractQuery {
 	 * from this class.
 	 */
 	public function addCount(array $items = array()) {
-		$alias = $this->stack->top();
+		$alias = $this->top();
 		$this->addTo($this->counts, $alias, $items);
 	}
 
@@ -173,7 +171,7 @@ abstract class AbstractQuery {
 	 * Add to the values array.
 	 */
 	public function addValues(array $values = array()) {
-		$alias = $this->stack->top();
+		$alias = $this->top();
 		
 		// no values, full stop
 		if(empty($values))
@@ -256,8 +254,16 @@ class AbstractQueryLanguage extends AbstractQuery {
 			// if we're only working with one source then it makes more sense
 			// to work with less clunk operators
 			$class = 'AbstractPredicates';
-			if(count($this->sources) === 1)
+			if(count($this->sources) === 1) {
+				
+				// should we add in an implicit select(ALL) to the source?
+				// this is to make short queries more accessible.
+				$alias = $this->top();
+				if(empty($this->items[$alias]))
+					$this->select(ALL);
+				
 				$class = 'AbstractSingleSourcePredicates';
+			}
 			
 			// reference into the predicates array and return
 			$predicates = new $class($this);
