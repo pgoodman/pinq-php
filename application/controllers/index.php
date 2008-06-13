@@ -3,12 +3,13 @@
 class IndexController extends Controller {
 	public function index() {
 		
-		// single-source
-		$simple = from('source')->select('a','b','c')->where->eq('a', _);
+		// single-source, if jump straight to where, then there is an implicit
+		// ->select(ALL)
+		$simple = from('source')->where->eq('a', _);
 		
 		// multi-source
-		$complex = from('sourcea', 'a')->select('a','b')->
-		           from('soueceb', 'b')->select('c')->where->
+		$complex = from('sourcea', 'a')->select(ALL)->
+		           from('soueceb', 'b')->select(ALL)->where->
 		           a('a')->eq(_)->and->b('c')->eq->a('b');
 		
 		print_r($simple);
