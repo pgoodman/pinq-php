@@ -2,6 +2,8 @@
 
 /* $Id$ */
 
+!defined('DIR_SYSTEM') && exit();
+
 /**
  * Overwrite PHP's super-globals arrays and remove things that we don't want
  * the programmer to have access to. This might be seen as evil. Mainly this
