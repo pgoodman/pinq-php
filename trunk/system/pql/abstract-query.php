@@ -36,7 +36,10 @@ if(!function_exists("from")) {
 }
 
 /**
- * A language to query a hypothetical data structure.
+ * A language to query a hypothetical data structure. This is a stack because
+ * as we are adding and selecting data from sources we need to know which
+ * source to add the select fields to. It doesn't need to be a full-on stack
+ * but it was simple :P 
  * @author Peter Goodman
  */
 abstract class AbstractQuery extends Stack {
