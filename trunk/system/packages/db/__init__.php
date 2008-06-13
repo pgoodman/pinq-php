@@ -12,13 +12,11 @@ if(!defined('DIR_PACKAGE_DATABASE')) {
 
 	// import what's needed
 	require_once DIR_PACKAGE_DATABASE .'/exceptions.php';
-	require_once DIR_PACKAGE_DATABASE .'/database.php';
-	require_once DIR_PACKAGE_DATABASE .'/database-record-iterator.php';
-	require_once DIR_PACKAGE_DATABASE .'/database-record.php';
-	
-	// ORM-ish things
-	require_once DIR_PACKAGE_DATABASE .'/database-query.php';
-	require_once DIR_PACKAGE_DATABASE .'/database-finder.php';
+	require_once DIR_PACKAGE_DATABASE .'/data-source.php';
+	require_once DIR_PACKAGE_DATABASE .'/record-iterator.php';
+	require_once DIR_PACKAGE_DATABASE .'/record.php';
+	require_once DIR_PACKAGE_DATABASE .'/concrete-query.php';
+	require_once DIR_PACKAGE_DATABASE .'/record-gateway.php';	
 }
 
 // load the config stuff
@@ -55,9 +53,7 @@ if(!is_dir($layer_dir)) {
 }
 
 // bring in the database-specific classes
-require_once "{$layer_dir}/database.php";
-require_once "{$layer_dir}/database-record-iterator.php";
-require_once "{$layer_dir}/database-record.php";
+require_once "{$layer_dir}/__init__.php";
 
 // figure out the class name for this database
 $class = class_name($driver) . 'Database';

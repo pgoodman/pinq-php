@@ -43,6 +43,9 @@ require_once DIR_SYSTEM .'/dictionary.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 require_once DIR_SYSTEM .'/exceptions.php';
 
+// bring in the model stuff (not quite a "model layer")
+require_once DIR_SYSTEM .'/model/__init__.php';
+
 // stuff needed to get up and running
 require_once DIR_SYSTEM .'/output-buffer.php';
 require_once DIR_SYSTEM .'/config-loader.php';
