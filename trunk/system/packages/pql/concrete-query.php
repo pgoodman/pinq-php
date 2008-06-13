@@ -42,7 +42,9 @@ abstract class ConcreteQuery {
 		// temporary indexes for through queries
 		$t = 1;
 		
-		// populate the entry nodes array
+		// populate the entry nodes array. this is actually *more* complicated
+		// than solving datasource dependencies because we need to sneak
+		// through relationships in.
 		foreach($relations as $left => $rights) {
 			
 			$entry_points[$left] = NULL;
@@ -121,10 +123,10 @@ abstract class ConcreteQuery {
 		//
 		// this algorithm works for a very simple reason: all data sources
 		// need to be uniquely aliased. that means that every key in the
-		// dependency graph will be unqie. given this, we build up the graph
+		// dependency graph will be unique. given this, we build up the graph
 		// using a flat array and then trim off items that don't belong in the
 		// base level. the way this is done is by using keys as entry points
-		// into deep part of the graph. when we need to make something
+		// into deep parts of the graph. when we need to make something
 		// dependent on another thing, we give it a reference to the entry
 		// point, thus extending the graph deeper.
 		foreach($relations as $left => $rights) {
