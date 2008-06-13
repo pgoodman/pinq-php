@@ -13,10 +13,10 @@ interface Parser {
 }
 
 /**
- * Simple interface for all printers.
+ * Simple interface for all printers (things that generate output).
  * @author Peter Goodman
  */
-interface Printable {
+interface Printer {
 	public function __toString();
 }
 
@@ -83,9 +83,9 @@ interface Continuation {
 /**
  * Interface signalling that something can be cached.
  */
-interface Cacheable {
+/*interface Cacheable {
 	
-}
+}*/
 
 /**
  * Interface for finders.
@@ -137,7 +137,7 @@ abstract class RecordIterator implements Countable, SeekableIterator {
 		// make sure the key is in the right place
 		if($key < $this->offset || $key >= $this->limit) {
 			throw new OutOfBoundsException(
-				"Could not access row [{$key}] of database result set."
+				"Could not access row [{$key}] of record set."
 			);
 		}
 		
