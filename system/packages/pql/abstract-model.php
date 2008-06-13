@@ -171,14 +171,13 @@ class AbstractModel extends Stack {
 	public function __call($key, array $args = array()) {
 
 		$property = &$this->_properties[$this->top()];
+		$lower_key = strtolower($key);
 		
-		switch($key) {
+		switch($lower_key) {
 			
 			// integers
 			case 'int':
-			case 'INT':
 			case 'integer':
-			case 'INTEGER':
 				$property['type'] = self::TYPE_INT;
 				$this->setPropertyByteLength($property, $args);
 				break;
@@ -186,12 +185,10 @@ class AbstractModel extends Stack {
 			// un/signed, signed is somewhat redundant as that is the default
 			// case.
 			case 'signed':
-			case 'SIGNED':
 				$property['signed'] = TRUE;
 				break;
 			
 			case 'unsigned':
-			case 'UNSIGNED':
 				$property['signed'] = FALSE;
 				break;
 			
@@ -200,7 +197,6 @@ class AbstractModel extends Stack {
 			// bytelength. If the bytelength is not supplied the assumption
 			// is a TEXT field.
 			case 'string':
-			case 'STRING':
 				$property['type'] = self::TYPE_STRING;
 				$this->setPropertyByteLength($property, $args);
 				break;
@@ -208,25 +204,20 @@ class AbstractModel extends Stack {
 			// floating-point numbers with a bytelength are a bit trickier.
 			// the bytelength determines the precision of the number.
 			case 'float':
-			case 'FLOAT':
 			case 'double':
-			case 'DOUBLE':
 			case 'real':
-			case 'REAL':
 				$property['type'] = self::TYPE_DECIMAL;
 				$this->setPropertyByteLength($property, $args);
 				break;
 			
 			// mixed data type
 			case 'mixed':
-			case 'MIXED':
 				$property['type'] = self::TYPE_MIXED;
 				$this->setPropertyByteLength($property, $args);
 				break;
 			
 			// binary data
 			case 'binary':
-			case 'BINARY':
 				$property['type'] = self::TYPE_BINARY;
 				$this->setPropertyByteLength($property, $args);
 				break;

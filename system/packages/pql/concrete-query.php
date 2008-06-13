@@ -104,7 +104,29 @@ abstract class ConcreteQuery {
 			}
 		}
 				
-		// go over the relations and build up the dependencies
+		// go over the relations and build up the dependency graph. the graph
+		// is structured as a multi-dimensional associative array. the keys on
+		// the first level are the base things that we're trying to get that
+		// need their dependencies satisfied. each of these are an associative
+		// array, with keys being dependencies. this regresses as far as need
+		// be.
+		// for example:
+		// 
+		// 'post' => array(               // post depends on users and content
+		//     'users' => array(          // users depends on profiles
+		//         'profiles' => array(), // profiles has no dependencies
+		//     ),                         
+		//     'content' => array(),	  // content has no dependencies
+		// )
+		//
+		// this algorithm works for a very simple reason: all data sources
+		// need to be uniquely aliased. that means that every key in the
+		// dependency graph will be unqie. given this, we build up the graph
+		// using a flat array and then trim off items that don't belong in the
+		// base level. the way this is done is by using keys as entry points
+		// into deep part of the graph. when we need to make something
+		// dependent on another thing, we give it a reference to the entry
+		// point, thus extending the graph deeper.
 		foreach($relations as $left => $rights) {
 			
 			// ignore a left with no right relations
@@ -131,7 +153,7 @@ abstract class ConcreteQuery {
 		}
 		
 		// take out any non-trunk items from the entry points array. these
-		// are the final joins
+		// are the final joins.
 		return array_intersect_key($entry_points, $trunks);
 	}
 	
