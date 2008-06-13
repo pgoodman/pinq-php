@@ -32,12 +32,12 @@ class PackageLoader extends Dictionary implements Loader {
 	 */
 	public function &load($key, array $context = array()) {
 		
+		// packages are given as dir.subdir.subdir. etc
+		$key = strtolower($key);
+		
 		// have we already loaded this package?
 		if(NULL !== ($cached = $this[$key]))
 			return $cached;
-		
-		// packages are given as dir.subdir.subdir. etc
-		$key = strtolower($key);
 		
 		// search in both the system and application directories. this will
 		// look first in the applications directory
