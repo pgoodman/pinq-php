@@ -9,7 +9,15 @@
  * to the dictionary.
  * @author Peter Goodman
  */
-class ModelDictionary extends Dictionary {
+class ModelLoader extends Loader {
+	
+	public function &load($key, array $context = array()) {
+		$ret = NULL;
+		
+		return $ret;
+	}
+	
+	public function store($key, $val = NULL) { }
 	
 	/**
 	 * This is more for semantic meaning than actual practical use.

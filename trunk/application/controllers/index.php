@@ -1,9 +1,10 @@
 <?php
 
-class IndexController extends Controller {
+class IndexController extends Pinq_Controller {
+	
 	public function index() {
 		
-		$db = $this->import('db.blog');
+		$db = $this->import('db.wordpress');
 		
 		// single-source, if jump straight to where, then there is an implicit
 		// ->select(ALL)
