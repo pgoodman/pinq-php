@@ -260,7 +260,7 @@ class AbstractQueryLanguage extends AbstractQuery {
 		//$this->parseOperator($op);
 		
 		if(strtolower($op) === 'where') {
-			
+
 			// if we're only working with one source then it makes more sense
 			// to work with less clunk operators
 			$class = 'AbstractPredicates';
@@ -277,7 +277,7 @@ class AbstractQueryLanguage extends AbstractQuery {
 			
 			// reference into the predicates array and return
 			$predicates = new $class($this);
-			$predicates->addOperator('where');
+			$predicates->addOperator(AbstractPredicates::WHERE);
 			return $predicates;
 		}
 

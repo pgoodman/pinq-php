@@ -42,6 +42,6 @@ class MysqlDatabaseRecordIterator extends DatabaseRecordIterator {
 	 * Return a record for the current mysql row.
 	 */
 	public function current() {
-		return new MysqlRecord(mysql_fetch_assoc($this->result));
+		return new MysqlDatabaseRecord(mysql_fetch_assoc($this->result));
 	}
 }
