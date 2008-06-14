@@ -17,10 +17,12 @@ class MysqlDatabaseRecordIterator extends DatabaseRecordIterator {
 	 * Constructor, bring in the result.
 	 */
 	public function __construct($result) {
-		parent::__construct($result);
 		
-		// cache this
+		// cache it
 		$this->count = mysql_num_rows($result);
+		
+		// this is after because RecordIterator calls $this->count
+		parent::__construct($result);
 	}
 	
 	/**
@@ -42,6 +44,7 @@ class MysqlDatabaseRecordIterator extends DatabaseRecordIterator {
 	 * Return a record for the current mysql row.
 	 */
 	public function current() {
-		return new MysqlDatabaseRecord(mysql_fetch_assoc($this->result));
+		$data = mysql_fetch_assoc($this->result);
+		return new MysqlDatabaseRecord($data);
 	}
 }

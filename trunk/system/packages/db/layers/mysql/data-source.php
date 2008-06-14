@@ -42,8 +42,8 @@ class MysqlDatabase extends Database {
 	/**
 	 * Query a MySQL database and return a result.
 	 */
-	protected function query($query) {
-		return mysql_query($query, $this->conn);
+	protected function query($query, array $args) {
+		return mysql_query($this->substituteArgs($query, $args), $this->conn);
 	}
 	
 	/**

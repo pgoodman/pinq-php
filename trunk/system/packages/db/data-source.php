@@ -10,7 +10,7 @@ abstract class Database implements DataSource {
 	 * The bare bones of what's needed to abstract a database.
 	 */
 	abstract public function __construct($host, $user = '', $pass = '');
-	abstract protected function query($query);
+	abstract protected function query($query, array $args);
 	abstract protected function error();
 	abstract protected function insertId();
 	abstract protected function quote($str);
@@ -28,7 +28,7 @@ abstract class Database implements DataSource {
 	 * Select rows from the database.
 	 */
 	final public function select($query, array $args = array()) {
-		$result = $this->query($this->substituteArgs($query, $args));
+		$result = $this->query($query, $args);
 		
 		if(!is_resource($result))
 			return NULL;
@@ -40,7 +40,7 @@ abstract class Database implements DataSource {
 	 * Insert/update/delete rows from a database.
 	 */
 	final public function update($query, array $args = array()) {
-		return (bool)$this->query($this->substituteArgs($query, $args));
+		return (bool)$this->query($query, $args);
 	}
 	
 	/**
@@ -60,9 +60,11 @@ abstract class Database implements DataSource {
 		if($count < count($args))
 			$args = array_slice($args, 0, $count);
 		
-		// finalize the args arra
-		$args = array_merge(array_fill(0, $count, 'NULL'), $args);
-		
+		// finalize the args array by padding its end with NULL's if there
+		// aren't enough items in it
+		if(0 < ($padding = $count - count($args)))
+			$args = array_merge($args, array_fill(0, $padding, NULL));
+				
 		// if we're dealing with a SQL LIKE statement then we don't want to
 		// risk overwriting anything within them
 		$stmt = str_replace(array('%', '?'), array('-%-', '%s'), $stmt);
@@ -94,6 +96,6 @@ abstract class Database implements DataSource {
 		}
 		
 		// sub in the variables, fix the %'s, and return
-		return str_replace('-%-', '%', vsprintf($stmt, $vars));
+		return str_replace('-%-', '%', vsprintf($stmt, $args));
 	}
 }
