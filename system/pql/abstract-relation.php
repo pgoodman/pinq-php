@@ -34,16 +34,15 @@ class AbstractRelation {
 		// keep a queue of the next models to look at
 		$next_models = new Queue; 
 		$next_models->push($to_alias);
-		
+				
 		// walk the path from $from_alias to $to_alias and build up a
 		// descriptive array of how to link every model in the path. Follow
 		// direct relations and crack open indirect ones.
-		while(NULL !== ($model = $models[$current]) 
-		           && !$next_models->isEmpty()) {
+		while(NULL !== ($model = $models[$current]) && !$next_models->isEmpty()) {
 						
 			// are we done?
-			if($current == $to_alias)
-				break;
+			//if($current == $to_alias)
+			//	break;
 			
 			// shift the next model to look at off the queue
 			$next = $next_models->shift();
@@ -51,7 +50,7 @@ class AbstractRelation {
 			// relationship cannot be satisfied
 			if(!isset($model->_relations[$next]) || !isset($models[$next]))
 				return NULL;
-						
+			
 			// the next model and how the current model is related to it
 			$next_model = $models[$next];
 			$how_to_relate = $model->_relations[$next];
@@ -59,7 +58,7 @@ class AbstractRelation {
 			// life is simple, we're dealing with a direct relationship.
 			// Change $current to $next, and find out the new $next.
 			if($how_to_relate[0] & self::DIRECT) {
-										
+												
 				$next_key = $current_key = NULL;
 				
 				// now that we've established a direct relationship, we need

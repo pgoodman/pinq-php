@@ -91,12 +91,15 @@ class DatabaseQuery extends ConcreteQuery {
 			if(!empty($right)) {
 				
 				// this will return direct relations each time. The ordering
-				// is arbitrary.
+				// is arbitrary.				
 				$relation = AbstractRelation::findPath(
 					$aliases[$right],
 					$aliases[$left],
 					$models
 				);
+								
+				if(empty($relation))
+					continue;
 				
 				// get the left and right columns out of the first relation				
 				$right_column = $relation[0][1];

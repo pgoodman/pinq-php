@@ -6,16 +6,11 @@ class IndexController extends Pinq_Controller {
 		
 		$db = $this->import('db.wordpress');
 		
-		// single-source, if jump straight to where, then there is an implicit
-		// ->select(ALL)
-		$simple = from('source')->where->eq('a', _);
+		$result = $db->findAll(from('categories', 'c')->select(ALL)->
+		                       from('categories', 'p')->link('c', 'p'));
 		
-		// multi-source
-		$complex = from('sourcea', 'a')->select(ALL)->
-		           from('soueceb', 'b')->select(ALL)->where->
-		           a('a')->eq(_)->and->b('c')->eq->a('b');
+		// SELECT c.* FROM   (categories c  INNER JOIN categories p ON c.category_parent=p.cat_ID)
 		
-		print_r($simple);
-		print_r($complex);
+		var_dump($result);
 	}
 }

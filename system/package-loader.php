@@ -45,11 +45,12 @@ class PackageLoader extends Loader {
 		$search_where = array(DIR_APPLICATION, DIR_SYSTEM);
 		$class_prefixes = array(
 			$this->config['config']['class_prefix'], 
-			'Pinq_'
+			'Pinq_',
 		);
 		
 		$package_file = NULL;
-		$class = NULL;
+		$class = '';
+		
 		do {
 			
 			$base_dir = array_shift($search_where) .'/packages/';
@@ -58,9 +59,14 @@ class PackageLoader extends Loader {
 			
 			// go as deep as we can into the directory structure based on the
 			// path to the package given
-			while(!empty($path) && is_dir($base_dir .'/'. $path[0]))		
-				$base_dir .= '/'. array_shift($path);
-		
+			while(!empty($path) && is_dir($base_dir .'/'. $path[0])) {
+				$part = array_shift($path);
+				$base_dir .= '/'. $part;
+				$class .= "_{$part}";
+			}
+			
+			//$class = $prefix . class_name($path[0]);
+			
 			// see if we can configure a multi-file package using an
 			// __init__ file
 			if(file_exists($base_dir .'/__init__.php')) {
@@ -71,12 +77,17 @@ class PackageLoader extends Loader {
 			// single file package?
 			} else if(!empty($path) && file_exists($base_dir ."/{$path[0]}.php")) {
 				$package_file = $base_dir ."/{$path[0]}.php";
-				$class = $prefix . class_name($path[0]);
+				$class .= "_{$path[0]}";
 				break;
 			}
 		
 		} while(!empty($search_where));
 		
+		// the final class name. this will be an amalgamation of the
+		// subdirectories along the path to the package, and if the package is
+		// in a single file, then it will also include the file name.
+		$class = $prefix . class_name($class);
+				
 		// the package has no config file
 		if(NULL === $package_file) {
 			throw new InvalidPackageException(
@@ -86,51 +97,42 @@ class PackageLoader extends Loader {
 			);
 		}
 		
-		// set up the variables that packages that configure themselves should
-		// use
-		/*$argv = &$path;
-		$argc = count($argv);
-		
-		$config = $this->config;
-		$loader = $this;*/
-		
 		// bring in the file that will configure itself. what's nice about
 		// this way of doing things is that no naming schemes are imposed on
 		// the programmer
 		require_once $package_file; // include
 		
+		// if the package configures itself it might change this
+		$package = NULL;
+
 		// the package might be a self-configuring class. see if it has a
 		// configure function.
-		if(NULL !== $class) {
-			if(method_exists($class, 'configure')) {
-				
-				// package info. the class name is especially important if the
-				// subclass of a system package is being used
-				$package_info = array(
-					'key' => $key, 
-					'class' => $class,
-					'argv' => $path,
-					'argc' => count($path),
-				);
-				
-				// call the packages configuration function.
-				call_user_func_array(
-					array($class, 'configure'), 
-					array(
-						$this, 
-						$this->config, 
-						array_merge($package_info, $context),
-					)
-				);
-			}
+		if(method_exists($class, 'configure')) {
+			
+			// package info. the class name is especially important if the
+			// subclass of a system package is being used
+			$package_info = array(
+				'key' => $key, 
+				'class' => $class,
+				'argv' => $path,
+				'argc' => count($path),
+			);
+			
+			// call the packages configuration function.
+			$package = call_user_func_array(
+				array($class, 'configure'), 
+				array(
+					$this, 
+					$this->config, 
+					array_merge($package_info, $context),
+				)
+			);
 		}
 		
-		// there are no guarantees about if the package stored itself into the
-		// loader or not. thus, this could easily be null. also, it's set to
-		// a variable as we want to pass it back by reference.
-		$ret = $this->offsetGet($key);
+		// store the package
+		$this->store($key, $package);
 		
-		return $ret;
+		return $package;
 	}
 	
 	/**
