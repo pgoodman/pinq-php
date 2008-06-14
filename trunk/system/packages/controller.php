@@ -8,7 +8,7 @@
  * Represents a request to a certain subset of events.
  * @author Peter Goodman
  */
-abstract class Pinq_Controller implements Package {
+abstract class PinqController implements Package {
 	
 	// package loader
 	protected $packages;
@@ -56,11 +56,6 @@ abstract class Pinq_Controller implements Package {
 		// note: any one of them can be NULL
 		return 1 == count($return) ? $return[0] : $return;	
 	}
-	
-	/**
-	 * Index method of a page controller.
-	 */
-	abstract public function index();
 	
 	/**
 	 * Hooks.

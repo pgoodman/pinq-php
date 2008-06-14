@@ -9,7 +9,7 @@
  * to the dictionary.
  * @author Peter Goodman
  */
-class Pinq_ModelLoader extends Loader implements ConfigurablePackage {
+class PinqModelLoader extends Loader implements ConfigurablePackage {
 	
 	/**
 	 * Configure the model loader by having it store an instance of itself in

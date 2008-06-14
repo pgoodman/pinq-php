@@ -18,7 +18,7 @@ require_once DIR_PACKAGE_DATABASE .'/record-gateway.php';
  * Class for the database package to configure itself.
  * @author Peter Goodman
  */
-class Pinq_Db implements ConfigurablePackage {
+class PinqDb implements ConfigurablePackage {
 	
 	/**
 	 * Configure this package.

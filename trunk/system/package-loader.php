@@ -45,7 +45,7 @@ class PackageLoader extends Loader {
 		$search_where = array(DIR_APPLICATION, DIR_SYSTEM);
 		$class_prefixes = array(
 			$this->config['config']['class_prefix'], 
-			'Pinq_',
+			'Pinq',
 		);
 		
 		$package_file = NULL;
