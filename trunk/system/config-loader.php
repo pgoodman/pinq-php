@@ -58,4 +58,11 @@ class ConfigLoader extends Dictionary implements Loader {
 		$this[$key] = $__config;
 		return $__config;
 	}
+	
+	/**
+	 * Store some config stuff.
+	 */
+	public function store($key, $val = NULL) {
+		
+	}
 }

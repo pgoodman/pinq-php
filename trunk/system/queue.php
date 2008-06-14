@@ -4,6 +4,16 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+if(!function_exists("queue")) {
+	
+	/**
+	 * Quciker way to make a queue.
+	 */
+	function queue() {
+		return new Queue;
+	}
+}
+
 /**
  * Simple generic queue.
  * @author Peter Goodman
@@ -37,9 +47,11 @@ class Queue implements Countable, IteratorAggregate {
 	 * Return whatever's on the top of the stack.
 	 */
 	public function &front() {
-		if($this->end < 0)
-			throw new QueueException("Queue is empty. Cannot access front ".
-			                         "element.");
+		if($this->end < 0) {
+			throw new QueueException(
+				"Queue is empty. Cannot access front element."
+			);
+		}
 		
 		return $this->queue[0];
 	}
@@ -78,11 +90,5 @@ class Queue implements Countable, IteratorAggregate {
 	 */
 	public function getIterator() {
 		return new ArrayIterator($this->queue);
-	}
-}
-
-if(!function_exists("queue")) {
-	function queue() {
-		return new Queue;
 	}
 }

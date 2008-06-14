@@ -13,7 +13,7 @@
  * controller.
  * @author Peter Goodman
  */
-class RouteParser extends Dictionary implements Parser {
+class RouteParser extends Dictionary implements Parser, Package {
     
     // storage and other things
     protected $macro_keys = array(), // instead of constantly doing
@@ -33,6 +33,18 @@ class RouteParser extends Dictionary implements Parser {
 	protected $base_dir,
 			  $ext;
     
+	/**
+	 * Configure this package for the PackageLoader.
+	 */
+	static public function configure(Loader $loader, array $info, array $args) {
+		
+		// store a new instance of this class as a package
+		$loader->store(
+			$info['key'],
+			call_user_class_array($info['class'], $args)
+		);
+	}
+
     /**
      * Constructor, build up some default macros.
      */

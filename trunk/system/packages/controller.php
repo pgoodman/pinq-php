@@ -4,10 +4,6 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-// ignore any attempts to instanciate the controller
-// todo: make a cleaner solution
-$ignore = TRUE;
-
 /**
  * Represents a request to a certain subset of events.
  * @author Peter Goodman

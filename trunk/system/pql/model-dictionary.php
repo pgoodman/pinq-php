@@ -15,6 +15,6 @@ class ModelDictionary extends Dictionary {
 	 * This is more for semantic meaning than actual practical use.
 	 */
 	public function create($key, AbstractModel $model) {		
-		$this->offsetSet($key, $model);
+		parent::offsetSet($key, $model);
 	}
 }

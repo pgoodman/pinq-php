@@ -4,6 +4,16 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+if(!function_exists("stack")) {
+	
+	/**
+	 * Simpler way to create a new stack.
+	 */
+	function stack() {
+		return new Stack;
+	}
+}
+
 /**
  * Simple generic stack.
  * @author Peter Goodman
@@ -50,9 +60,11 @@ class Stack implements Countable, IteratorAggregate {
 	 * Return whatever's on the top of the stack.
 	 */
 	public function &top() {
-		if($this->top < 0)
-			throw new StackException("Stack is empty. Cannot access top ".
-			                         "element.");
+		if($this->top < 0) {
+			throw new StackException(
+				"Stack is empty. Cannot access top element."
+			);
+		}
 		
 		return $this->stack[$this->top];
 	}
@@ -83,11 +95,5 @@ class Stack implements Countable, IteratorAggregate {
 	 */
 	public function getIterator() {
 		return new ArrayIterator(array_reverse($this->stack));
-	}
-}
-
-if(!function_exists("stack")) {
-	function stack() {
-		return new Stack;
 	}
 }

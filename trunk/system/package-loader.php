@@ -20,9 +20,10 @@ class PackageLoader extends Dictionary implements Loader {
 	}
 	
 	/**
-	 * Destrcctor.
+	 * Destructor.
 	 */
 	public function __destruct() {
+		parent::__destruct();
 		unset($this->config);
 	}
 	
@@ -86,24 +87,47 @@ class PackageLoader extends Dictionary implements Loader {
 		// use
 		$argv = &$path;
 		$argc = count($argv);
-		$config = &$this->config;
-		$package = NULL;
-		$ignore = FALSE;
+		
+		$config = $this->config;
+		$loader = $this;
 		
 		// bring in the file that will configure itself. what's nice about
 		// this way of doing things is that no naming schemes are imposed on
 		// the programmer
 		include $package_file;
 		
-		// the package is not self-configuring, try to instanciate we can
-		// instantiate a class instead
-		if(!$ignore && NULL === $package && NULL !== $class) {
-			if(class_exists($class, FALSE))
-				$package = call_user_class_array($class, array_values($context));
+		// the package might be a self-configuring class. see if it has a
+		// configure function.
+		if(NULL !== $class) {
+			if(method_exists($class, 'configure')) {
+				
+				// package info. the class name is especially important if the
+				// subclass of a system package is being used
+				$package_info = array(
+					'key' => $key, 
+					'class' => $class,
+				);
+				
+				// call the packages configuration function.
+				call_user_func_array(
+					array($class, 'configure'), 
+					array($this, $package_info, $context)
+				);
+			}
 		}
 		
-		// store and return the package
-		$this[$key] = $package;
-		return $package;
+		// there are no guarantees about if the package stored itself into the
+		// loader or not. thus, this could easily be null. also, it's set to
+		// a variable as we want to pass it back by reference.
+		$ret = $this->offsetGet($key);
+		
+		return $ret;
+	}
+	
+	/**
+	 * Store a package.
+	 */
+	public function store($key, $val = NULL) {
+		$this->offsetSet($key, $val);
 	}
 }
