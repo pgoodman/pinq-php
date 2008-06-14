@@ -15,13 +15,22 @@ class DatabaseQuery extends ConcreteQuery {
 	 * Build up the select fields.
 	 * @internal
 	 */
-	static protected function buildSelectFields(AbstractQuery &$query) {
+	static protected function buildSelectFields(AbstractQuery $query,
+		                                        Dictionary $models) {
 		
 		$select = array();
 		
 		// build up the SELECT columns
 		foreach($query->items as $table => $columns) {
-								
+						
+			// we assume that this exists. if we are being passed the model
+			// name then we have to adapt it for SQL as model names are not
+			// necessarily the sql table names.
+			if($query->aliases[$table] === $table) {
+				$temp = $models[$query->aliases[$table]]->getName();
+				$table = empty($temp) ? $table : $temp;
+			}
+			
 			// if we're getting all columns from this table then
 			// skip this loop
 			if(isset($columns[(string)ALL])) {
@@ -64,9 +73,12 @@ class DatabaseQuery extends ConcreteQuery {
 		foreach($graph as $left => $rights) {
 			
 			// if the alias is the same as the table name then we don't want
-			// to alas is
-			if(isset($aliases[$left]))
-				$name = $aliases[$left] != $left ? $aliases[$left] : '';
+			// to alias it
+			$name = '';
+			if(isset($aliases[$left]) && ($a = $aliases[$left]) != $left) {
+				$temp = $models[$a]->getName();
+				$name = empty($temp) ? $a : $temp;
+			}
 			
 			// add in a leading comma for top-level froms and a join prefix
 			$sql .= "{$comma} {$prefix} ";
@@ -232,7 +244,7 @@ class DatabaseQuery extends ConcreteQuery {
 			return $cached;
 		
 		// add in what we want to select
-		$sql = 'SELECT '. self::buildSelectFields($query);
+		$sql = 'SELECT '. self::buildSelectFields($query, $models);
 		
 		// add in the tables to get data from and build up the join statements
 		// (if any)

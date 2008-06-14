@@ -78,6 +78,13 @@ class AbstractModel extends Stack {
 	}
 	
 	/**
+	 * Get the name associated with this model.
+	 */
+	public function getName() {
+		return $this->_name;
+	}
+	
+	/**
 	 * Create a property and pop any previous ones off the stack.
 	 */
 	public function __get($property) {
