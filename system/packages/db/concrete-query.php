@@ -26,9 +26,7 @@ class DatabaseQuery extends ConcreteQuery {
 			// we assume that this exists. if we are being passed the model
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
-			if($query->aliases[$table] === $table) {
-				//$temp = $models[$query->aliases[$table]]->getName();
-				//$table = empty($temp) ? $table : $temp;
+			if(!isset($query->aliases[$table])) {
 				$table = self::resolveReference(
 					$table, 
 					$query->aliases, 

@@ -45,7 +45,8 @@ abstract class RecordIterator implements Countable, SeekableIterator {
 	 * Rewind the record set.
 	 */
 	public function rewind() {
-		$this->seek($this->offset);
+		if($this->offset > 0)
+			$this->seek($this->offset);
 	}
 	
 	/**
