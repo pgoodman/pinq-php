@@ -37,16 +37,20 @@ class OutputBuffer {
  * Send some data to the output buffer.
  * @author Peter Goodman
  */
-function out($str = '') {
-	OutputBuffer::$buffer .= (string)$str;
+function out() {
+	$args = func_get_args();
+	foreach($args as $str)
+		OutputBuffer::$buffer .= (string)$str;
 }
 
 /**
  * Send data to the output buffer and follow it with a new-line character.
  * @author Peter Goodman
  */
-function outln($str = '') {
-	OutputBuffer::$buffer .= "{$str}\n";
+function outln() {
+	$args = func_get_args();
+	foreach($args as $str)
+		OutputBuffer::$buffer .= "{$str}\n";
 }
 
 /**

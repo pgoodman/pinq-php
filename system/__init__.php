@@ -121,7 +121,7 @@ function pinq($script_file, $app_dir) {
 		$config->load('routes', array(
 			'routes' => &$router
 		));
-		
+				
 		// parse the URI, if it can't be parsed a 404 error will occur.
 		if(!$router->parse(get_route()))
 			set_http_status(404);
@@ -141,7 +141,7 @@ function pinq($script_file, $app_dir) {
 		// so we will skip that test. make sure that the class is a Controller
 		// and make sure that is has a method for the action we're trying to 
 		// call.
-		if(!is_subclass_of($class, 'Pinq_Controller') || !method_exists($class, $method))
+		if(!is_subclass_of($class, 'PinqController') || !method_exists($class, $method))
 			set_http_status(404);
 
 		// compress any output using zlib. this is done before the method call

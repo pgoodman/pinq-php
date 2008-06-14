@@ -10,10 +10,18 @@
  * prefix of terminals (things that won't change such as /'s and words) and
  * then matches against those. When the router can't match against a route
  * in memory, it will simply scan the document tree until it can find a
- * controller.
+ * controller. Okay, so, why go to all of the trouble of matching longest
+ * prefixes? Routers ought to be simple! Well, this is still simple, but the
+ * real benefit is that it means that two similar routes won't overwrite each
+ * other. For example, the following won't conflict, even though from the
+ * point of a regular expression they would:
+ *
+ * /controller/action/(:word)
+ * /controller/action/foo
+ * 
  * @author Peter Goodman
  */
-class Pinq_RouteParser extends Dictionary implements Parser, ConfigurablePackage {
+class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage {
 	
 	// storage and other things
 	protected $macro_keys = array(), // instead of constantly doing
