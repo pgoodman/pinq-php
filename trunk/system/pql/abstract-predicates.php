@@ -123,6 +123,7 @@ class AbstractPredicates {
 	 * @internal
 	 */
 	protected function parseOperator($op) {
+
 		$ops = explode('_', $op);
 		$operator = 0;
 		

@@ -71,7 +71,7 @@ class MysqlDatabase extends Database {
 	 * Get the record set class.
 	 */
 	protected function getRecordIterator($result) {
-		return new MysqlRecordIterator($result);
+		return new MysqlDatabaseRecordIterator($result);
 	}
 	
 	/**

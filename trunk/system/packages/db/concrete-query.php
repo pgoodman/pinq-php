@@ -27,9 +27,15 @@ class DatabaseQuery extends ConcreteQuery {
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
 			if($query->aliases[$table] === $table) {
-				$temp = $models[$query->aliases[$table]]->getName();
-				$table = empty($temp) ? $table : $temp;
+				//$temp = $models[$query->aliases[$table]]->getName();
+				//$table = empty($temp) ? $table : $temp;
+				$table = self::resolveReference(
+					$table, 
+					$query->aliases, 
+					$models
+				);
 			}
+			
 			
 			// if we're getting all columns from this table then
 			// skip this loop
@@ -74,11 +80,10 @@ class DatabaseQuery extends ConcreteQuery {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
-			$name = '';
-			if(isset($aliases[$left]) && ($a = $aliases[$left]) != $left) {
-				$temp = $models[$a]->getName();
-				$name = empty($temp) ? $a : $temp;
-			}
+			$name = self::resolveReference($left, $aliases, $models);
+			
+			if($name == $left)
+				$name = '';
 			
 			// add in a leading comma for top-level froms and a join prefix
 			$sql .= "{$comma} {$prefix} ";
@@ -133,7 +138,12 @@ class DatabaseQuery extends ConcreteQuery {
 	 * admit that this is just such an ugly function. I dislike it.
 	 * @internal
 	 */
-	static public function rebuildPredicates(array &$predicates = array()) {
+	static public function rebuildPredicates(AbstractQuery $query,
+		                                     Dictionary $models) {
+			
+		$predicates = $query->predicates;
+		$aliases = $query->aliases;
+		$sources = $query->sources;
 		
 		$sql = '';
 		
@@ -142,62 +152,65 @@ class DatabaseQuery extends ConcreteQuery {
 			list($type, $value) = $predicate;
 		
 			// operator
-			if($type & AbstractQuery::OP_OPERATOR) {
+			if($type & AbstractPredicates::OP_OPERATOR) {
 								
-				if($value & AbstractQuery::OPEN_SUBSET) {
+				if($value & AbstractPredicates::OPEN_SUBSET) {
 					$sql .= ' (';
 					continue;
-				} else if($value & AbstractQuery::CLOSE_SUBSET) {
+				} else if($value & AbstractPredicates::CLOSE_SUBSET) {
 					$sql .= ')';
 					continue;
 				}
 			
 				// arithmatic operators, order matters
-				if($value < AbstractQuery::LOG_IS) {
+				if($value < AbstractPredicates::LOG_IS) {
 			
-					if($value & AbstractQuery::LOG_NOT)
-						$sql .= '!';
+					if($value & AbstractPredicates::LOG_NOT)
+						$sql .= ' !';
 				
-					if($value & AbstractQuery::LOG_LT)
-						$sql .= '<';
+					if($value & AbstractPredicates::LOG_LT)
+						$sql .= ' <';
 				
-					if($value & AbstractQuery::LOG_GT)
-						$sql .= '>';
+					if($value & AbstractPredicates::LOG_GT)
+						$sql .= ' >';
 				
-					if($value & AbstractQuery::LOG_EQ)
-						$sql .= '=';
+					if($value & AbstractPredicates::LOG_EQ)
+						$sql .= ' =';
 			
 				// other operators
 				} else {
 				
-					if($value & AbstractQuery::LOG_AND)
+					if($value & AbstractPredicates::LOG_AND)
 						$sql .= ' AND';
 				
-					if($value & AbstractQuery::LOG_OR)
+					if($value & AbstractPredicates::LOG_OR)
 						$sql .= ' OR';
 				
-					if($value & AbstractQuery::LOG_IS)
+					if($value & AbstractPredicates::LOG_IS)
 						$sql .= ' IS';
 				
-					if($value & AbstractQuery::LOG_NOT)
+					if($value & AbstractPredicates::LOG_NOT)
 						$sql .= ' NOT';
 				
-					if($value & AbstractQuery::GROUP_BY)
+					if($value & AbstractPredicates::GROUP_BY)
 						$sql .= ' GROUP BY';
 				
-					if($value & AbstractQuery::ORDER_BY) {
-						if($value === AbstractQuery::ORDER_ASC)
+					if($value & AbstractPredicates::ORDER_BY) {
+						if($value === AbstractPredicates::ORDER_ASC)
 							$sql .= ' ASC';
-						else if($value === AbstractQuery::ORDER_DESC)
+						else if($value === AbstractPredicates::ORDER_DESC)
 							$sql .= ' DESC';
 						else
 							$sql .= ' ORDER BY';
 					}
+					
+					//if($value & AbstractPredicates::LIKE)
+					//	$sql .= ' LIKE';
 				
-					if($value & AbstractQuery::LIMIT)
+					if($value & AbstractPredicates::LIMIT)
 						$sql .= ' LIMIT';
 				
-					if($value & AbstractQuery::WHERE)
+					if($value & AbstractPredicates::WHERE)
 						$sql .= ' WHERE';
 				}
 			
@@ -209,11 +222,18 @@ class DatabaseQuery extends ConcreteQuery {
 					$sql .= '?';
 			
 				// column references
-				else if($type & AbstractQuery::VALUE_REFERENCE)
-					$sql .= " {$value[0]}.{$value[1]}";
+				else if($type & AbstractPredicates::VALUE_REFERENCE) {
+					
+					// resolve the proper table / alias
+					$ref = $value[0];
+					if(!isset($aliases[$ref]))
+						$ref = self::resolveReference($value[0], $aliases, $models);
+					
+					
+					$sql .= " {$ref}.{$value[1]}";
 			
 				// immediate constants
-				else {
+				} else {
 				
 					// limit only
 					if(is_array($value) && count($value) == 2) {
@@ -235,9 +255,31 @@ class DatabaseQuery extends ConcreteQuery {
 	}
 	
 	/**
+	 * Figure out if we can take an SQL table name.
+	 * @internal
+	 */
+	static protected function resolveReference($ref, array $aliases, 
+		                                       Dictionary $models) {
+		
+		// we have been given a model alias which is not the model name		
+		if(isset($aliases[$ref]) && ($a = $aliases[$ref]) != $ref) {
+			$name = $models[$a]->getName();
+			$else = $a;
+		
+		// we've been given a model name, try to gets its table name
+		} else if(isset($models[$ref])) {
+			$name = $models[$ref]->getName();
+			$else = $ref;
+		}
+		
+		return empty($name) ? $else : $name;
+	}
+	
+	/**
 	 * Compile and abstract query into a SQL SELECT statement.
 	 */
-	static public function compileSelect(AbstractQuery $query, Dictionary $models) {
+	static public function compileSelect(AbstractQuery $query, 
+		                                 Dictionary $models) {
 		
 		// we've cached this query, nice.
 		if(NULL !== ($cached = self::getCachedQuery($query)))
@@ -260,7 +302,7 @@ class DatabaseQuery extends ConcreteQuery {
 		}
 		
 		// add in the predictes
-		$sql .= self::rebuildPredicates($query->predicates);
+		$sql .= self::rebuildPredicates($query, $models);
 		
 		// cache the query
 		self::cacheQuery($query, $sql);
@@ -273,8 +315,7 @@ class DatabaseQuery extends ConcreteQuery {
 	 * Compile a query that works for both UPDATES and DELETES.
 	 */
 	static protected function compileModify(AbstractQuery $query, 
-		                                    Dictionary $models,
-		                                    $prefix,
+		                                    Dictionary $models, $prefix,
 		                                    $set = TRUE) {
 		
 		// we've cached this query, nice.
@@ -324,7 +365,7 @@ class DatabaseQuery extends ConcreteQuery {
 		foreach($predicates as $predicate) {
 			list($type, $value) = $predicate;
 			
-			if($type & AbstractQuery::VALUE_REFERENCE)
+			if($type & AbstractPredicates::VALUE_REFERENCE)
 				$pivots[$value[0]] = $value[1];
 		}
 		
@@ -336,12 +377,12 @@ class DatabaseQuery extends ConcreteQuery {
 		if($has_predicates) {
 			$where = array_shift($predicates);
 			array_unshift($predicates, $where, array(
-				AbstractQuery::OP_OPERATOR, 
-				AbstractQuery::OPEN_SUBSET,
+				AbstractPredicates::OP_OPERATOR, 
+				AbstractPredicates::OPEN_SUBSET,
 			));
 			$predicates[] = array(
-				AbstractQuery::OP_OPERATOR, 
-				AbstractQuery::CLOSE_SUBSET
+				AbstractPredicates::OP_OPERATOR, 
+				AbstractPredicates::CLOSE_SUBSET
 			);
 		}
 		
@@ -371,22 +412,22 @@ class DatabaseQuery extends ConcreteQuery {
 				// join this condition into the predicates
 				if($has_predicates) {
 					$predicates[] = array(
-						AbstractQuery::OP_OPERATOR, 
-						AbstractQuery::LOG_AND,
+						AbstractPredicates::OP_OPERATOR, 
+						AbstractPredicates::LOG_AND,
 					);
 				}
 				
 				// add in the condition to join these tables in the update
 				$predicates[] = array(
-					AbstractQuery::OP_OPERAND | AbstractQuery::VALUE_REFERENCE,
+					AbstractPredicates::OP_OPERAND | AbstractPredicates::VALUE_REFERENCE,
 					$path[0],
 				);
 				$predicates[] = array(
-					AbstractQuery::OP_OPERATOR, 
-					AbstractQuery::LOG_EQ,
+					AbstractPredicates::OP_OPERATOR, 
+					AbstractPredicates::LOG_EQ,
 				);
 				$predicates[] = array(
-					AbstractQuery::OP_OPERAND | AbstractQuery::VALUE_REFERENCE,
+					AbstractPredicates::OP_OPERAND | AbstractPredicates::VALUE_REFERENCE,
 					$path[1],
 				);
 			}
@@ -395,7 +436,7 @@ class DatabaseQuery extends ConcreteQuery {
 		// add in the predicates, note that we use empty() here instead of
 		// $has_predicates.
 		if(!empty($predicates))
-			$sql .= self::rebuildPredicates($predicates);
+			$sql .= self::rebuildPredicates($query, $models);
 		
 		// cache the query
 		self::cacheQuery($query, $sql);

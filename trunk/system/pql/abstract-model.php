@@ -251,6 +251,9 @@ class AbstractModel extends Stack {
 	 * not defined because the structure of the model and how queries being
 	 * made on it should reflect this.
 	 */
+	public function relateTo($alias, array $through = NULL) {
+		return $this->relatesTo($alias, $through);
+	}
 	public function relatesTo($alias, array $through = NULL) {
 		
 		// add the relationship

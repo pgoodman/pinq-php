@@ -114,7 +114,16 @@ abstract class ConcreteQuery {
 						$entry_points[$name] = NULL;
 						
 						if(!isset($aliases[$name]))
-							$aliases[$name] = $aliases[$path[$i][0]];
+							
+							// this is listed in the aliases
+							if(isset($aliases[$path[$i][0]]))
+								$aliases[$name] = $aliases[$path[$i][0]];
+							
+							// it isn't listed in the aliases, it's likely been
+							// substituted in by the relations path, take it
+							// as is.
+							else
+								$aliases[$name] = $path[$i][0];
 						
 						// we need to keep the name (which could be an alias)
 						// for the next iteration
