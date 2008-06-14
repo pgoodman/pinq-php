@@ -9,7 +9,7 @@
  * memory (via the dictionary object).
  * @author Peter Goodman
  */
-class ConfigLoader extends Dictionary implements Loader {
+class ConfigLoader extends Loader {
 	
 	/**
 	 * Parse a configuration file in the applications folder. The context is
@@ -33,6 +33,7 @@ class ConfigLoader extends Dictionary implements Loader {
 		do {
 			if(file_exists($file_name = array_shift($files)))
 				break;
+			
 		} while(!empty($files));
 		
 		// config file doesn't exist, error

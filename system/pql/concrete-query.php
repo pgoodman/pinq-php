@@ -17,14 +17,33 @@ abstract class ConcreteQuery {
 	      UPDATE = 4,
 	      DELETE = 8;
 	
+	static protected $cache = array();
+	
+	/**
+	 * See if a compiled query is already in the cache.
+	 */
+	static protected function getCachedQuery(AbstractQuery $query) {
+		if(isset(self::$cache[$query->id]))
+			return self::$cache[$query->id];
+		
+		return NULL;
+	}
+	
+	/**
+	 * Cache a compiled query.
+	 */
+	static protected function cacheQuery(AbstractQuery $query, $query) {
+		self::$cache[$query->id] = $query;
+	}
+	
 	/**
 	 * Return a graph of the dependencies for this query, that is, lay out the
 	 * links made in the query such that the links will occur in the proper
 	 * order.
 	 * @internal
 	 */
-	static protected function getDependencyGraph(AbstractQuery &$query, 
-		                                         Dictionary &$models) {
+	static protected function getDependencyGraph(AbstractQuery $query, 
+		                                         Dictionary $models) {
 		
 		// the table of relations established through the query
 		$relations = $query->relations;
