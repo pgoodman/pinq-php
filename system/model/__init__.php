@@ -10,3 +10,4 @@ require_once $dir .'/data-source.php';
 require_once $dir .'/record.php';
 require_once $dir .'/record-iterator.php';
 require_once $dir .'/record-gateway.php';
+require_once $dir .'/loader.php';

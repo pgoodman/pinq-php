@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-$config['blog'] = array(
+$config['wordpress'] = array(
 	'user' => 'root',
 	'pass' => 'root',
 	'host' => 'localhost',

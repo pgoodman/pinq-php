@@ -8,7 +8,7 @@
  * Represents a request to a certain subset of events.
  * @author Peter Goodman
  */
-abstract class Controller {
+abstract class Pinq_Controller implements Package {
 	
 	// package loader
 	protected $packages;

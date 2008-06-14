@@ -43,7 +43,10 @@ class PackageLoader extends Loader {
 		// search in both the system and application directories. this will
 		// look first in the applications directory
 		$search_where = array(DIR_APPLICATION, DIR_SYSTEM);
-		$class_prefixes = array($this->config['config']['class_prefix'], '');
+		$class_prefixes = array(
+			$this->config['config']['class_prefix'], 
+			'Pinq_'
+		);
 		
 		$package_file = NULL;
 		$class = NULL;
@@ -85,16 +88,16 @@ class PackageLoader extends Loader {
 		
 		// set up the variables that packages that configure themselves should
 		// use
-		$argv = &$path;
+		/*$argv = &$path;
 		$argc = count($argv);
 		
 		$config = $this->config;
-		$loader = $this;
+		$loader = $this;*/
 		
 		// bring in the file that will configure itself. what's nice about
 		// this way of doing things is that no naming schemes are imposed on
 		// the programmer
-		include $package_file;
+		require_once $package_file; // include
 		
 		// the package might be a self-configuring class. see if it has a
 		// configure function.
@@ -106,12 +109,18 @@ class PackageLoader extends Loader {
 				$package_info = array(
 					'key' => $key, 
 					'class' => $class,
+					'argv' => $path,
+					'argc' => count($path),
 				);
 				
 				// call the packages configuration function.
 				call_user_func_array(
 					array($class, 'configure'), 
-					array($this, $package_info, $context)
+					array(
+						$this, 
+						$this->config, 
+						array_merge($package_info, $context),
+					)
 				);
 			}
 		}

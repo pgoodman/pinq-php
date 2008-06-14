@@ -13,7 +13,7 @@
  * controller.
  * @author Peter Goodman
  */
-class RouteParser extends Dictionary implements Parser, Package {
+class Pinq_RouteParser extends Dictionary implements Parser, ConfigurablePackage {
 	
 	// storage and other things
 	protected $macro_keys = array(), // instead of constantly doing
@@ -36,12 +36,21 @@ class RouteParser extends Dictionary implements Parser, Package {
 	/**
 	 * Configure this package for the PackageLoader.
 	 */
-	static public function configure(Loader $loader, array $info, array $args) {
+	static public function configure(Loader $loader, Loader $config, array $args) {
 		
-		// store a new instance of this class as a package
+		extract($args);
+		
+		// require these array keys in the $args array
+		DEBUG_MODE && expect_array_keys($args, array(
+			'controller_dir', 
+			'file_extension', 
+			'key'
+		));
+				
+		// store a new instance of the route parser class as a package
 		$loader->store(
-			$info['key'],
-			call_user_class_array($info['class'], $args)
+			$key,
+			new $class($controller_dir, $file_extension)
 		);
 	}
 
