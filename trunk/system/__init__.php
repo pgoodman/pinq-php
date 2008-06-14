@@ -44,6 +44,7 @@ require_once DIR_SYSTEM .'/queue.php';
 require_once DIR_SYSTEM .'/dictionary.php';
 
 // interfaces and exceptions
+require_once DIR_SYSTEM .'/loader.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 require_once DIR_SYSTEM .'/exceptions.php';
 

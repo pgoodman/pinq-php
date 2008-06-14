@@ -21,14 +21,6 @@ interface Printer {
 }
 
 /**
- * Interface for something that will load and configure something else.
- */
-interface Loader {
-	public function &load($key, array $context = array());
-	public function store($key, $value = NULL);
-}
-
-/**
  * Interface for a package.
  */
 interface Package {

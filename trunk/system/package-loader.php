@@ -8,7 +8,7 @@
  * Import packages.
  * @author Peter Goodman
  */
-class PackageLoader extends Dictionary implements Loader {
+class PackageLoader extends Loader {
 	
 	protected $config;
 	

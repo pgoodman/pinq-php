@@ -224,13 +224,17 @@ class DatabaseQuery extends ConcreteQuery {
 	 */
 	static public function compileSelect(AbstractQuery $query, Dictionary $models) {
 		
+		// we've cached this query, nice.
+		if(NULL !== ($cached = self::getCachedQuery($query)))
+			return $cached;
+		
 		// add in what we want to select
 		$sql = 'SELECT '. self::buildSelectFields($query);
 		
-		// add in the tables to get data from
+		// add in the tables to get data from and build up the join statements
+		// (if any)
 		$graph = self::getDependencyGraph($query, $models);
-		
-		if(!empty($graph))
+		if(!empty($graph)) {
 			$sql .= ' FROM '. self::recursiveJoin(
 				$query->aliases,
 				$models,
@@ -238,9 +242,16 @@ class DatabaseQuery extends ConcreteQuery {
 				$graph, 
 				''
 			);
-			
+		}
+		
+		// add in the predictes
+		$sql .= self::rebuildPredicates($query->predicates);
+		
+		// cache the query
+		self::cacheQuery($query, $sql);
+		
 		// add in the predicates and return
-		return $sql . self::rebuildPredicates($query->predicates);
+		return $sql;
 	}
 	
 	/**
@@ -251,6 +262,11 @@ class DatabaseQuery extends ConcreteQuery {
 		                                    $prefix,
 		                                    $set = TRUE) {
 		
+		// we've cached this query, nice.
+		if(NULL !== ($cached = self::getCachedQuery($query)))
+			return $cached;
+		
+		// query isn't cached, build up the sql then cache it.
 		$sql = "{$prefix} ";
 		$comma = '';
 		
@@ -366,6 +382,9 @@ class DatabaseQuery extends ConcreteQuery {
 		if(!empty($predicates))
 			$sql .= self::rebuildPredicates($predicates);
 		
+		// cache the query
+		self::cacheQuery($query, $sql);
+		
 		// add in the predicates and return
 		return $sql;
 	}
@@ -376,6 +395,12 @@ class DatabaseQuery extends ConcreteQuery {
 	 * those in any way.
 	 */
 	static public function compileInsert(AbstractQuery $query, Dictionary $models) {
+		
+		// we've cached this query, nice.
+		if(NULL !== ($cached = self::getCachedQuery($query)))
+			return $cached;
+		
+		// query isn't cached, build up the query
 		$queries = array();
 		$values = &$query->values;
 		
@@ -410,7 +435,10 @@ class DatabaseQuery extends ConcreteQuery {
 		
 		// we only have one query so return it instead of the array
 		if(count($queries) == 1)
-			return $queries[0];
+			$queries = $queries[0];
+		
+		// cache the query
+		self::cacheQuery($query, $queries);
 		
 		return $queries;
 	}

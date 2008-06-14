@@ -52,14 +52,21 @@ abstract class AbstractQuery extends Stack {
 		   $counts		 = array(), // things in the datasources to count
 		   $values		 = array(), // values for a create / delete / update
 		   $relations	 = array(),
-		   $predicates   = array(); // conditions to be met on the data 
-									// returned
+		   $predicates   = array(), // conditions to be met on the data 
+		   $id;						// returned
 	
 	/** 
 	 * Constructor, very little to set up.
 	 */
 	public function __construct() {
-		//$this->stack = new Stack;
+		
+		// 
+		static $id;
+		if(NULL === $id)
+			$id = -1;
+		
+		// give this abstract query a unique id
+		$this->id = $id++;
 	}
 	
 	/**
