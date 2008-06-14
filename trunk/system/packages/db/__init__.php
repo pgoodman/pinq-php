@@ -34,6 +34,7 @@ class Pinq_Db implements ConfigurablePackage {
 			'key',
 		));
 		
+		// bring out the above variables for convenience
 		extract($args);
 		
 		// load the config stuff
@@ -89,8 +90,14 @@ class Pinq_Db implements ConfigurablePackage {
 		// connect to the database
 		$database = new $class($host, $user, $pass);
 		$database->open($name);
-
-		// store the database record gateway to the package
-		$loader->store($key, $database); // new DatabaseRecordGateway($database)
+		
+		// get the model loader package and have it load any models for this
+		// database. note: the argv[0] on here isn't necessary, but it means
+		// that each database connection will have its own model loader
+		$model = $loader->load("model-loader.{$argv[0]}");
+		$model->load($key);
+				
+		// return the database record gateway to the package
+		return new DatabaseRecordGateway($database, $model);
 	}
 }

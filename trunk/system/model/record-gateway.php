@@ -48,8 +48,8 @@ abstract class RecordGateway {
 		// if we were given or derived an abstract query object then we need
 		// to compile it.
 		if($query instanceof AbstractQuery)
-			return $this->compileQuery($query, $type);
-		
+			$query = $this->compileQuery($query, $type);
+				
 		return (string)$query;
 	}
 	
@@ -99,8 +99,8 @@ abstract class RecordGateway {
 			if(!$what->isSaved()) {
 				throw new UnexpectedValueException(
 					"RecordGateway::delete() expected first argument to be ".
-					"an existing record. The record passed does not ".
-					"exist in its corresponding data source."
+					"an existing record. The record passed does not exist ".
+					"in its corresponding data source."
 				);
 			}
 			

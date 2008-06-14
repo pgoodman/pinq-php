@@ -25,7 +25,7 @@ class ConfigLoader extends Loader {
 		
 		// the possible file names for this configuration file
 		$files = array(
-			DIR_APPLICATION ."/config/{$key}.php",
+			DIR_APPLICATION ."/config/{$key}". EXT,
 			DIR_SYSTEM ."/config/{$key}.php",
 		);
 				
@@ -34,10 +34,11 @@ class ConfigLoader extends Loader {
 			if(file_exists($file_name = array_shift($files)))
 				break;
 			
+			$file_name = NULL;
 		} while(!empty($files));
 		
 		// config file doesn't exist, error
-		if(!file_exists($file_name)) {
+		if(NULL === $file_name) {
 			throw new ConfigurationException(
 				"ConfigParser::parse() expected a valid PHP configuration ".
 				"file name (without extension). File [{$key}.php] does not ".

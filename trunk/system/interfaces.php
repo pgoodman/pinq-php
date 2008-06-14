@@ -26,6 +26,10 @@ interface Printer {
 interface Package {
 	
 }
+
+/**
+ * Interface for a configurable package.
+ */
 interface ConfigurablePackage extends Package {
 	static public function configure(Loader $loader, Loader $config, array $args);
 }

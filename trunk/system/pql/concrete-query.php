@@ -32,8 +32,8 @@ abstract class ConcreteQuery {
 	/**
 	 * Cache a compiled query.
 	 */
-	static protected function cacheQuery(AbstractQuery $query, $query) {
-		self::$cache[$query->id] = $query;
+	static protected function cacheQuery(AbstractQuery $query, $stmt) {
+		self::$cache[$query->id] = $stmt;
 	}
 	
 	/**
@@ -112,7 +112,9 @@ abstract class ConcreteQuery {
 						// add the joining table into the link
 						$relations[$last][] = $name;
 						$entry_points[$name] = NULL;
-						$aliases[$name] = $path[$i][0];
+						
+						if(!isset($aliases[$name]))
+							$aliases[$name] = $aliases[$path[$i][0]];
 						
 						// we need to keep the name (which could be an alias)
 						// for the next iteration

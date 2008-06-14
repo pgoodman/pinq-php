@@ -231,11 +231,7 @@ class AbstractModel extends Stack {
 			
 			// default, assume this is an extra unsupported flag.
 			default:
-				$val = &$args;
-				if(empty($val)) $val = TRUE;
-				else if(count($val) == 1) $val = $val[0];
-				
-				$property['extra'][$key] = $val;
+				$property['extra'][$key] = !empty($args) ? $args[0] : TRUE;
 				break;
 		}
 		

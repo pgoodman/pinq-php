@@ -48,10 +48,7 @@ class Pinq_RouteParser extends Dictionary implements Parser, ConfigurablePackage
 		));
 				
 		// store a new instance of the route parser class as a package
-		$loader->store(
-			$key,
-			new $class($controller_dir, $file_extension)
-		);
+		return new $class($controller_dir, $file_extension);
 	}
 
 	/**

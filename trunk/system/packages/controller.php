@@ -48,7 +48,7 @@ abstract class Pinq_Controller implements Package {
 		// load one, pass it off to the appropriate function
 		foreach($packages as $package_name)
 			$return[] = $this->packages->load($package_name);
-		
+				
 		// hook
 		$this->afterImport();
 		

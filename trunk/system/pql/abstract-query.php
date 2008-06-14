@@ -94,10 +94,10 @@ abstract class AbstractQuery extends Stack {
 	protected function addDataSource($ds, $alias) {
 		
 		// map the alias back to the source name for later use (in the
-		// concrete query)
+		// concrete query)		
 		$this->aliases[$alias] = $ds;
 		$this->aliases[$ds] = $ds;
-
+		
 		// are we dealing with heriarchical data?
 		if(FALSE !== strpos($ds, '.')) {
 			$ds = explode('.', $ds);
