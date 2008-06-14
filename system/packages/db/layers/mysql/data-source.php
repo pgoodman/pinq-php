@@ -16,7 +16,7 @@ class MysqlDatabase extends Database {
 	 * Constructor, Connect to the database.
 	 */
 	public function __construct($host, $user = '', $pass = '') {
-		f(!$this->conn = mysql_connect($server, $user, $pass))
+		if(!($this->conn = mysql_connect($host, $user, $pass, FALSE)))
 			throw new DatabaseException("Could not connect to the database.");
 	}
 	
@@ -24,9 +24,10 @@ class MysqlDatabase extends Database {
 	 * Open a database, this is a method for DataSource.
 	 */
 	public function open($name) {
-		if(!mysql_select_db($db, $this->conn)) {
+		if(!mysql_select_db($name, $this->conn)) {
 			throw new DatabaseException(
-				"Could not connect to the database [". $this->error() ."]"
+				"Could not connect to the database [{$name}]. ".
+				$this->error()
 			);
 		}
 	}

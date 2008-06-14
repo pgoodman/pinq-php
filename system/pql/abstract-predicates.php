@@ -109,7 +109,13 @@ class AbstractPredicates {
 				self::LOG_NOT | self::LOG_GT | self::LOG_EQ => self::LOG_LT,
 			);
 		}
-		
+	}
+	
+	/**
+	 * Destructor.
+	 */
+	public function __destruct() {
+		unset($this->predicates, $this->query);
 	}
 	
 	/**

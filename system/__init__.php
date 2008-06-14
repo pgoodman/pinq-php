@@ -33,6 +33,10 @@ define('PINQ_IN_ISS', defined('SERVER_IIS') && TRUE === SERVER_ISS);
 define('DIR_SYSTEM', dirname(__FILE__));
 define('DIR_PACKAGES', DIR_SYSTEM .'/packages/');
 
+// start the session and regenerate the id
+session_start();
+//session_regenerate_id(FALSE);
+
 // core classes that stand on their own without pinq-defined interfaces/
 // abstract classes
 require_once DIR_SYSTEM .'/stack.php';
@@ -43,7 +47,8 @@ require_once DIR_SYSTEM .'/dictionary.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 require_once DIR_SYSTEM .'/exceptions.php';
 
-// bring in the model stuff (not quite a "model layer")
+// bring in the model stuff (NOT a "model layer" as they are understood in
+// MVC terms)
 require_once DIR_SYSTEM .'/pql/__init__.php';
 require_once DIR_SYSTEM .'/model/__init__.php';
 
@@ -61,7 +66,7 @@ require_once DIR_SYSTEM .'/functions/__init__.php';
  * @param $script_file ALWAYS USE __FILE__!!!!!
  * @param $app_dir The directory of the applications folder RELATIVE to the
  *                 script file.
- * @author Peter GOodman.
+ * @author Peter Goodman.
  */
 function pinq($script_file, $app_dir) {
 	

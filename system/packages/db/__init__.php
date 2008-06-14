@@ -62,5 +62,5 @@ $class = class_name($driver) . 'Database';
 $database = new $class($host, $user, $pass);
 $database->open($name);
 
-// return a database finder
-$package = new DatabaseFinder($database);
+// store the database record gateway to the package
+$loader->store($key, $database); // new DatabaseRecordGateway($database)

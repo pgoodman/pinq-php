@@ -11,13 +11,22 @@
 abstract class RecordGateway {
 	
 	// the data source
-	protected $ds;
+	protected $ds,
+	          $models;
 	
 	/**
 	 * Constructor, bring in the data source.
 	 */
-	public function __construct(DataSource $ds) {
+	public function __construct(DataSource $ds, Dictionary $models) {
 		$this->ds = $ds;
+		$this->models = $models;
+	}
+	
+	/**
+	 * Destructor.
+	 */
+	public function __destruct() {
+		unset($this->ds);
 	}
 	
 	/**

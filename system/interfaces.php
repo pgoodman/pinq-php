@@ -25,6 +25,14 @@ interface Printer {
  */
 interface Loader {
 	public function &load($key, array $context = array());
+	public function store($key, $value = NULL);
+}
+
+/**
+ * Interface for a package.
+ */
+interface Package {
+	static public function configure(Loader $loader, array $info, array $args);
 }
 
 /**

@@ -12,6 +12,7 @@
  * @author Peter Goodman
  */
 class OutputBuffer {
+	
 	static public $buffer = "";
 	
 	/**
