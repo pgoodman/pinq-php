@@ -60,7 +60,13 @@ abstract class AbstractQuery extends Stack {
 	 */
 	public function __construct() {
 		
-		// 
+		// this is for a *page-load specific* compiled query cache. we give
+		// each instance of abstract query a unique id (for this page load!!)
+		// and hope that if the programmer is doing a query in a loop that
+		// they shift the query building out of the loop. If they do this
+		// then compilation will be free after the first iteration. If that's
+		// not the case, compilation is still pretty quick because the first
+		// compilation caches the relations it has found and whatnot :D
 		static $id;
 		if(NULL === $id)
 			$id = -1;
