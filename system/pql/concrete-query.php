@@ -196,7 +196,8 @@ abstract class ConcreteQuery {
 	 * and hopefully account for them gracefully. THis function does not
 	 * attempt to solve conflicts for count queries.
 	 */
-	static protected function findConflictingItems(AbstractQuery $query, Dictionary $models) {
+	static protected function findConflictingItems(AbstractQuery $query, 
+		                                           Dictionary $models) {
 		
 		$items = $query->items;
 		
@@ -216,7 +217,10 @@ abstract class ConcreteQuery {
 			// all fields are being selected
 			else if(isset($set[(string)ALL])) {
 				$name = $query->aliases[$key];
-				$items[$key] = array_flip(array_keys($models[$name]->_properties));
+				
+				$items[$key] = array_flip(
+					array_keys($models[$name]->_properties)
+				);
 			}
 		}
 				

@@ -61,8 +61,8 @@ class DatabaseRecord extends AbstractRecord implements Object {
 					$original_key = array_shift($keys);
 					
 					// we've found a prefixed column, chop off the prefix
-					if(strpos($key, $model_name) === 0)
-						$key = substr($key, $len);
+					//if(strpos($key, $model_name) === 0)
+					$key = substr($key, $len);
 					
 					// add in the data
 					$model[$key] = &$temp[$original_key];
@@ -75,6 +75,10 @@ class DatabaseRecord extends AbstractRecord implements Object {
 				
 				// store the model
 				$models[$model_name] = new self($model);
+				
+				// this is needed so that the referenced model to the above
+				// dictionary doesn't carry over to the next iteration
+				unset($model);
 				
 			} while(!empty($keys));
 			

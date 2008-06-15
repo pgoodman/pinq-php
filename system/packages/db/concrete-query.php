@@ -19,7 +19,7 @@ class DatabaseQuery extends ConcreteQuery {
 		                                        Dictionary $models) {
 		
 		$select = array();
-		$conflicts = self::findConflictingItems($query, $models);
+		//$conflicts = self::findConflictingItems($query, $models);
 
 		// a signal that the ORM is being used as opposed to traditional SQL
 		// this is evil.
@@ -88,11 +88,11 @@ class DatabaseQuery extends ConcreteQuery {
 				// TODO: it might be a better solution to flat out prefix
 				//       every column so that processing of the records is
 				//       simpler and there are guaranteed to be no conflicts
-				if(isset($conflicts[$alias]))
-					$alias = "{$model_name}_{$alias}";
+				//if(isset($conflicts[$alias]))
+				//	$alias = "{$model_name}_{$alias}";
 				
 				// add the select column + its alias to the query
-				$select[] = "{$table}.{$column} AS {$alias}" ;
+				$select[] = "{$table}.{$column} AS {$model_name}_{$alias}" ;
 			}
 		}
 		
