@@ -35,6 +35,16 @@ interface ConfigurablePackage extends Package {
 }
 
 /**
+ * Interface for something that can overload getters/setters.
+ */
+interface Object {
+	public function __get($key);
+	public function __set($key, $val);
+	public function __isset($key);
+	public function __unset($key);
+}
+
+/**
  * An interface for a class that can be stored in one form or another.
  */
 /*interface Storable extends Serializable {

@@ -101,7 +101,7 @@ abstract class RecordGateway {
 		// to compile it.
 		if($query instanceof AbstractQuery)
 			$query = $this->compileQuery($query, $type);
-				
+		
 		return (string)$query;
 	}
 	
