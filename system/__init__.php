@@ -26,8 +26,8 @@ ignore_user_abort(FALSE);
 // should some of the libraries in pinq operate in debug mode?
 define('DEBUG_MODE', TRUE);
 
-// are we in ISS?
-define('PINQ_IN_ISS', defined('SERVER_IIS') && TRUE === SERVER_ISS);
+// are we in IIS?
+define('PINQ_IN_IIS', defined('SERVER_IIS') && TRUE === SERVER_IIS);
 
 // some core directories
 define('DIR_SYSTEM', dirname(__FILE__));
