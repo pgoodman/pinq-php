@@ -12,7 +12,7 @@ abstract class DatabaseRecordIterator extends RecordIterator {
 	
 	protected $result;	
 	/**
-	 * Constructor, bring in the PDO statement and execute the query.
+	 * Constructor, bring in the database result resource.
 	 */
 	public function __construct($result) {
 		$this->result = &$result;		

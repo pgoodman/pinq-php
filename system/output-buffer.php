@@ -39,8 +39,7 @@ class OutputBuffer {
  */
 function out() {
 	$args = func_get_args();
-	foreach($args as $str)
-		OutputBuffer::$buffer .= (string)$str;
+	OutputBuffer::$buffer .= implode('', $str);
 }
 
 /**
@@ -49,8 +48,7 @@ function out() {
  */
 function outln() {
 	$args = func_get_args();
-	foreach($args as $str)
-		OutputBuffer::$buffer .= "{$str}\n";
+	OutputBuffer::$buffer .= implode("\n", $str) ."\n";
 }
 
 /**
