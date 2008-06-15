@@ -14,21 +14,31 @@ class IndexController extends PinqController {
         // find all jobs including with their content information by a
         // specific tag name passed in through the route
         $jobs = $db->findAll(
+		
+			// get all columns from the job posting table
             from('job_postings', 'jp')->select(ALL)->
+
+			// get all columns from the content table and link it to the job
+			// postings table automatically
             from('content')->select(ALL)->link('jp', 'content')->
+
+			// link tags to job postings with an implicit through join
             from('tags')->link('jp', 'tags')->where->tags('Name')->eq(_),
-            array($tag_name) // substitute into the query
+
+			// substitute into the query for the tag name
+            array($tag_name)
         );
 		
-		// all equivalent, all using PQL, either up-front or behind the
-		// scenes :D 
+		// go into the model gateway with a partial query for the job postings
+		// model
 		$featured = $db->job_postings->findBy('Id', 1);
 		
 		echo '<pre>';
 		print_r($featured);
 		echo '</pre>';
 
-        // iterate over the jobs and output html for them
+        // iterate over the jobs and output html for them. this would
+		// eventually be moved to some sort of view
         foreach($jobs as $job) {
             outln(
                 '<h3>'. $job['Title'] .'</h3>',

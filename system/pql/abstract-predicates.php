@@ -99,7 +99,7 @@ class AbstractPredicates {
 				
 				'group' => self::GROUP_BY,
 				'limit' => self::LIMIT,
-				'order' => self::ORDER_BY,
+				'sort' => self::ORDER_BY,
 				'asc' => self::ORDER_ASC,
 				'desc' => self::ORDER_DESC,
 				
