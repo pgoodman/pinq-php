@@ -19,10 +19,19 @@ class DatabaseQuery extends ConcreteQuery {
 		                                        Dictionary $models) {
 		
 		$select = array();
-		
+		$conflicts = self::findConflictingItems($query, $models);
+
+		// a signal that the ORM is being used as opposed to traditional SQL
+		// this is evil.
+		$select[] = "1 AS __pql__";
+
 		// build up the SELECT columns
 		foreach($query->items as $table => $columns) {
-						
+			
+			// skip this, we don't care
+			if(empty($columns))
+				continue;
+			
 			// we assume that this exists. if we are being passed the model
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
@@ -34,22 +43,67 @@ class DatabaseQuery extends ConcreteQuery {
 				);
 			}
 			
+			$model_name = $query->aliases[$table];
+			$model = $models[$model_name];
 			
-			// if we're getting all columns from this table then
-			// skip this loop
+			// if we're getting all columns from this table then skip this 
+			// loop. This should already be solved by the find conflicting
+			// items, but this added redundancy might not be too bad.
 			if(isset($columns[(string)ALL])) {
-				$select[] = "{$table}.*";
-				continue;
+				//$select[] = "{$table}.*";
+				//continue;
+				$temp = array_keys($model->_properties);
+				$columns = array_combine($temp, $temp);
 			}
 			
+			// this might be evil
+			// Why am I doing this? Assume we are selecting data from two
+			// tables at once, both of which have an 'id' column. In a normal
+			// select, the value for one would overwrite the value for another
+			// and so we would actually LOSE some possibly useful data. The
+			// solution is three-fold. We need to
+			// 1) identify possible conflicting columns
+			// 2) identify where select fields for each table start, thus we
+			//    need to delimit them somehow.
+			// 3) prefix the conflicting columns with something so that we
+			//    can identify and remove the prefixes later.
+			//
+			// The solution is simple: the table delimiters (as follows in
+			// code) have the model name in them, prefixed by '__' to make
+			// them somewhat unique. Conflicting columns are then prefixed
+			// by the model names which we know from the delimiters. Thus,
+			// we get EXTRA info from the delimiters: the model name, which
+			// we can then use in DatabaseRecord to allow the programmer to
+			// access the information from the joined tables separately.
+			$select[] = "1 AS __{$model_name}";
+						
 			// we're getting multiple columns from this table
 			foreach($columns as $alias => $column) {
+				
+				// uh-oh, we are selecting a field from the table and aliasing
+				// it in a way that conflicts with a field from another table
+				// in this query. Change the alias and we'll work it out
+				// later.
+				if(isset($conflicts[$alias]))
+					$alias = "{$model_name}_{$alias}";
+				
+				// add the select column + its alias to the query
 				$select[] = "{$table}.{$column} AS {$alias}" ;
 			}
 		}
 		
+		$count_split = FALSE;
+		
 		// build up the COUNT columns
 		foreach($query->counts as $table => $columns) {
+			
+			if(empty($columns))
+				continue;
+				
+			if(!$count_split) {
+				$select[] = "1 AS __count_split";
+				$count_split = TRUE;
+			}
 			
 			// we're getting multiple columns from this table
 			foreach($columns as $alias => $column) {

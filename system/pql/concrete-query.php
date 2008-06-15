@@ -190,6 +190,59 @@ abstract class ConcreteQuery {
 	}
 	
 	/**
+	 * In the query we might be selecting from more than one model. That can
+	 * be problematic, especially if there are items in the models that are
+	 * also in other models. Thus we want to be able to find those conflicts
+	 * and hopefully account for them gracefully. THis function does not
+	 * attempt to solve conflicts for count queries.
+	 */
+	static protected function findConflictingItems(AbstractQuery $query, Dictionary $models) {
+		
+		$items = $query->items;
+		
+		// by default there are no conflicts
+		$conflicts = array();
+				
+		// pre-processing:
+		// there need to be at least two non-empty sets of items for there to
+		// be conflicts. Go through the items and remove the ones that are
+		// empty, also, fill in the ones that are selecting all items.
+		foreach($items as $key => $set) {
+			
+			// no fields are being selected
+			if(empty($set))
+				unset($items[$key]);
+			
+			// all fields are being selected
+			else if(isset($set[(string)ALL])) {
+				$name = $query->aliases[$key];
+				$items[$key] = array_flip(array_keys($models[$name]->_properties));
+			}
+		}
+				
+		// processing:
+		// find the conflicting fields through repeated array intersection.
+		// this is unfortunately very inefficient for a large number of models
+		// being selected from. Why does this need to be repeated? Well, we
+		// can't just find conflicts for the first model against all the other
+		// models, we need to find the conflicts between each model against
+		// all the other models. A semi short-cut is taken using the array_
+		// shift and merge that (todo) should be tested. We assume all prior
+		// conflicts have been found.
+		$items = array_values($items);
+		while(count($items) > 1) {
+			$conflicts = array_merge(
+				$conflicts,
+				call_user_func_array('array_intersect_key', $items)
+			);
+			array_shift($items);
+		}
+		
+		// and array of conflict keys
+		return $conflicts;
+	}
+	
+	/**
 	 * Compile the abstract query into something concrete. Apparently static
 	 * functions can't be abstract.
 	 */
