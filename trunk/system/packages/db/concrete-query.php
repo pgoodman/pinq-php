@@ -239,10 +239,14 @@ class DatabaseQuery extends ConcreteQuery {
 				} else {
 				
 					// limit only
-					if(is_array($value) && count($value) == 2) {
+					if(is_array($value)) {
 					
-						$sql .= $value[0] === _ ? ' ?' : ' '. (int)$value[0];
-						$sql .= $value[1] === _ ? ', ?': ', '. (int)$value[1];
+						$sep = '';
+						foreach($value as $val) {
+							$val = $val === _ ? '?' : (int)$val;
+							$sql .= "{$sep} {$val}";
+							$sep = ',';
+						}
 					
 					} else
 						
