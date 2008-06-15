@@ -8,7 +8,7 @@
  * Represents a single database record.
  * @author Peter Goodman
  */
-class DatabaseRecord extends Record {
+class DatabaseRecord extends AbstractRecord {
 	
 	// database records always exist insofar as they are only instantiated
 	// through a query method

@@ -67,6 +67,13 @@ class Dictionary implements ArrayAccess {
 	public function offsetExists($key) {
 		return isset($this->dict[$key]);
 	}
+	
+	/**
+	 * Return the array in the dictionary.
+	 */
+	public function toArray() {
+		return $this->dict;
+	}
 }
 
 /**

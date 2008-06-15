@@ -126,6 +126,34 @@ abstract class RecordGateway {
 	}
 	
 	/**
+	 * Take only the first value from a record. This makes COUNT queries, for
+	 * example, very simple.
+	 */
+	public function findValue($query, array $args = array()) {
+		$row = $this->find($query, $args);
+		
+		// oh well, no row to return
+		if(NULL === $row)
+			return NULL;
+		
+		// dig deep into the record if we are dealing with an outer record
+		while($row instanceof OuterRecord)
+			$row = $row->getInnerRecord();
+		
+		// we are now likely dealing with a Record that is also a dictionary
+		if($row instanceof Dictionary)
+			$row = array_values($row->toArray());
+		else
+			$row = array_values((array)$row);
+		
+		// does no first element exist?
+		if(!isset($row[0]))
+			return NULL;
+		
+		return $row[0];
+	}
+	
+	/**
 	 * Find >= one records from the data source. This function accepts a
 	 * string query or an abstract query object. It also takes arguments to
 	 * substitute into the query.

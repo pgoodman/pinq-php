@@ -5,9 +5,19 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * A data record.
+ * Interface for a record.
  */
-abstract class Record extends Dictionary {
+interface Record extends ArrayAccess {
+	public function isSaved();
+	public function isDeleted();
+	public function save();
+	public function delete();
+}
+
+/**
+ * A data record, this implements the generic things every record needs.
+ */
+abstract class AbstractRecord extends Dictionary implements Record {
 	
 	protected $is_saved = FALSE,
 	          $is_deleted = FALSE;
@@ -44,9 +54,9 @@ abstract class Record extends Dictionary {
 }
 
 /**
- * A record holding a record.
+ * A record holding a record. This allows stacking of records.
  */
-abstract class OuterRecord extends Record {
+abstract class OuterRecord implements Record {
 	
 	// and instance of a Record class
 	protected $record;
@@ -68,7 +78,9 @@ abstract class OuterRecord extends Record {
 	/**
 	 * Record methods.
 	 */
-	public function offsetGet($key) { return $this->record->offsetGet($key); }
+	public function offsetGet($key) { 
+		return $this->record->offsetGet($key); 
+	}
 	public function offsetSet($key, $val) { 
 		return $this->record->offsetSet($key, $val); 
 	}
