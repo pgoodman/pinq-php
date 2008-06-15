@@ -43,7 +43,9 @@ class IndexController extends PinqController {
         // iterate over the jobs and output html for them. this would
         // eventually be moved to some sort of view
         foreach($jobs as $job) {
-			
+	
+			print_r($job); exit;
+	
             outln(
                 '<h3>'. $job['Title'] .'</h3>',
                 '<hr />',
