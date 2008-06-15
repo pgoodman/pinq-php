@@ -145,6 +145,11 @@ class DatabaseQuery extends ConcreteQuery {
 		
 		$sql = '';
 		
+		// no predicates (or there is just a WHERE)
+		if(count($predicates) < 2)
+			return $sql;
+		
+		// go over each predicate an translate to SQL
 		foreach($predicates as $predicate) {
 		
 			list($type, $value) = $predicate;
@@ -433,8 +438,7 @@ class DatabaseQuery extends ConcreteQuery {
 				
 		// add in the predicates, note that we use empty() here instead of
 		// $has_predicates.
-		if(!empty($predicates))
-			$sql .= self::rebuildPredicates($query, $models);
+		$sql .= self::rebuildPredicates($query, $models);
 		
 		// cache the query
 		self::cacheQuery($query, $sql);
