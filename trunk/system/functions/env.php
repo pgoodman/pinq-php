@@ -48,7 +48,7 @@ function get_env($var) {
 		
 	} else if($var == 'PHP_SELF') {
 		// php bug #42523
-		if(PINQ_IN_ISS && version_compare(PHP_VERSION, '5.2.4') <= 0) {
+		if(PINQ_IN_IIS && version_compare(PHP_VERSION, '5.2.4') <= 0) {
 			$len = strlen($val);
 			if(substr($val, 0, $len) == substr($val, $len))
 				return substr($val, 0, $len);
@@ -113,7 +113,7 @@ function get_script_filename() {
 	
 	// cakephp ticket #2683, this could be problematic as php5 on apache no
 	// longer uses PATH_TRANSLATED
-	if(PINQ_IN_ISS)
+	if(PINQ_IN_IIS)
 		return str_replace('\\\\', '\\', get_env('PATH_TRANSLATED'));
 	
 	return get_env('SCRIPT_FILENAME');
