@@ -84,6 +84,10 @@ class DatabaseQuery extends ConcreteQuery {
 				// it in a way that conflicts with a field from another table
 				// in this query. Change the alias and we'll work it out
 				// later.
+				//
+				// TODO: it might be a better solution to flat out prefix
+				//       every column so that processing of the records is
+				//       simpler and there are guaranteed to be no conflicts
 				if(isset($conflicts[$alias]))
 					$alias = "{$model_name}_{$alias}";
 				

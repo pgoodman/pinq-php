@@ -23,7 +23,8 @@ class IndexController extends PinqController {
             from('content')->select(ALL)->link('jp', 'content')->
 
             // link tags to job postings with an implicit through join
-            from('tags')->link('jp', 'tags')->where->tags('Name')->eq(_),
+            from('tags')->link('jp', 'tags')->where->tags('Name')->eq(_)->
+			limit(5),
 
             // substitute into the query for the tag name
             array($tag_name)
