@@ -146,6 +146,8 @@ abstract class AbstractQuery extends Stack {
 	protected function addTo(array &$array, $ds_alias, array $items) {
 		foreach($items as $alias => $item) {
 			
+			// if an integer-keyed array was passed in then set the default
+			// mapping to be (item name -> item name)
 			if(!is_string($alias))
 				$alias = (string)$item;
 			
@@ -164,6 +166,11 @@ abstract class AbstractQuery extends Stack {
 	 */
 	public function addItemsToFind(array $items = array()) {
 		$alias = $this->top();
+		
+		// so that we can pass an associative array of mappings in
+		if(count($items) === 1 && is_array($items[0]))
+			$items = $items[0];
+		
 		$this->addTo($this->items, $alias, $items);
 	}
 	
@@ -253,33 +260,36 @@ class AbstractQueryLanguage extends AbstractQuery {
 		parent::__construct();
 	}
 	
+	protected function &getAbstractPredicates() {
+		// if we're only working with one source then it makes more sense
+		// to work with less clunk operators
+		$class = 'AbstractPredicates';
+		if(count($this->sources) === 1) {
+			
+			// should we add in an implicit select(ALL) to the source?
+			// this is to make short queries more accessible.
+			$alias = $this->top();
+			if(empty($this->items[$alias]))
+				$this->select(ALL);
+			
+			$class = 'AbstractSingleSourcePredicates';
+		}
+		
+		// reference into the predicates array and return
+		$predicates = new $class();
+		$predicates->setQuery($this);
+		
+		return $predicates;
+	}
+	
 	/**
 	 * Parse variable requests, these are usually operators.
 	 */
 	public function __get($op) {
 		//$this->parseOperator($op);
 		
-		if(strtolower($op) === 'where') {
-
-			// if we're only working with one source then it makes more sense
-			// to work with less clunk operators
-			$class = 'AbstractPredicates';
-			if(count($this->sources) === 1) {
-				
-				// should we add in an implicit select(ALL) to the source?
-				// this is to make short queries more accessible.
-				$alias = $this->top();
-				if(empty($this->items[$alias]))
-					$this->select(ALL);
-				
-				$class = 'AbstractSingleSourcePredicates';
-			}
-			
-			// reference into the predicates array and return
-			$predicates = new $class($this);
-			$predicates->addOperator(AbstractPredicates::WHERE);
-			return $predicates;
-		}
+		if(strtolower($op) === 'where')
+			return $this->getAbstractPredicates();
 
 		return $this;
 	}
@@ -332,12 +342,9 @@ class AbstractQueryLanguage extends AbstractQuery {
 				$this->addCount($args);
 				break;
 
-			// split by underscores and build up the operator
-			default:
-				
-				
-
-				break;
+			// where clause
+			case 'where';
+				return $this->getAbstractPredicates();
 		}
 		
 		return $this;

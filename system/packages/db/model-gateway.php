@@ -4,11 +4,11 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-class DatabaseRecordGateway extends RecordGateway {
+class DatabaseModelGateway extends ModelGateway {
 	
 	/**
 	 * Compile a specific type of query given an abstract query and the query
-	 * type.
+	 * type. Ugh, same as DatabaseRecordGateway::compileQuery.
 	 */
 	protected function compileQuery(AbstractQuery $query, $type) {
 		
@@ -20,9 +20,9 @@ class DatabaseRecordGateway extends RecordGateway {
 	}
 	
 	/**
-	 * Get a specific model gateway.
+	 * Get a new instance of this class.
 	 */
-	protected function getModelGateway() {
-		return new DatabaseModelGateway($this->ds, $this->models);
+	public function getModelGateway() {
+		return new self($this->ds, $this->models);
 	}
 }

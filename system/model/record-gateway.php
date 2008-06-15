@@ -14,6 +14,14 @@ abstract class RecordGateway {
 	protected $ds,
 	          $models;
 	
+	// quick links to concrete-query's methods
+	protected static $types = array(
+		ConcreteQuery::SELECT => 'compileSelect',
+		ConcreteQuery::INSERT => 'compileInsert',
+		ConcreteQuery::UPDATE => 'compileUpdate',
+		ConcreteQuery::DELETE => 'compileDelete',
+	);
+	
 	/**
 	 * Constructor, bring in the data source.
 	 */
@@ -26,8 +34,52 @@ abstract class RecordGateway {
 	 * Destructor.
 	 */
 	public function __destruct() {
-		unset($this->ds);
+		unset($this->ds, $this->models);
 	}
+	
+	/**
+	 * Given a model name, return a model gateway instance. Using this
+	 * function selects all fields from the model.
+	 */
+	public function __get($model) {
+		return $this->__call($model, array(ALL));
+	}
+	
+	/**
+	 * Given a model name, return a model gateway that contains an abstract
+	 * query that selects all fields in the $args array. This makes it
+	 * possible to do $ds->model_name('fields', 'to', 'select').
+	 */
+	public function __call($model, array $select = array()) {
+		// return the model gateway
+		if(isset($this->models[$model])) {
+			$gateway = $this->getModelGateway();
+			
+			// build a query for the model
+			$query = from($model);
+
+			// apply the select fields
+			call_user_func_array(array($query, 'select'), $select);
+			
+			// set the unfinished query to the gateway. note: the gateway
+			// doesn't know anything about the model it's holding. it's only
+			// job is to store a query.
+			$gateway->setPartialQuery($query);
+			
+			return $gateway;
+		}
+		
+		// model that was passed in didn't exist
+		throw new UnexpectedValueException(
+			"A model gateway could not be established to the non-existant ".
+			"model [{$model}]."
+		);
+	}
+	
+	/**
+	 * Return a new instance of a model gateway.
+	 */
+	abstract protected function getModelGateway();
 	
 	/**
 	 * Compile a query for a specific data source.
@@ -59,8 +111,13 @@ abstract class RecordGateway {
 	 * into the query.
 	 */
 	public function find($query, array $args = array()) {
-		$query = $this->getQuery($query, ConcreteQuery::SELECT);
-		$result = $this->ds->select($query, $args);
+		
+		// add in a limit to the query
+		if($query instanceof AbstractPredicates)
+			$query->limit(1);
+		
+		// find all results
+		$result = $this->findAll($query, $args);
 		
 		if(count($result) === 0)
 			return NULL;

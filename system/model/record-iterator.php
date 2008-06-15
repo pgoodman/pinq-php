@@ -14,6 +14,9 @@ abstract class RecordIterator implements Countable, SeekableIterator {
 	          $limit,
 	          $key;
 	
+	/**
+	 * Constructor, set the offset and count.
+	 */
 	public function __construct() {
 		$this->key = $this->offset;
 		$this->limit = $this->count();

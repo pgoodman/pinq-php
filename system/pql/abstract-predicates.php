@@ -4,6 +4,13 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+if(!function_exists('where')) {
+	function &where() {
+		$predicates = new AbstractSingleSourcePredicates;		
+		return $predicates;
+	}
+}
+
 /**
  * Build up a list of predicates to use in an abstract query.
  * @author Peter Goodman
@@ -58,9 +65,7 @@ class AbstractPredicates {
 	/**
 	 * Constructor, bring in a reference to the query's sources array.
 	 */
-	public function __construct(AbstractQuery $query) {
-		
-		$this->query = &$query;
+	public function __construct() {
 		
 		// a list of basic operators. note: operators can also be concatenated
 		// with underscores through __get and __call
@@ -109,6 +114,9 @@ class AbstractPredicates {
 				self::LOG_NOT | self::LOG_GT | self::LOG_EQ => self::LOG_LT,
 			);
 		}
+		
+		// add in the where operator
+		$this->addOperator(self::WHERE);
 	}
 	
 	/**
@@ -124,13 +132,11 @@ class AbstractPredicates {
 	 */
 	protected function parseOperator($op) {
 
-		$ops = explode('_', $op);
+		$ops = explode('_', strtolower($op));
 		$operator = 0;
 		
 		// accumulate the operations
 		foreach($ops as $op) {
-			
-			$op = strtolower($op);
 			
 			// operator doesn't exist or is there for semantics alone, skip
 			if(!isset(self::$operator_names[$op]) || $op == 'by')
@@ -186,6 +192,8 @@ class AbstractPredicates {
 	 */
 	public function __call($fn, array $args = array()) {
 		
+		$fn = strtolower($fn);
+		
 		// is this an aliased item?
 		if(isset($this->query->sources[$fn])) {
 			$this->addOperand(
@@ -195,9 +203,10 @@ class AbstractPredicates {
 			
 		// is this an operator+value?
 		} else if($this->parseOperator($fn)) {
+						
 			$this->addOperand(
 				self::VALUE_CONSTANT, 
-				$fn == 'limit' ? $args : $args[0]
+				($fn === 'limit') ? $args : $args[0]
 			);
 		}
 		
@@ -210,6 +219,13 @@ class AbstractPredicates {
 	public function __get($operator) {
 		$this->parseOperator($operator);		
 		return $this;
+	}
+	
+	/**
+	 * Set the AbstractQuery to the predicates object.
+	 */
+	public function setQuery(AbstractQuery $query) {
+		$this->query = &$query;
 	}
 	
 	/**
@@ -240,18 +256,20 @@ class AbstractSingleSourcePredicates extends AbstractPredicates {
 	 */
 	public function __call($op, array $operands = array()) {
 		
-		// in single-source mode, __call requires two arguments (operands)
-		if(count($operands) < 2) {
-			throw new BadFunctionCallException(
-				"Query [{$op}] expected two operands."
-			);
+		// special case for a LIMIT operator which can accept an arbitrary
+		// number of values
+		$op = strtolower($op);
+		
+		if($op == 'limit') {
+			$this->addOperator(self::LIMIT);
+			$this->addOperand(self::VALUE_CONSTANT, $operands);
+		
+		// normal operator
+		} else {
+			$this->addOperand(parent::VALUE_REFERENCE, $operands[0]);
+			$this->parseOperator($op);
+			$this->addOperand(parent::VALUE_CONSTANT, $operands[1]);
 		}
-		
-		list($op_left, $op_right) = $operands;
-		
-		$this->addOperand(parent::VALUE_REFERENCE, $operands[0]);
-		$this->parseOperator($op);
-		$this->addOperand(parent::VALUE_CONSTANT, $operands[1]);
 		
 		return $this;
 	}
