@@ -158,7 +158,7 @@ function pinq($script_file, $app_dir) {
 
 		// other exceptions will be allowed to bubble up
 		} catch(FlushBufferException $e) { }
-
+				
 		// flush the output buffer
 		OutputBuffer::flush();
 

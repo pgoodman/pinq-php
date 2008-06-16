@@ -25,11 +25,15 @@ class DatabaseQuery extends ConcreteQuery {
 		// this is evil.
 		$select[] = "1 AS __pql__";
 
-		// build up the SELECT columns
+		// build up the SELECT columns, including any columns being COUNTed.
 		foreach($query->items as $table => $columns) {
 			
+			// we assume this exists because abstract-query makes it exist
+			// for each model name
+			$counts = &$query->counts[$table];
+			
 			// skip this, we don't care
-			if(empty($columns))
+			if(empty($columns) && empty($counts))
 				continue;
 			
 			// we assume that this exists. if we are being passed the model
@@ -43,17 +47,22 @@ class DatabaseQuery extends ConcreteQuery {
 				);
 			}
 			
+			// figure out the model name, then find the associated model
 			$model_name = $query->aliases[$table];
-			$model = $models[$model_name];
+			$model = &$models[$model_name];
 			
-			// if we're getting all columns from this table then skip this 
-			// loop. This should already be solved by the find conflicting
-			// items, but this added redundancy might not be too bad.
+			// if we're selecting all of the columns from this table then we
+			// will remove the ALL flag an merge the expanded column names
+			// into the query.
 			if(isset($columns[(string)ALL])) {
-				//$select[] = "{$table}.*";
-				//continue;
+				
+				// get rid of this, it is no longer needed
+				unset($columns[(string)ALL]);
+				
+				// get the expanded model fields and merge them into the
+				// select column, preserving any other custom select columns.
 				$temp = array_keys($model->_properties);
-				$columns = array_combine($temp, $temp);
+				$columns = array_merge(array_combine($temp, $temp), $columns);
 			}
 			
 			// this might be evil
@@ -80,38 +89,14 @@ class DatabaseQuery extends ConcreteQuery {
 			// we're getting multiple columns from this table
 			foreach($columns as $alias => $column) {
 				
-				// uh-oh, we are selecting a field from the table and aliasing
-				// it in a way that conflicts with a field from another table
-				// in this query. Change the alias and we'll work it out
-				// later.
-				//
-				// TODO: it might be a better solution to flat out prefix
-				//       every column so that processing of the records is
-				//       simpler and there are guaranteed to be no conflicts
-				//if(isset($conflicts[$alias]))
-				//	$alias = "{$model_name}_{$alias}";
-				
 				// add the select column + its alias to the query
 				$select[] = "{$table}.{$column} AS {$model_name}_{$alias}" ;
 			}
-		}
-		
-		$count_split = FALSE;
-		
-		// build up the COUNT columns
-		foreach($query->counts as $table => $columns) {
 			
-			if(empty($columns))
-				continue;
-				
-			if(!$count_split) {
-				$select[] = "1 AS __count_split";
-				$count_split = TRUE;
-			}
-			
-			// we're getting multiple columns from this table
-			foreach($columns as $alias => $column) {
-				$select[] = "COUNT({$table}.{$column}) AS {$alias}" ;
+			// if we're doing any counting the we need to include these columns
+			// as well
+			foreach($counts as $allias => $column) {
+				$select[] = "COUNT({$table}.{$column}) AS {$model_name}_{$alias}";
 			}
 		}
 		
