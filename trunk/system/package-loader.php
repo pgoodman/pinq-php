@@ -134,13 +134,11 @@ class PackageLoader extends Loader {
 			);
 			
 			// call the packages configuration function.
-			$package = call_user_func_array(
-				array($class, 'configure'), 
-				array(
-					$this, 
-					$this->config, 
-					array_merge($package_info, $context),
-				)
+			$func = new ReflectionMethod($class, 'configure');
+			$package = $func->invoke(
+				$this, 
+				$this->config, 
+				array_merge($package_info, $context),
 			);
 		}
 		
