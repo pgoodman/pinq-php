@@ -11,12 +11,8 @@ class DatabaseRecordGateway extends RecordGateway {
 	 * type.
 	 */
 	protected function compileQuery(AbstractQuery $query, $type) {
-		
-		if(!isset(self::$types[$type]))
-			return '';
-		
-		$func = self::$types[$type];
-		return DatabaseQuery::$func($query, $this->models);
+		$compiler = new DatabaseQuery($query, $this->models);
+		return $compiler->compileByType($type);
 	}
 	
 	/**
