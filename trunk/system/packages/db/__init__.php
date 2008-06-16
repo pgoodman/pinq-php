@@ -52,7 +52,7 @@ class PinqDb implements ConfigurablePackage {
 		if(!isset($info[$argv[0]])) {
 			throw new UnexpectedValueException(
 				"No configuration information exists for the [{$argv[0]}] ".
-				"database. Please check the [package.db.ini.php] file."
+				"database. Please check the [package.db.php] file."
 			);
 		}
 		
@@ -77,7 +77,7 @@ class PinqDb implements ConfigurablePackage {
 		// uh oh, the driver file doesn't exist, error
 		if(!is_dir($layer_dir)) {
 			throw new ConfigurationException(
-				"Error in [package.db.ini.php], database driver [{$driver}] ".
+				"Error in [package.db.php], database driver [{$driver}] ".
 				"does not exist or is not supported."
 			);
 		}

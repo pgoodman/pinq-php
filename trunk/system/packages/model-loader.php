@@ -22,7 +22,9 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 	}
 	
 	/**
-	 * Load a model file and store its models.
+	 * Load a model file and store its models. Models are location in the
+	 * application directory under /models/package/$key, where package would
+	 * be, for example: db or xml, or whatever.
 	 */
 	public function &load($key, array $context = array()) {
 		$ret = NULL;

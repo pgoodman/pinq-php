@@ -4,25 +4,27 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-class StackException extends Exception { }
-class QueueException extends Exception { }
-class ParserException extends Exception { }
-class PrinterException extends Exception { }
-class HandlerException extends Exception { }
-class ImmutableException extends Exception { }
-class CompositionException extends Exception { }
-class InvalidStateException extends Exception { }
-class ModelException extends Exception { }
-class InvalidPackageException extends Exception { }
-class FlushBufferException extends Exception { }
-class ConfigurationException extends Exception { }
+class PinqException extends Exception { }
 
-class HttpRequestException extends Exception {
+class StackException extends PinqException { }
+class QueueException extends PinqException { }
+class ParserException extends PinqException { }
+class PrinterException extends PinqException { }
+class HandlerException extends PinqException { }
+class ImmutableException extends PinqException { }
+class CompositionException extends PinqException { }
+class InvalidStateException extends PinqException { }
+class ModelException extends PinqException { }
+class InvalidPackageException extends PinqException { }
+class FlushBufferException extends PinqException { }
+class ConfigurationException extends PinqException { }
+
+class HttpRequestException extends PinqException {
 	public function __construct($code, $message) {
 		parent::__construct();
 		
 	}
 }
 
-class HttpRedirectException extends Exception { }
+class HttpRedirectException extends PinqException { }
 
