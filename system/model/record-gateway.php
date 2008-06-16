@@ -56,10 +56,7 @@ abstract class RecordGateway {
 			$gateway = $this->getModelGateway();
 			
 			// build a query for the model
-			$query = from($model);
-
-			// apply the select fields
-			call_user_func_array(array($query, 'select'), $select);
+			$query = from($model)->select($select);
 			
 			// set the unfinished query to the gateway. note: the gateway
 			// doesn't know anything about the model it's holding. it's only
@@ -101,7 +98,7 @@ abstract class RecordGateway {
 		// to compile it.
 		if($query instanceof AbstractQuery)
 			$query = $this->compileQuery($query, $type);
-		
+				
 		return (string)$query;
 	}
 	

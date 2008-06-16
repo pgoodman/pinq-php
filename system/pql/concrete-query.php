@@ -193,7 +193,7 @@ abstract class ConcreteQuery {
 	 * In the query we might be selecting from more than one model. That can
 	 * be problematic, especially if there are items in the models that are
 	 * also in other models. Thus we want to be able to find those conflicts
-	 * and hopefully account for them gracefully. THis function does not
+	 * and hopefully account for them gracefully. This function does not
 	 * attempt to solve conflicts for count queries.
 	 */
 	static protected function findConflictingItems(AbstractQuery $query, 
