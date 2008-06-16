@@ -14,14 +14,6 @@ abstract class RecordGateway {
 	protected $ds,
 	          $models;
 	
-	// quick links to concrete-query's methods
-	protected static $types = array(
-		ConcreteQuery::SELECT => 'compileSelect',
-		ConcreteQuery::INSERT => 'compileInsert',
-		ConcreteQuery::UPDATE => 'compileUpdate',
-		ConcreteQuery::DELETE => 'compileDelete',
-	);
-	
 	/**
 	 * Constructor, bring in the data source.
 	 */
@@ -96,8 +88,18 @@ abstract class RecordGateway {
 		
 		// if we were given or derived an abstract query object then we need
 		// to compile it.
-		if($query instanceof AbstractQuery)
-			$query = $this->compileQuery($query, $type);
+		if($query instanceof AbstractQuery) {
+			
+			// the query has already been compiled and cached, use it
+			if(NULL !== ($cached = ConcreteQuery::getCachedQuery($query)))
+				return $cached;
+			
+			// nope, we need to compile the query
+			$stmt = $this->compileQuery($query, $type);
+			ConcreteQuery::cacheQuery($query, $stmt);
+			
+			$query = $stmt;
+		}
 				
 		return (string)$query;
 	}

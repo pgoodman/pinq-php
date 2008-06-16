@@ -55,8 +55,15 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			'key'
 		));
 				
-		// store a new instance of the route parser class as a package
-		return new $class($controller_dir, $file_extension);
+		// get the router. this could be this class or an extending class,
+		// hence the new $class
+		$router =  new $class($controller_dir, $file_extension);
+		
+		// load the router configuration file, and pass it the router as
+		// context
+		$config->load('package.route-parser', array('routes' => &$router));
+		
+		return $router;
 	}
 
 	/**

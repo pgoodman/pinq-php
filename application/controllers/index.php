@@ -29,17 +29,6 @@ class IndexController extends PinqController {
             // substitute into the query for the tag name
             array($tag_name)
         );
-	    
-        // go into the model gateway with a partial query for the job postings
-        // model. The $db->job_postings is equivalent to the abstract query:
-        // from('job_postings')->select(ALL)
-        // put in the wrapper of a model-gateway
-        /*$featured = $db->job_postings->findBy('Id', 1);
-        
-        echo '<pre>';
-        print_r($featured);
-        echo '</pre>';
-		*/
 		
         // iterate over the jobs and output html for them. this would
         // eventually be moved to some sort of view

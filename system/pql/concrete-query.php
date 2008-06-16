@@ -19,10 +19,23 @@ abstract class ConcreteQuery {
 	
 	static protected $cache = array();
 	
+	// the query and models
+	protected $query,
+	          $models;
+	
+	/**
+	 * Constructor, bring in the query and models.
+	 */
+	public function __construct(AbstractQuery $query, Dictionary $models) {
+		$this->query = $query;
+		$this->models = $models;
+	}
+	
 	/**
 	 * See if a compiled query is already in the cache.
+	 * @internal
 	 */
-	static protected function getCachedQuery(AbstractQuery $query) {
+	static public function getCachedQuery(AbstractQuery $query) {
 		if(isset(self::$cache[$query->id]))
 			return self::$cache[$query->id];
 		
@@ -30,9 +43,11 @@ abstract class ConcreteQuery {
 	}
 	
 	/**
-	 * Cache a compiled query.
+	 * Cache a compiled query. $stmt is expected to be a string statement or
+	 * an array of string statements.
+	 * @internal
 	 */
-	static protected function cacheQuery(AbstractQuery $query, $stmt) {
+	static public function cacheQuery(AbstractQuery $query, $stmt) {
 		self::$cache[$query->id] = $stmt;
 	}
 	
@@ -42,12 +57,13 @@ abstract class ConcreteQuery {
 	 * order.
 	 * @internal
 	 */
-	static protected function getDependencyGraph(AbstractQuery $query, 
-		                                         Dictionary $models) {
+	protected function getDependencyGraph() {
 		
-		// the table of relations established through the query
-		$relations = $query->relations;
-		$aliases = &$query->aliases;
+		// the table of relations established through the query. we actually
+		// use a copy of the relations because later on it will be modified
+		// and added to (for through relations).
+		$relations = $this->query->relations;
+		$aliases = &$this->query->aliases;
 		
 		// to quickly access deeper areas in the graph, we will store
 		// references to each place where these nodes show up in the graph
@@ -80,7 +96,7 @@ abstract class ConcreteQuery {
 				$path = AbstractRelation::findPath(
 					$aliases[$left], 
 					$aliases[$right], 
-					$models
+					$this->models
 				);
 				
 				// path will have no less than 2 arrays in it
@@ -190,76 +206,29 @@ abstract class ConcreteQuery {
 	}
 	
 	/**
-	 * In the query we might be selecting from more than one model. That can
-	 * be problematic, especially if there are items in the models that are
-	 * also in other models. Thus we want to be able to find those conflicts
-	 * and hopefully account for them gracefully. This function does not
-	 * attempt to solve conflicts for count queries.
+	 * Compile a certain type of query.
 	 */
-	static protected function findConflictingItems(AbstractQuery $query, 
-		                                           Dictionary $models) {
-		
-		$items = $query->items;
-		
-		// by default there are no conflicts
-		$conflicts = array();
-				
-		// pre-processing:
-		// there need to be at least two non-empty sets of items for there to
-		// be conflicts. Go through the items and remove the ones that are
-		// empty, also, fill in the ones that are selecting all items.
-		foreach($items as $key => $set) {
+	public function compileByType($type) {
+		switch($type) {
+			case self::SELECT:
+				return $this->compileSelect();
 			
-			// no fields are being selected
-			if(empty($set))
-				unset($items[$key]);
+			case self::UPDATE:
+				return $this->compileUpdate();
 			
-			// all fields are being selected
-			else if(isset($set[(string)ALL])) {
-				$name = $query->aliases[$key];
-				
-				$items[$key] = array_flip(
-					array_keys($models[$name]->_properties)
-				);
-			}
+			case self::INSERT:
+				return $this->compileInsert();
+			
+			case self::DELETE:
+				return $this->compileDelete();
 		}
-				
-		// processing:
-		// find the conflicting fields through repeated array intersection.
-		// this is unfortunately very inefficient for a large number of models
-		// being selected from. Why does this need to be repeated? Well, we
-		// can't just find conflicts for the first model against all the other
-		// models, we need to find the conflicts between each model against
-		// all the other models. A semi short-cut is taken using the array_
-		// shift and merge that (todo) should be tested. We assume all prior
-		// conflicts have been found.
-		$items = array_values($items);
-		while(count($items) > 1) {
-			$conflicts = array_merge(
-				$conflicts,
-				call_user_func_array('array_intersect_key', $items)
-			);
-			array_shift($items);
-		}
-		
-		// and array of conflict keys
-		return $conflicts;
 	}
 	
 	/**
-	 * Compile the abstract query into something concrete. Apparently static
-	 * functions can't be abstract.
+	 * Compile the abstract query into something concrete.
 	 */
-	static public function compileSelect(AbstractQuery $query, Dictionary $models) {
-		assert(FALSE);
-	}
-	static public function compileUpdate(AbstractQuery $query, Dictionary $models) {
-		assert(FALSE);
-	}
-	static public function compileInsert(AbstractQuery $query, Dictionary $models) {
-		assert(FALSE);
-	}
-	static public function compileDelete(AbstractQuery $query, Dictionary $models) {
-		assert(FALSE);
-	}
+	abstract protected function compileSelect();
+	abstract protected function compileUpdate();        
+	abstract protected function compileInsert();   
+	abstract protected function compileDelete();
 }

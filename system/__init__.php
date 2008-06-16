@@ -115,12 +115,6 @@ function pinq($script_file, $app_dir) {
 			'controller_dir' => DIR_APPLICATION .'/controllers/',
 			'file_extension' => EXT,
 		));
-
-		// load the router configuration file, and pass it the router as 
-		// context
-		$config->load('routes', array(
-			'routes' => &$router
-		));
 				
 		// parse the URI, if it can't be parsed a 404 error will occur.
 		if(!$router->parse(get_route()))

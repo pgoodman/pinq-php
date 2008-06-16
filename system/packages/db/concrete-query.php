@@ -15,14 +15,12 @@ class DatabaseQuery extends ConcreteQuery {
 	 * Build up the select fields.
 	 * @internal
 	 */
-	static protected function buildSelectFields(AbstractQuery $query,
-		                                        Dictionary $models) {
+	protected function buildSelectFields() {
 		
+		$query = &$this->query;
 		$select = array();
-		//$conflicts = self::findConflictingItems($query, $models);
-
-		// a signal that the ORM is being used as opposed to traditional SQL
-		// this is evil.
+		
+		// a signal that the PQL is being used as opposed to traditional SQL
 		$select[] = "1 AS __pql__";
 
 		// build up the SELECT columns, including any columns being COUNTed.
@@ -39,17 +37,12 @@ class DatabaseQuery extends ConcreteQuery {
 			// we assume that this exists. if we are being passed the model
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
-			if(!isset($query->aliases[$table])) {
-				$table = self::resolveReference(
-					$table, 
-					$query->aliases, 
-					$models
-				);
-			}
+			if(!isset($query->aliases[$table]))
+				$table = $this->resolveReference($table);
 			
 			// figure out the model name, then find the associated model
 			$model_name = $query->aliases[$table];
-			$model = &$models[$model_name];
+			$model = &$this->models[$model_name];
 			
 			// if we're selecting all of the columns from this table then we
 			// will remove the ALL flag an merge the expanded column names
@@ -109,19 +102,18 @@ class DatabaseQuery extends ConcreteQuery {
 	 * the joins recursively.
 	 * @internal
 	 */
-	static protected function recursiveJoin(array &$aliases = array(), 
-		                                    Dictionary &$models, 
-		                                    $right, 
-									        array &$graph = array(), 
-									        $prefix = 'INNER JOIN') {
+	protected function recursiveJoin($right, array &$graph = array(), $prefix) {
 		$sql = "";
 		$comma = "";
+		
+		$models = &$this->models;
+		$aliases = &$this->query->aliases;
 		
 		foreach($graph as $left => $rights) {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
-			$name = self::resolveReference($left, $aliases, $models);
+			$name = $this->resolveReference($left);
 			
 			if($name == $left)
 				$name = '';
@@ -132,11 +124,10 @@ class DatabaseQuery extends ConcreteQuery {
 			// recursively do the joins
 			if(!empty($rights)) {
 				
-				$joins = self::recursiveJoin(
-					$aliases, 
-					$models, 
+				$joins = $this->recursiveJoin(
 					$left, 
-					$rights
+					$rights,
+					'INNER JOIN'
 				);
 				
 				$sql .= "({$name} {$left} {$joins})";
@@ -179,21 +170,19 @@ class DatabaseQuery extends ConcreteQuery {
 	 * admit that this is just such an ugly function. I dislike it.
 	 * @internal
 	 */
-	static public function rebuildPredicates(AbstractQuery $query,
-		                                     Dictionary $models) {
+	public function rebuildPredicates() {
 			
-		$predicates = $query->predicates;
-		$aliases = $query->aliases;
-		$sources = $query->sources;
-		
+		// model aliases in the query
+		$query = &$this->query;
+		$aliases = &$query->aliases;
 		$sql = '';
 		
 		// no predicates (or there is just a WHERE)
-		if(count($predicates) < 2)
+		if(count($query->predicates) < 2)
 			return $sql;
 		
 		// go over each predicate an translate to SQL
-		foreach($predicates as $predicate) {
+		foreach($query->predicates as $predicate) {
 		
 			list($type, $value) = $predicate;
 		
@@ -272,8 +261,9 @@ class DatabaseQuery extends ConcreteQuery {
 					
 					// resolve the proper table / alias
 					$ref = $value[0];
+					
 					if(!isset($aliases[$ref]))
-						$ref = self::resolveReference($value[0], $aliases, $models);
+						$ref = $this->resolveReference($value[0]);
 					
 					
 					$sql .= " {$ref}.{$value[1]}";
@@ -293,10 +283,10 @@ class DatabaseQuery extends ConcreteQuery {
 					
 					} else
 						
-						// although we *could* determing the type that this
+						// although we *could* determine the type that this
 						// value should follow, I'm not going to (for now)
-						$sql .= $value === _ ? ' ?' 
-						        : " '". htmlentities($value, ENT_QUOTES) ."'";
+						$sql .= $value === _ ? ' ?' : " '". 
+						        htmlentities($value, ENT_QUOTES) ."'";
 				}
 			}
 		}
@@ -308,8 +298,10 @@ class DatabaseQuery extends ConcreteQuery {
 	 * Figure out if we can take an SQL table name.
 	 * @internal
 	 */
-	static protected function resolveReference($ref, array $aliases, 
-		                                       Dictionary $models) {
+	protected function resolveReference($ref) {
+		
+		$aliases = &$this->query->aliases;
+		$models = &$this->models;
 		
 		// we have been given a model alias which is not the model name		
 		if(isset($aliases[$ref]) && ($a = $aliases[$ref]) != $ref) {
@@ -328,34 +320,20 @@ class DatabaseQuery extends ConcreteQuery {
 	/**
 	 * Compile and abstract query into a SQL SELECT statement.
 	 */
-	static public function compileSelect(AbstractQuery $query, 
-		                                 Dictionary $models) {
-		
-		// we've cached this query, nice.
-		if(NULL !== ($cached = self::getCachedQuery($query)))
-			return $cached;
+	protected function compileSelect() {
 		
 		// add in what we want to select
-		$sql = 'SELECT '. self::buildSelectFields($query, $models);
+		$sql = 'SELECT '. $this->buildSelectFields();
 		
 		// add in the tables to get data from and build up the join statements
 		// (if any)
-		$graph = self::getDependencyGraph($query, $models);
-		if(!empty($graph)) {
-			$sql .= ' FROM '. self::recursiveJoin(
-				$query->aliases,
-				$models,
-				NULL, 
-				$graph, 
-				''
-			);
-		}
+		$graph = $this->getDependencyGraph();
+		
+		if(!empty($graph))
+			$sql .= ' FROM '. $this->recursiveJoin(NULL, $graph, '');
 		
 		// add in the predictes
-		$sql .= self::rebuildPredicates($query, $models);
-		
-		// cache the query
-		self::cacheQuery($query, $sql);
+		$sql .= $this->rebuildPredicates();
 		
 		// add in the predicates and return
 		return $sql;
@@ -364,13 +342,10 @@ class DatabaseQuery extends ConcreteQuery {
 	/**
 	 * Compile a query that works for both UPDATES and DELETES.
 	 */
-	static protected function compileModify(AbstractQuery $query, 
-		                                    Dictionary $models, $prefix,
-		                                    $set = TRUE) {
+	protected function compileModify($prefix, $set = TRUE) {
 		
-		// we've cached this query, nice.
-		if(NULL !== ($cached = self::getCachedQuery($query)))
-			return $cached;
+		$query = &$this->query;
+		$models = &$this->models;
 		
 		// query isn't cached, build up the sql then cache it.
 		$sql = "{$prefix} ";
@@ -392,10 +367,9 @@ class DatabaseQuery extends ConcreteQuery {
 			foreach($query->values as $alias => $fields) {
 			
 				foreach($fields as $column => $value) {
-					$sql .= "{$comma} {$alias}.{$column}=". $models[$alias]->castValue(
-						$column, 
-						$value
-					);
+					
+					$sql .= "{$comma} {$alias}.{$column}=";
+					$sql .= $models[$alias]->castValue($column, $value);
 					$comma = ',';
 				}
 			}
@@ -403,9 +377,7 @@ class DatabaseQuery extends ConcreteQuery {
 		
 		// note it's not by reference!! why? well if we use the same query
 		// for multiple things (inser/update/delete) and pass it around, then
-		// each time it will grow the predicates and a useless way, so we
-		// want to work with a copy of the predicates array (which complicates
-		// some things)
+		// each time it will grow the predicates and a useless way.
 		$predicates = $query->predicates;
 				
 		// find what value we're pivoting on. unfortunately this doesn't do
@@ -413,6 +385,7 @@ class DatabaseQuery extends ConcreteQuery {
 		// be pivots, but whatever.
 		$pivots = array();
 		foreach($predicates as $predicate) {
+			
 			list($type, $value) = $predicate;
 			
 			if($type & AbstractPredicates::VALUE_REFERENCE)
@@ -485,10 +458,7 @@ class DatabaseQuery extends ConcreteQuery {
 				
 		// add in the predicates, note that we use empty() here instead of
 		// $has_predicates.
-		$sql .= self::rebuildPredicates($query, $models);
-		
-		// cache the query
-		self::cacheQuery($query, $sql);
+		$sql .= $this->rebuildPredicates();
 		
 		// add in the predicates and return
 		return $sql;
@@ -499,20 +469,17 @@ class DatabaseQuery extends ConcreteQuery {
 	 * ignores any relations made in the query and so it will not satisfy
 	 * those in any way.
 	 */
-	static public function compileInsert(AbstractQuery $query, Dictionary $models) {
-		
-		// we've cached this query, nice.
-		if(NULL !== ($cached = self::getCachedQuery($query)))
-			return $cached;
+	protected function compileInsert() {
 		
 		// query isn't cached, build up the query
 		$queries = array();
-		$values = &$query->values;
+		$values = &$this->query->values;
+		$models = &$this->models;
 		
 		// unlike with UPDATE, we can't INSERT into multiple tables at the
 		// same time, but it doesn't mean that we can't chain several insert
 		// queries together.
-		foreach($query->sources as $alias => $name) {
+		foreach($this->query->sources as $alias => $name) {
 			
 			$sql = "INSERT INTO {$name}";
 			$comma = '';
@@ -542,33 +509,20 @@ class DatabaseQuery extends ConcreteQuery {
 		if(count($queries) == 1)
 			$queries = $queries[0];
 		
-		// cache the query
-		self::cacheQuery($query, $queries);
-		
 		return $queries;
 	}
 	
 	/**
 	 * Compile an UPDATE query.
 	 */
-	static public function compileUpdate(AbstractQuery $query, Dictionary $models) {
-		return self::compileModify(
-			$query,
-			$models,
-			'UPDATE',
-			TRUE
-		);
+	protected function compileUpdate() {
+		return $this->compileModify('UPDATE', TRUE);
 	}
 	
 	/**
 	 * Compile a DELETE query.
 	 */
-	static public function compileDelete(AbstractQuery $query, Dictionary $models) {
-		return self::compileModify(
-			$query,
-			$models,
-			'DELETE FROM',
-			FALSE
-		);
+	protected function compileDelete() {
+		return $this->compileModify('DELETE FROM', FALSE);
 	}
 }
