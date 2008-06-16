@@ -52,30 +52,35 @@ class PackageLoader extends Loader {
 		$class = '';
 		
 		do {
-			
-			$base_dir = array_shift($search_where) .'/packages/';
+			$folder = array_shift($search_where);
+			$base_dir = '/packages/';
 			$prefix = array_shift($class_prefixes);
 			$path = explode('.', $key);
 			
+			// this seems redundant, but the separation of $folder and $base_
+			// dir is actually useful for later if we want to include a system
+			// directory
+			$abs_dir = $folder . $base_dir;
+			
 			// go as deep as we can into the directory structure based on the
 			// path to the package given
-			while(!empty($path) && is_dir($base_dir .'/'. $path[0])) {
+			while(!empty($path) && is_dir($abs_dir .'/'. $path[0])) {
 				$part = array_shift($path);
-				$base_dir .= '/'. $part;
 				$class .= "_{$part}";
+				
+				$base_dir .= '/'. $part;
+				$abs_dir .= '/'. $part;
 			}
-			
-			//$class = $prefix . class_name($path[0]);
-			
+						
 			// see if we can configure a multi-file package using an
 			// __init__ file
-			if(file_exists($base_dir .'/__init__.php')) {
+			if(file_exists($abs_dir .'/__init__.php')) {
 				$package_file = $base_dir .'/__init__.php';
 				break;
 			
 			// the package wasn't spread across multiple files, is it a
 			// single file package?
-			} else if(!empty($path) && file_exists($base_dir ."/{$path[0]}.php")) {
+			} else if(!empty($path) && file_exists($abs_dir ."/{$path[0]}.php")) {
 				$package_file = $base_dir ."/{$path[0]}.php";
 				$class .= "_{$path[0]}";
 				break;
@@ -83,12 +88,22 @@ class PackageLoader extends Loader {
 		
 		} while(!empty($search_where));
 		
+		// we might have included a package in the applications dir. it might
+		// be dependent on the package of the same name from inside the system
+		// dir, so we will include it but not configure/instantiate it.
+		if(!empty($search_where)) {
+			$sys_file = array_shift($search_where) . $package_file;
+			if(file_exists($sys_file))
+				require_once $sys_file;
+		}
+		
 		// the final class name. this will be an amalgamation of the
 		// subdirectories along the path to the package, and if the package is
 		// in a single file, then it will also include the file name.
 		$class = $prefix . class_name($class);
 				
 		// the package has no config file
+		
 		if(NULL === $package_file) {
 			throw new InvalidPackageException(
 				"Unable to load the package [{$key}]. Please make sure that ".
@@ -100,7 +115,7 @@ class PackageLoader extends Loader {
 		// bring in the file that will configure itself. what's nice about
 		// this way of doing things is that no naming schemes are imposed on
 		// the programmer
-		require_once $package_file; // include
+		require_once $folder . $package_file; // include
 		
 		// if the package configures itself it might change this
 		$package = NULL;
