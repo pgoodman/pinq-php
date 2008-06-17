@@ -136,6 +136,7 @@ class PackageLoader extends Loader {
 			// call the packages configuration function.
 			$func = new ReflectionMethod($class, 'configure');
 			$package = $func->invoke(
+				NULL, // because it's static
 				$this, 
 				$this->config, 
 				array_merge($package_info, $context)
