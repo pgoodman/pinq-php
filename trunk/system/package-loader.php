@@ -138,7 +138,7 @@ class PackageLoader extends Loader {
 			$package = $func->invoke(
 				$this, 
 				$this->config, 
-				array_merge($package_info, $context),
+				array_merge($package_info, $context)
 			);
 		}
 		
