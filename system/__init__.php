@@ -137,7 +137,7 @@ function pinq($script_file, $app_dir) {
 		// call.
 		if(!is_subclass_of($class, 'PinqController') || !method_exists($class, $method))
 			set_http_status(404);
-
+		
 		// compress any output using zlib. this is done before the method call
 		// as people might be using php's output functions instead of pinq's.
 		if($config['config']['compress_output'])

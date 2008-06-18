@@ -40,15 +40,14 @@ class PinqDb implements ConfigurablePackage {
 		
 		// load the config stuff
 		$info = $config->load('package.db');
-
-		// oh noes, no configuration settings for this database alias exists
-		if($argc === 0) {
-			throw new UnexpectedValueException(
-				"No database name passed to import()."
-			);
-		}
-
+		
+		// take the first db config by default
+		if(!empty($info) && $argc === 0)
+			$argv[0] = current(array_keys($info));
+		
 		// we've been given a database alias but it hasn't been configured
+		// if $argv[0] also doesn't exist then the isset will fail, which is
+		// nice
 		if(!isset($info[$argv[0]])) {
 			throw new UnexpectedValueException(
 				"No configuration information exists for the [{$argv[0]}] ".
