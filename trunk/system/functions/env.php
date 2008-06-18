@@ -112,15 +112,15 @@ function get_user_ip() {
 	
 	// go through the different ip places and try to find the ip
 	while(!empty($ip_places)) {
-		$place = array_shift($ip_places);
-		
-		if(!empty($addr = get_env($place)))
+		$addr = get_env(array_shift($ip_places));
+	
+		if(!empty($addr))
 			$ip = $addr;
 	}
 	
 	// thanks CI for this little nugget
 	if(FALSE !== strpos($ip, ',')) {
-		$ip = end(explode(',', $ip))
+		$ip = end(explode(',', $ip));
 	}
 	
 	if(!preg_match('~^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$~', $ip))
