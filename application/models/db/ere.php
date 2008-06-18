@@ -41,7 +41,8 @@ $model->store('tags', struct('www_Tags')->
                             ->mapTo('content_tags', 'TagId')->
     Name                    ->string(35)->
     
-    relatesTo('content', through('content_tags'))
+    relatesTo('content', through('content_tags'))->
+    relatesTo('job_postings', through('content'))
 );
 
 // users

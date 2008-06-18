@@ -12,10 +12,8 @@ class DatabaseRecord extends AbstractRecord implements Object {
 	
 	// database records always exist insofar as they are only instantiated
 	// through a query method
-	protected $is_saved = TRUE,
-	          $is_deleted = FALSE,
-	          $primary_key,
-	          $models;
+	protected $_is_saved = TRUE,
+	          $_is_deleted = FALSE;
 	
 	// if the PQL was used, some things might be prefixed. Make sure that we
 	// un-prefix them and set things up nicely.
@@ -34,7 +32,7 @@ class DatabaseRecord extends AbstractRecord implements Object {
 			unset($temp['__pql__']);
 			
 			$keys = array_keys($temp);
-			$models = array();
+			$records = array();
 			
 			do {
 				// we know that in a pql query, aside from the __pql__ column
@@ -74,7 +72,8 @@ class DatabaseRecord extends AbstractRecord implements Object {
 				}
 				
 				// store the model
-				$models[$model_name] = new self($model);
+				$records[$model_name] = new self($model);
+				$records[$model_name]->setName($model_name);
 				
 				// this is needed so that the referenced model to the above
 				// dictionary doesn't carry over to the next iteration
@@ -82,9 +81,9 @@ class DatabaseRecord extends AbstractRecord implements Object {
 				
 			} while(!empty($keys));
 			
-			// store the actual data
-			if(count($models) > 1)
-				$this->models = &$models;
+			// store the sub records
+			$this->setName($model_name);
+			$this->setSubRecords($records);
 		}
 		
 		parent::__construct($data);
@@ -99,31 +98,6 @@ class DatabaseRecord extends AbstractRecord implements Object {
 	public function delete() {
 		$this->is_deleted = TRUE;
 		$this->is_saved = FALSE;
-	}
-	
-	/**
-	 * If only one model was selected from then we need to error.
-	 */
-	private function noModelsError() {
-		if(NULL === $this->models) {
-			throw new BadFunctionCallException(
-				"DatabaseRecord's overloaded methods can only be called ".
-				"when more than one database tables were selected from."
-			);
-		}
-	}
-	
-	/**
-	 * Dig into the result tables selected.
-	 */
-	public function __get($key) {
-		$this->noModelsError();
-		
-		if(!isset($this->models[$key]))
-			return NULL;
-		
-		// return the sub-database record
-		return $this->models[$key];
 	}
 	
 	public function __set($key, $val) { }

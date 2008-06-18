@@ -86,6 +86,13 @@ class Queue implements Countable, IteratorAggregate {
 	}
 	
 	/**
+	 * Get the queue as an array.
+	 */
+	public function getArray() {
+		return $this->queue;
+	}
+	
+	/**
 	 * Get an iterator.
 	 */
 	public function getIterator() {

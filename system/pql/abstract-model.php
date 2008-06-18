@@ -257,7 +257,7 @@ class AbstractModel extends Stack {
 	public function relatesTo($alias, array $through = NULL) {
 		
 		// add the relationship
-		$how = !empty($through) ? AbstractRelation::INDIRECT 
+		$how = !empty($through) ? AbstractRelation::INDIRECT
 		                        : AbstractRelation::DIRECT;
 		
 		$this->_relations[$alias] = array($how, $through);
@@ -267,7 +267,16 @@ class AbstractModel extends Stack {
 		// we assume the same type of relationship.
 		if($how & self::RELATE_INDIRECT) {
 			$alias = strtolower($through[0]);
-			$this->_relations[$alias] = array(AbstractRelation::DIRECT, NULL);
+			
+			// the first item in the $through might actually be indirect. if
+			// it's already in the relations then we just won't set it. if it
+			// isn't then we'll assume direct
+			if(!isset($this->_relations[$alias])) {
+				$this->_relations[$alias] = array(
+					AbstractRelation::DIRECT, 
+					NULL
+				);
+			}
 		}
 		
 		return $this;

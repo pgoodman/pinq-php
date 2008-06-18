@@ -19,7 +19,7 @@ if(!function_exists("dict")) {
  * as robust as PHP's ArrayObject class.
  */
 class Dictionary implements ArrayAccess {
-	protected $dict = array();
+	protected $_dict = array();
 	
 	/**
 	 * Constructor, bring in any default values.
@@ -27,52 +27,52 @@ class Dictionary implements ArrayAccess {
 	public function __construct(array &$vals = NULL) {
 		
 		if(!empty($vals))
-			$this->dict = &$vals;
+			$this->_dict = &$vals;
 	}
 	
 	/**
 	 * Destructor, clear the stored values.
 	 */
 	public function __destruct() {
-		unset($this->dict);
+		unset($this->_dict);
 	}
 	
 	/**
 	 * Get a value by its key from the dictionary.
 	 */
 	public function offsetGet($key) {
-		if(!isset($this->dict[$key]))
+		if(!isset($this->_dict[$key]))
 			return NULL;
 		
-		return $this->dict[$key];
+		return $this->_dict[$key];
 	}
 	
 	/**
 	 * Set a value to a specific key in the dictionary.
 	 */
 	public function offsetSet($key, $val) {
-		$this->dict[$key] = $val;
+		$this->_dict[$key] = $val;
 	}
 	
 	/**
 	 * Unset a specific key,value pair in the dictionary.
 	 */
 	public function offsetUnset($key) {
-		unset($this->dict[$key]);
+		unset($this->_dict[$key]);
 	}
 	
 	/**
 	 * Check if an entry in the dictionary exists for a given key.
 	 */
 	public function offsetExists($key) {
-		return isset($this->dict[$key]);
+		return isset($this->_dict[$key]);
 	}
 	
 	/**
 	 * Return the array in the dictionary.
 	 */
 	public function toArray() {
-		return $this->dict;
+		return $this->_dict;
 	}
 }
 

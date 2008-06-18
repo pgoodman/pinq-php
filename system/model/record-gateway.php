@@ -12,7 +12,8 @@ abstract class RecordGateway {
 	
 	// the data source
 	protected $ds,
-	          $models;
+	          $models,
+	          $cached_gateways = array();
 	
 	/**
 	 * Constructor, bring in the data source.
@@ -43,9 +44,19 @@ abstract class RecordGateway {
 	 * possible to do $ds->model_name('fields', 'to', 'select').
 	 */
 	public function __call($model, array $select = array()) {
+		
 		// return the model gateway
 		if(isset($this->models[$model])) {
+			
+			// this isn't exactly dependable. todo: make this dependable
+			$gateway_id = $model . count($select);
+			
+			// return the cached gateway
+			if(isset($this->cached_gateways[$gateway_id]))
+				return $this->cached_gateways[$gateway_id];
+			
 			$gateway = $this->getModelGateway();
+			$gateway->setName($model);
 			
 			// build a query for the model
 			$query = from($model)->select($select);
@@ -55,7 +66,8 @@ abstract class RecordGateway {
 			// job is to store a query.
 			$gateway->setPartialQuery($query);
 			
-			return $gateway;
+			// return and cache the gateway
+			return $this->cached_gateways[$gateway_id] = $gateway;
 		}
 		
 		// model that was passed in didn't exist
@@ -96,11 +108,12 @@ abstract class RecordGateway {
 			
 			// nope, we need to compile the query
 			$stmt = $this->compileQuery($query, $type);
+			
 			ConcreteQuery::cacheQuery($query, $stmt);
 			
 			$query = $stmt;
 		}
-				
+						
 		return (string)$query;
 	}
 	

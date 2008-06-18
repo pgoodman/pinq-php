@@ -43,7 +43,13 @@ if(!function_exists("from")) {
  * @author Peter Goodman
  */
 abstract class AbstractQuery extends Stack {
-		
+	
+	// relation options
+	const PIVOT_LEFT = 1,
+	      PIVOT_RIGHT = 2;
+	
+	static protected $query_id = 0;
+	
 	public $aliases		 = array(), // maps aliases to source names
 		   $sources		 = array(), // the data sources being used
 		   $items		 = array(), // what do we want to find from each 
@@ -52,6 +58,7 @@ abstract class AbstractQuery extends Stack {
 		   $counts		 = array(), // things in the datasources to count
 		   $values		 = array(), // values for a create / delete / update
 		   $relations	 = array(),
+		   $pivots       = array(),
 		   $predicates   = array(), // conditions to be met on the data 
 		   $id;						// returned
 	
@@ -60,19 +67,9 @@ abstract class AbstractQuery extends Stack {
 	 */
 	public function __construct() {
 		
-		// this is for a *page-load specific* compiled query cache. we give
-		// each instance of abstract query a unique id (for this page load!!)
-		// and hope that if the programmer is doing a query in a loop that
-		// they shift the query building out of the loop. If they do this
-		// then compilation will be free after the first iteration. If that's
-		// not the case, compilation is still pretty quick because the first
-		// compilation caches the relations it has found and whatnot :D
-		static $id;
-		if(NULL === $id)
-			$id = -1;
-		
-		// give this abstract query a unique id
-		$this->id = $id++;
+		// give this abstract query a unique id. this is used for query
+		// caching purposes
+		$this->id = self::$query_id++;
 	}
 	
 	/**
@@ -88,8 +85,16 @@ abstract class AbstractQuery extends Stack {
 			$this->counts, 
 			$this->values, 
 			$this->predicates,
-			$this->relations
+			$this->relations,
+			$this->pivots
 		);
+	}
+	
+	/**
+	 * Clone the query. We need to make sure to change the query id.
+	 */
+	public function __clone() {
+		$this->id = self::$query_id++;
 	}
 	
 	/**
@@ -218,7 +223,7 @@ abstract class AbstractQuery extends Stack {
 	 * explicitly defining how the datasources are related. The order of the
 	 * relationships is significant.
 	 */
-	public function addRelationship($a1, $a2) {
+	public function addRelationship($a1, $a2, $options = FALSE) {
 		
 		$a1 = (string)$a1;
 		$a2 = (string)$a2;
@@ -229,6 +234,16 @@ abstract class AbstractQuery extends Stack {
 				$this->relations[$a1] = array();
 			
 			$this->relations[$a1][] = $a2;
+			
+			$pivot = $options & (self::PIVOT_LEFT | self::PIVOT_RIGHT);
+			
+			if($pivot) {
+				if(!isset($this->pivots[$a1]))
+					$this->pivots[$a1] = array();
+				
+				$this->pivots[$a1][$a2] = $pivot;
+			}
+			
 			return TRUE;
 		}
 		return FALSE;
@@ -246,8 +261,8 @@ abstract class AbstractQuery extends Stack {
 	 * right before the query is compiled.
 	 * @internal
 	 */
-	public function setPredicates(array &$predicates) {
-		$this->predicates = &$predicates;
+	public function setPredicates(AbstractPredicates $predicates) {
+		$this->predicates = $predicates->getPredicates();
 	}
 }
 
@@ -266,37 +281,56 @@ class AbstractQueryLanguage extends AbstractQuery {
 		parent::__construct();
 	}
 	
-	protected function &getAbstractPredicates() {
+	protected function &getAbstractPredicates($type) {
+		
 		// if we're only working with one source then it makes more sense
-		// to work with less clunk operators
-		$class = 'AbstractPredicates';
-		if(count($this->sources) === 1) {
-			
-			// should we add in an implicit select(ALL) to the source?
-			// this is to make short queries more accessible.
-			$alias = $this->top();
-			if(empty($this->items[$alias]))
-				$this->select(ALL);
-			
-			$class = 'AbstractSingleSourcePredicates';
-		}
+		// to work with less clunky operators
+		$class = 'Abstract'. (count($this->sources) > 1 ? 'SingleSource' : '') .
+		         'Predicates';
 		
 		// reference into the predicates array and return
-		$predicates = new $class();
-		$predicates->setQuery($this);
+		$predicates = pql_create_predicates($type, $this, $class);
+		$this->setPredicates($predicates);
 		
 		return $predicates;
 	}
 	
 	/**
 	 * Parse variable requests, these are usually operators.
+	 * TODO: refactor
 	 */
 	public function __get($op) {
 		//$this->parseOperator($op);
 		
-		if(strtolower($op) === 'where')
-			return $this->getAbstractPredicates();
+		$op = strtolower($op);
+		
+		$types = array(
+			'where' => AbstractPredicates::WHERE,
+			'group' => AbstractPredicates::GROUP_BY,
+			'order' => AbstractPredicates::ORDER_BY,
+		);
+		
+		if(isset($types[$op]))
+			return $this->getAbstractPredicates($types[$op]);
 
+		return $this;
+	}
+	
+	/**
+	 * Predicates limit function. This is an unfortunate duplication of some
+	 * stuff in abstract-predicates.
+	 * TODO: refactor
+	 */
+	public function limit() {
+		$args = func_get_args();
+		$predicates = pql_create_predicates(
+			AbstractPredicates::LIMIT, 
+			$this,
+			'Abstract'. (count($this->sources) > 1 ? 'SingleSource' : '') .
+			'Predicates'
+		);
+		$predicates->addOperand(AbstractPredicates::VALUE_CONSTANT, $args);
+		
 		return $this;
 	}
 	
@@ -330,19 +364,6 @@ class AbstractQueryLanguage extends AbstractQuery {
 				$this->addValues($args);
 				break;
 			
-			// define a relationship between two or more datasources. it's up
-			// to whatever is taking in the abstract query to decide how to
-			// actually establish that relationship
-			case 'link':
-				
-				if(!isset($args[1]) || !$this->addRelationship($args[0], $args[1]))
-					throw new UnexpectedValueException(
-						"Could not relate data sources [{$args[0]}] and ".
-						"[{$args[1]}]."
-					);
-
-				break;
-			
 			// count some items
 			case 'count':
 				$this->addCount($args);
@@ -351,6 +372,23 @@ class AbstractQueryLanguage extends AbstractQuery {
 			// where clause
 			case 'where';
 				return $this->getAbstractPredicates();
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Define a relationship between two or more datasources. it's up to
+	 * whatever is taking in the abstract query to decide how to actually
+	 * establish that relationship.
+	 */
+	function link($left_alias, $right_alias, $options = 0) {
+				
+		if(!$this->addRelationship($left_alias, $right_alias, $options)) {
+			throw new UnexpectedValueException(
+				"Could not relate data models [{$left_aliase}] and ".
+				"[{$right_alias}]."
+			);
 		}
 		
 		return $this;
