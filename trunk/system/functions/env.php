@@ -5,9 +5,7 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Get an environment variable. As is obvious, parts of this function are
- * taken from the CakePHP coding project. Thanks guys!
- * Most of this function: Copyright 2005-2008, Cake Software Foundation, Inc.
+ * Get an environment variable.
  */
 function get_env($var) {
 	
@@ -20,6 +18,7 @@ function get_env($var) {
 	// normal places for env variables
 	else if(isset($_ENV[$var]))
 		$val = $_ENV[$var];	
+	
 	else if(FALSE !== ($ret = getenv($var)))
 		$val = $ret;
 	
@@ -27,32 +26,6 @@ function get_env($var) {
 	else if(function_exists('apache_getenv')) {
 		if(FALSE !== ($ret = apache_getenv($var)))
 			$val = $ret;
-	}
-	
-	// do we need to double-check stuff?
-	if($var == 'REMOTE_ADDR') {
-		
-		// they might be behind a proxy
-		if(NULL !== ($addr = get_env('HTTP_X_FORWARDED_FOR')))
-			$val = $addr;
-		
-		// no too sur
-		else if (NULL !== ($addr = get_env('HTTP_PC_REMOTE_ADDR')))
-			$val = $addr;
-	
-	// if we're behind a proxy then there might be an issue
-	} else if($var == 'SERVER_ADDR') {
-		
-		//if(NULL !== ($addr = get_env('HTTP_X_REAL_IP')))
-		//	$val = $addr;
-		
-	} else if($var == 'PHP_SELF') {
-		// php bug #42523
-		if(PINQ_IN_IIS && version_compare(PHP_VERSION, '5.2.4') <= 0) {
-			$len = strlen($val);
-			if(substr($val, 0, $len) == substr($val, $len))
-				return substr($val, 0, $len);
-		}
 	}
 	
 	return $val;
@@ -117,4 +90,64 @@ function get_script_filename() {
 		return str_replace('\\\\', '\\', get_env('PATH_TRANSLATED'));
 	
 	return get_env('SCRIPT_FILENAME');
+}
+
+/**
+ * Get the user's IP. Parts of this function are inspired by the CakePHP and
+ * CodeIgniter PHP libraries.
+ */
+function get_user_ip() {
+	
+	static $ip;
+	
+	if($ip !== NULL)
+		return $ip;
+	
+	$ip_places = array(
+		'HTTP_CLIENT_IP',
+		'REMOTE_ADDR',
+		'HTTP_X_FORWARDED_FOR',
+		'HTTP_PC_REMOTE_ADDR',
+	);
+	
+	// go through the different ip places and try to find the ip
+	while(!empty($ip_places)) {
+		$place = array_shift($ip_places);
+		
+		if(!empty($addr = get_env($place)))
+			$ip = $addr;
+	}
+	
+	// thanks CI for this little nugget
+	if(FALSE !== strpos($ip, ',')) {
+		$ip = end(explode(',', $ip))
+	}
+	
+	if(!preg_match('~^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$~', $ip))
+		$ip = '0.0.0.0';
+	
+	return $ip;
+}
+
+/**
+ * Get the current request method, If it doesn't validate then default to GET.
+ */
+function get_request_method() {
+	static $request_method;
+	
+	if(NULL !== $request_method)
+		return $request_method;
+	
+	$methods = array(
+		'GET', 'HEAD',
+		'PUT', 'POST', 'DELETE',
+		'OPTIONS', 'TRACE',
+	);
+	
+	// default to a GET request
+	$method = strtoupper(get_env('REQUEST_METHOD'));
+	if(!in_array($method, $methods))
+		$method = 'GET';
+	
+	return $request_method = $method;
 }

@@ -22,6 +22,8 @@ $server = array_merge($_SERVER, array(
 	'DOCUMENT_ROOT' => get_document_root(),
 	'SCRIPT_FILENAME' => get_script_filename(),
 	'HTTPS' => (get_http_scheme() == 'https' ? 'on' : 'off'),
+	'REMOTE_ADDR' => get_user_ip(),
+	'REQUEST_METHOD' => get_request_method(),
 ));
 
 // only put what we want into the super-globals array, and remove redundancies
