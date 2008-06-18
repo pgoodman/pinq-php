@@ -5,9 +5,30 @@
 !defined('DIR_SYSTEM') && exit();
 
 if(!function_exists('where')) {
-	function &where() {
-		$predicates = new AbstractSingleSourcePredicates;		
+	
+	function &pql_create_predicates($pred_type, AbstractQuery $query = NULL, $class = 'AbstractSingleSourcePredicates') {
+		$predicates = new $class($query);
+		$predicates->addOperator($pred_type);
 		return $predicates;
+	}
+	
+	function &where() {
+		return pql_create_predicates(AbstractPredicates::WHERE);
+	}
+	
+	function &limit() {
+		$args = func_get_args();
+		$predicates = pql_create_predicates(AbstractPredicates::LIMIT);
+		$predicates->addOperand(AbstractPredicates::VALUE_CONSTANT, $args);
+		return $predicates;
+	}
+	
+	function &order() {
+		return pql_create_predicates(AbstractPredicates::ORDER_BY);
+	}
+	
+	function &group() {
+		return pql_create_predicates(AbstractPredicates::GROUP_BY);
 	}
 }
 
@@ -45,9 +66,14 @@ class AbstractPredicates {
 		  LIMIT	     = 8192,
 		  WHERE	     = 16384;
 	
+	// special operator for linking two models in a where using values but
+	// without knowing what fields are being pivoted on.
+	//const PIVOT = 32768;
+	
 	// operator or operand?
 	const OP_OPERATOR = 1,
 		  OP_OPERAND  = 2;
+	//	  OP_PSEUDO   = 4;
 	
 	// operand types
 	const VALUE_CONSTANT  = 4, // immediate constants: strings, integers, etc.
@@ -65,7 +91,7 @@ class AbstractPredicates {
 	/**
 	 * Constructor, bring in a reference to the query's sources array.
 	 */
-	public function __construct() {
+	public function __construct(AbstractQuery $query = NULL) {
 		
 		// a list of basic operators. note: operators can also be concatenated
 		// with underscores through __get and __call
@@ -115,15 +141,14 @@ class AbstractPredicates {
 			);
 		}
 		
-		// add in the where operator
-		$this->addOperator(self::WHERE);
+		$this->query = $query;
 	}
 	
 	/**
 	 * Destructor.
 	 */
 	public function __destruct() {
-		unset($this->predicates, $this->query);
+		unset($this->predicates);
 	}
 	
 	/**
@@ -193,20 +218,22 @@ class AbstractPredicates {
 	public function __call($fn, array $args = array()) {
 		
 		$fn = strtolower($fn);
-		
-		// is this an aliased item?
-		if(isset($this->query->sources[$fn])) {
-			$this->addOperand(
-				self::VALUE_REFERENCE, 
-				array($fn, $args[0])
-			);
 			
 		// is this an operator+value?
-		} else if($this->parseOperator($fn)) {
+		if($this->parseOperator($fn)) {
 						
 			$this->addOperand(
 				self::VALUE_CONSTANT, 
 				($fn === 'limit') ? $args : $args[0]
+			);
+		
+		// assume it's an aliased item. we don't actually need to check if
+		// this is right because, for all intents and purposed, the query will
+		// fail if it's wrong.
+		} else {
+			$this->addOperand(
+				self::VALUE_REFERENCE, 
+				array($fn, $args[0])
 			);
 		}
 		
@@ -222,22 +249,11 @@ class AbstractPredicates {
 	}
 	
 	/**
-	 * Set the AbstractQuery to the predicates object.
-	 */
-	public function setQuery(AbstractQuery $query) {
-		$this->query = &$query;
-	}
-	
-	/**
-	 * Get the AbstractQuery out of the predicates. This is usually called
-	 * when the query needs to be compiled.
+	 * Return the predicates array.
 	 * @internal
 	 */
-	public function getQuery() {
-		
-		// give the query the built-up predicates and return
-		$this->query->setPredicates($this->predicates);
-		return $this->query;
+	public function getPredicates() {
+		return $this->predicates;
 	}
 }
 

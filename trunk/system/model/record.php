@@ -7,7 +7,7 @@
 /**
  * Interface for a record.
  */
-interface Record extends ArrayAccess {
+interface Record extends ArrayAccess, Object {
 	public function isSaved();
 	public function isDeleted();
 	public function save();
@@ -19,14 +19,16 @@ interface Record extends ArrayAccess {
  */
 abstract class AbstractRecord extends Dictionary implements Record {
 	
-	protected $is_saved = FALSE,
-	          $is_deleted = FALSE;
+	protected $_is_saved = FALSE,
+	          $_is_deleted = FALSE,
+	          $_name,
+	          $_sub_records;
 	
 	/**
 	 * Is this record saved to a data source?
 	 */
 	public function isSaved() {
-		return $this->is_saved;
+		return $this->_is_saved;
 	}
 	
 	/**
@@ -34,14 +36,14 @@ abstract class AbstractRecord extends Dictionary implements Record {
 	 * collected).
 	 */
 	public function isDeleted() {
-		return $this->is_deleted;
+		return $this->_is_deleted;
 	}
 	
 	/**
 	 * Save this record to the data source.
 	 */
 	public function save() {
-		$this->is_saved = TRUE;
+		$this->_is_saved = TRUE;
 	}
 	
 	/**
@@ -49,7 +51,57 @@ abstract class AbstractRecord extends Dictionary implements Record {
 	 */
 	public function delete() {
 		if($this->isSaved())
-			$this->is_deleted = TRUE;
+			$this->_is_deleted = TRUE;
+	}
+	
+	/**
+	 * Set the model name of this record.
+	 */
+	public function setName($name) {
+		$this->_name = $name;
+	}
+	
+	/**
+	 * Get the model name of this record.
+	 */
+	public function getName() {
+		return $this->_name;
+	}
+	
+	/**
+	 * Is this a named record, or possibly a mix of many sub-records OR was it
+	 * a record found through straight SQL?
+	 */
+	public function isNamed() {
+		return NULL !== $this->_name;
+	}
+	
+	/**
+	 * Set the sub-records for this record, thus making this record
+	 * ambiguous.
+	 */
+	protected function setSubRecords(array &$records) {
+		
+		if(count($records) < 2)
+			return;
+		
+		$this->_name = NULL;
+		$this->_sub_records = &$records;
+	}
+	
+	/**
+	 * Dig into the result tables selected.
+	 */
+	public function __get($model_name) {
+		
+		// we might be trying to build a related query, if many records exist
+		// within this record then we cannot do it as this record is
+		// considered ambiguous.
+		if(!isset($this->_sub_records[$model_name]))
+			return NULL;
+		
+		// return the sub-database record
+		return $this->_sub_records[$model_name];
 	}
 }
 

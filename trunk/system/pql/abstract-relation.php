@@ -40,21 +40,20 @@ class AbstractRelation {
 		// direct relations and crack open indirect ones.
 		while(NULL !== ($model = $models[$current]) && !$next_models->isEmpty()) {
 						
-			// are we done?
-			//if($current == $to_alias)
-			//	break;
-			
 			// shift the next model to look at off the queue
 			$next = $next_models->shift();
 			
 			// relationship cannot be satisfied
-			if(!isset($model->_relations[$next]) || !isset($models[$next]))
-				return NULL;
+			if(!isset($model->_relations[$next]) || !isset($models[$next])) {
+				
+				// cache the failed attempt
+				return $start->_cached_paths[$to_alias] = array();
+			}
 			
 			// the next model and how the current model is related to it
 			$next_model = $models[$next];
-			$how_to_relate = $model->_relations[$next];
-						
+			$how_to_relate = $model->_relations[$next];			
+			
 			// life is simple, we're dealing with a direct relationship.
 			// Change $current to $next, and find out the new $next.
 			if($how_to_relate[0] & self::DIRECT) {
@@ -72,10 +71,13 @@ class AbstractRelation {
 				// the mapping is in the next model
 				else if(isset($next_model->_mappings[$current]))
 					list($current_key, $next_key) = $next_model->_mappings[$current];
-				
+								
 				// a relationship could not be satisfied
-				else
-					return NULL;
+				else {
+					
+					// cache the failed attempt
+					return $start->_cached_paths[$to_alias] = array();
+				}
 				
 				// add the mapping to the path
 				$path[] = array($current, $current_key);
@@ -90,11 +92,12 @@ class AbstractRelation {
 			// what *should* be the $next model to look at and continue
 			// without changing $current.
 			} else {
-								
+				
+				$old_nexts = $next_models->getArray();
+				$next_models->clear();
 				$next_models->extend($how_to_relate[1]);
 				$next_models->push($next);
-				
-				continue;
+				$next_models->extend($old_nexts);
 			}
 		}
 		

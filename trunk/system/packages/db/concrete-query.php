@@ -177,6 +177,9 @@ class DatabaseQuery extends ConcreteQuery {
 		$aliases = &$query->aliases;
 		$sql = '';
 		
+		// add in the pivots if there are any
+		$this->createPivots();
+		
 		// no predicates (or there is just a WHERE)
 		if(count($query->predicates) < 2)
 			return $sql;
@@ -287,11 +290,92 @@ class DatabaseQuery extends ConcreteQuery {
 						// value should follow, I'm not going to (for now)
 						$sql .= $value === _ ? ' ?' : " '". 
 						        htmlentities($value, ENT_QUOTES) ."'";
-				}
+				}			
 			}
 		}
 		
 		return $sql;
+	}
+	
+	/**
+	 * Rebuild pivots. Pivots are when we link two tables together in a query
+	 * and then want to add an extra predicate so that we can specify a value
+	 * to "pivot" the join tables on. Pivots always go with columns from the
+	 * left alias.
+	 *
+	 * Note: this function is called within rebuildPredicates() as it usually
+	 *       modifies the predicates array significantly.
+	 * 
+	 * @internal
+	 */
+	protected function createPivots() {
+		
+		$query = &$this->query;
+		$predicates = &$query->predicates;
+				
+		// no pivoting needed
+		if(empty($query->pivots))
+			return;
+
+		// if there are no predicates then we need to add in the WHERE clause
+		if(empty($predicates)) {
+			$predicates[] = array(
+				AbstractPredicates::OP_OPERATOR,
+				AbstractPredicates::WHERE
+			);
+		}
+		// isolate existing predicates
+		$join_with_and = count($query->predicates) > 1;
+		$this->isolatePredicates();
+		
+		// add in the pivots
+		foreach($query->pivots as $left_alias => $rights) {
+			foreach($rights as $right_alias => $pivot_type) {
+				
+				// join onto the end of the predicates array
+				if($join_with_and) {
+					$predicates[] = array(
+						AbstractPredicates::OP_OPERATOR,
+						AbstractPredicates::LOG_AND
+					);
+				}
+				
+				// find a path between the two models
+				$path = AbstractRelation::findPath(
+					$query->aliases[$left_alias], 
+					$query->aliases[$right_alias],
+					$this->models
+				);
+				
+				if(empty($path))
+					continue;
+				
+				// figure out which side of the path to pivot on
+				reset($path);
+				
+				if($pivot_type & AbstractQuery::PIVOT_LEFT)
+					$path_part = current($path);
+				else
+					$path_part = end($path);
+				
+				// add in a condition
+				$predicates[] = array(
+					AbstractPredicates::OP_OPERAND | 
+					AbstractPredicates::VALUE_REFERENCE,
+					$path_part
+				);
+				
+				$predicates[] = array(
+					AbstractPredicates::OP_OPERATOR, 
+					AbstractPredicates::LOG_EQ,
+				);
+				$predicates[] = array(
+					AbstractPredicates::OP_OPERAND | 
+					AbstractPredicates::VALUE_CONSTANT,
+					_,
+				);				
+			}
+		}
 	}
 	
 	/**
@@ -300,8 +384,8 @@ class DatabaseQuery extends ConcreteQuery {
 	 */
 	protected function resolveReference($ref) {
 		
-		$aliases = &$this->query->aliases;
-		$models = &$this->models;
+		$aliases = $this->query->aliases;
+		$models = $this->models;
 		
 		// we have been given a model alias which is not the model name		
 		if(isset($aliases[$ref]) && ($a = $aliases[$ref]) != $ref) {
@@ -337,6 +421,31 @@ class DatabaseQuery extends ConcreteQuery {
 		
 		// add in the predicates and return
 		return $sql;
+	}
+	
+	/**
+	 * Isolate the current predicates.
+	 */
+	protected function isolatePredicates() {
+		
+		$predicates = &$this->query->predicates;
+		
+		// if we're working with predicates, then we want to isolate them off
+		// from any other predicates we might add by doing relations
+		if(count($predicates) > 1) {
+			
+			$where = array_shift($predicates);
+			
+			array_unshift($predicates, $where, array(
+				AbstractPredicates::OP_OPERATOR, 
+				AbstractPredicates::OPEN_SUBSET,
+			));
+			
+			$predicates[] = array(
+				AbstractPredicates::OP_OPERATOR, 
+				AbstractPredicates::CLOSE_SUBSET
+			);
+		}
 	}
 	
 	/**
@@ -393,21 +502,10 @@ class DatabaseQuery extends ConcreteQuery {
 		}
 		
 		$aliases = &$query->aliases;
-		$has_predicates = !empty($predicates);
+		$join_with_and = count($query->predicates) > 1;
 		
-		// if we're working with predicates, then we want to isolate them off
-		// from any other predicates we might add by doing relations
-		if($has_predicates) {
-			$where = array_shift($predicates);
-			array_unshift($predicates, $where, array(
-				AbstractPredicates::OP_OPERATOR, 
-				AbstractPredicates::OPEN_SUBSET,
-			));
-			$predicates[] = array(
-				AbstractPredicates::OP_OPERATOR, 
-				AbstractPredicates::CLOSE_SUBSET
-			);
-		}
+		// isolate the original predicates
+		$this->isolatePredicates();
 		
 		// add in the relationships as predicates
 		foreach($query->relations as $left => $rights) {
@@ -421,7 +519,7 @@ class DatabaseQuery extends ConcreteQuery {
 				);
 				
 				// make sure we're not using an indirect relationship
-				if(count($path) > 2) {
+				if(empty($path) || count($path) > 2) {
 					throw new DomainException(
 						"Models related in an update/insert query must be ".
 						"directly related."
@@ -433,7 +531,7 @@ class DatabaseQuery extends ConcreteQuery {
 				$path[1][0] = $aliases[$path[1][0]];
 				
 				// join this condition into the predicates
-				if($has_predicates) {
+				if($join_with_and) {
 					$predicates[] = array(
 						AbstractPredicates::OP_OPERATOR, 
 						AbstractPredicates::LOG_AND,
@@ -442,7 +540,8 @@ class DatabaseQuery extends ConcreteQuery {
 				
 				// add in the condition to join these tables in the update
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERAND | AbstractPredicates::VALUE_REFERENCE,
+					AbstractPredicates::OP_OPERAND | 
+					AbstractPredicates::VALUE_REFERENCE,
 					$path[0],
 				);
 				$predicates[] = array(
@@ -450,14 +549,14 @@ class DatabaseQuery extends ConcreteQuery {
 					AbstractPredicates::LOG_EQ,
 				);
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERAND | AbstractPredicates::VALUE_REFERENCE,
+					AbstractPredicates::OP_OPERAND | 
+					AbstractPredicates::VALUE_REFERENCE,
 					$path[1],
 				);
 			}
 		}
-				
-		// add in the predicates, note that we use empty() here instead of
-		// $has_predicates.
+		
+		// add in the predicates
 		$sql .= $this->rebuildPredicates();
 		
 		// add in the predicates and return

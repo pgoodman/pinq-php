@@ -101,6 +101,7 @@ abstract class ConcreteQuery {
 				
 				// path will have no less than 2 arrays in it
 				$count = count($path);
+				
 				if($count > 1) {
 					
 					// fix the aliases on the first and last models in the

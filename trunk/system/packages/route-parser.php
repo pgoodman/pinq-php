@@ -187,12 +187,12 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		// make sure we group all routes with the same prefix together, that
 		// way when we encounter a route, we only search given its prefix
 		if(!isset($this[$prefix]))
-			$this->dict[$prefix] = array();
+			$this->_dict[$prefix] = array();
 		
 		// add in the route to others with similar prefixes. we can also
 		// disgard the prefix from the route as it is useless to us.
 		$route = substr($route, strlen($prefix));
-		$this->dict[$prefix][] = array($route, $maps_to);
+		$this->_dict[$prefix][] = array($route, $maps_to);
 	}
 	
 	/**
