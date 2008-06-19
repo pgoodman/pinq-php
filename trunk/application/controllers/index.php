@@ -36,10 +36,9 @@ class IndexController extends PinqController {
 		foreach($db->job_postings->findAll(limit(2)) as $job) {
 			print_r($job);
 			
-			$tags_gateway->findAll($job);
+			$tags = $tags_gateway->findAll($job);
 			
-			//foreach( as $tag) {
-			//}
+			var_dump($tags);
 		}
 		
 		// find al jobs by a tag	

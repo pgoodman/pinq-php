@@ -255,10 +255,14 @@ class DatabaseQuery extends ConcreteQuery {
 			// operand.
 			} else {
 			
-				// special case for substitute values
+				// substitute values
 				if($value === _)
 					$sql .= '?';
-			
+				
+				// keyed substitute values
+				else if($type & AbstractPredicates::VALUE_SUBSTITUTE)
+					$sql .= " :{$value}";
+					
 				// column references
 				else if($type & AbstractPredicates::VALUE_REFERENCE) {
 					
@@ -270,7 +274,7 @@ class DatabaseQuery extends ConcreteQuery {
 					
 					
 					$sql .= " {$ref}.{$value[1]}";
-			
+				
 				// immediate constants
 				} else {
 				
@@ -369,10 +373,14 @@ class DatabaseQuery extends ConcreteQuery {
 					AbstractPredicates::OP_OPERATOR, 
 					AbstractPredicates::LOG_EQ,
 				);
+				
+				// TODO: this is sort of a hack. I think this should really
+				//       be rethought out as pivots now only serve a single
+				//       purpose which is unfortunate
 				$predicates[] = array(
 					AbstractPredicates::OP_OPERAND | 
-					AbstractPredicates::VALUE_CONSTANT,
-					_,
+					AbstractPredicates::VALUE_SUBSTITUTE,
+					$path_part[1],
 				);				
 			}
 		}

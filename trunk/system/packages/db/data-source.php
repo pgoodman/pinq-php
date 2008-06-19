@@ -28,6 +28,7 @@ abstract class Database implements DataSource {
 	 * Select rows from the database.
 	 */
 	final public function select($query, array $args = array()) {
+				
 		$result = $this->query($query, $args);
 		
 		if(!is_resource($result))
@@ -50,6 +51,36 @@ abstract class Database implements DataSource {
 	 */
 	final protected function substituteArgs($stmt = '', array $args = array()) {
 		
+		if(empty($args))
+			return $stmt;
+		
+		// the arguments array is associative. assume then that the substitutes
+		// in the query are also associative and turn them into question marks
+		if(is_string(key($args))) {
+			
+			$key_pattern = '~:([^:\s\b]+)~';
+			$matches = array();
+			
+			if(!preg_match_all($key_pattern, $stmt, $matches))
+				return $stmt;
+			
+			// replace all key patterns with question marks
+			$stmt = preg_replace($key_pattern, '?', $stmt);
+			
+			// what we are doing is taking the $args array, moving the keys
+			// into the order that they appear in in $stmt, matching the
+			// values to those keys, then dumping the keys so that we can
+			// easily substitute the new args in for question marks.
+			$args = array_values(array_combine(
+				$matches[1], 
+				array_intersect_key(
+					$args, 
+					array_flip($matches[1])
+				)
+			));
+		}
+		
+		// how many of these are we working with?
 		$count = substr_count($stmt, '?');
 		
 		// don't need to substitute anything in
