@@ -10,9 +10,9 @@ class DatabaseRecordGateway extends RecordGateway {
 	 * Compile a specific type of query given an abstract query and the query
 	 * type.
 	 */
-	protected function compileQuery(AbstractQuery $query, $type) {
-		$compiler = new DatabaseQuery($query, $this->models);
-		return $compiler->compileByType($type);
+	protected function compileQuery(Query $query, $type) {
+		$compiler = new DatabaseQueryCompiler($query, $this->models);
+		return $compiler->compile($type);
 	}
 	
 	/**

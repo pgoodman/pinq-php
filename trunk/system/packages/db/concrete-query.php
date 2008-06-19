@@ -9,7 +9,7 @@
  * SQL query.
  * @author Peter Goodman
  */
-class DatabaseQuery extends ConcreteQuery {
+class DatabaseQueryCompiler extends QueryCompiler {
 	
 	/**
 	 * Build up the select fields.
@@ -141,7 +141,7 @@ class DatabaseQuery extends ConcreteQuery {
 				
 				// this will return direct relations each time. The ordering
 				// is arbitrary.				
-				$relation = AbstractRelation::findPath(
+				$relation = ModelRelation::findPath(
 					$aliases[$right],
 					$aliases[$left],
 					$models
@@ -190,65 +190,65 @@ class DatabaseQuery extends ConcreteQuery {
 			list($type, $value) = $predicate;
 		
 			// operator
-			if($type & AbstractPredicates::OP_OPERATOR) {
+			if($type & QueryPredicates::OP_OPERATOR) {
 								
-				if($value & AbstractPredicates::OPEN_SUBSET) {
+				if($value & QueryPredicates::OPEN_SUBSET) {
 					$sql .= ' (';
 					continue;
-				} else if($value & AbstractPredicates::CLOSE_SUBSET) {
+				} else if($value & QueryPredicates::CLOSE_SUBSET) {
 					$sql .= ')';
 					continue;
 				}
 			
 				// arithmatic operators, order matters
-				if($value < AbstractPredicates::LOG_IS) {
+				if($value < QueryPredicates::LOG_IS) {
 			
-					if($value & AbstractPredicates::LOG_NOT)
+					if($value & QueryPredicates::LOG_NOT)
 						$sql .= ' !';
 				
-					if($value & AbstractPredicates::LOG_LT)
+					if($value & QueryPredicates::LOG_LT)
 						$sql .= ' <';
 				
-					if($value & AbstractPredicates::LOG_GT)
+					if($value & QueryPredicates::LOG_GT)
 						$sql .= ' >';
 				
-					if($value & AbstractPredicates::LOG_EQ)
+					if($value & QueryPredicates::LOG_EQ)
 						$sql .= ' =';
 			
 				// other operators
 				} else {
 				
-					if($value & AbstractPredicates::LOG_AND)
+					if($value & QueryPredicates::LOG_AND)
 						$sql .= ' AND';
 				
-					if($value & AbstractPredicates::LOG_OR)
+					if($value & QueryPredicates::LOG_OR)
 						$sql .= ' OR';
 				
-					if($value & AbstractPredicates::LOG_IS)
+					if($value & QueryPredicates::LOG_IS)
 						$sql .= ' IS';
 				
-					if($value & AbstractPredicates::LOG_NOT)
+					if($value & QueryPredicates::LOG_NOT)
 						$sql .= ' NOT';
 				
-					if($value & AbstractPredicates::GROUP_BY)
+					if($value & QueryPredicates::GROUP_BY)
 						$sql .= ' GROUP BY';
 				
-					if($value & AbstractPredicates::ORDER_BY) {
-						if($value === AbstractPredicates::ORDER_ASC)
+					if($value & QueryPredicates::ORDER_BY) {
+						if($value === QueryPredicates::ORDER_ASC)
 							$sql .= ' ASC';
-						else if($value === AbstractPredicates::ORDER_DESC)
+						else if($value === QueryPredicates::ORDER_DESC)
 							$sql .= ' DESC';
 						else
 							$sql .= ' ORDER BY';
 					}
 					
-					//if($value & AbstractPredicates::LIKE)
+					//if($value & QueryPredicates::LIKE)
 					//	$sql .= ' LIKE';
 				
-					if($value & AbstractPredicates::LIMIT)
+					if($value & QueryPredicates::LIMIT)
 						$sql .= ' LIMIT';
 				
-					if($value & AbstractPredicates::WHERE)
+					if($value & QueryPredicates::WHERE)
 						$sql .= ' WHERE';
 				}
 			
@@ -260,11 +260,11 @@ class DatabaseQuery extends ConcreteQuery {
 					$sql .= '?';
 				
 				// keyed substitute values
-				else if($type & AbstractPredicates::VALUE_SUBSTITUTE)
+				else if($type & QueryPredicates::VALUE_SUBSTITUTE)
 					$sql .= " :{$value}";
 					
 				// column references
-				else if($type & AbstractPredicates::VALUE_REFERENCE) {
+				else if($type & QueryPredicates::VALUE_REFERENCE) {
 					
 					// resolve the proper table / alias
 					$ref = $value[0];
@@ -324,8 +324,8 @@ class DatabaseQuery extends ConcreteQuery {
 		// if there are no predicates then we need to add in the WHERE clause
 		if(empty($predicates)) {
 			$predicates[] = array(
-				AbstractPredicates::OP_OPERATOR,
-				AbstractPredicates::WHERE
+				QueryPredicates::OP_OPERATOR,
+				QueryPredicates::WHERE
 			);
 		}
 		// isolate existing predicates
@@ -339,13 +339,13 @@ class DatabaseQuery extends ConcreteQuery {
 				// join onto the end of the predicates array
 				if($join_with_and) {
 					$predicates[] = array(
-						AbstractPredicates::OP_OPERATOR,
-						AbstractPredicates::LOG_AND
+						QueryPredicates::OP_OPERATOR,
+						QueryPredicates::LOG_AND
 					);
 				}
 				
 				// find a path between the two models
-				$path = AbstractRelation::findPath(
+				$path = ModelRelation::findPath(
 					$query->aliases[$left_alias], 
 					$query->aliases[$right_alias],
 					$this->models
@@ -357,29 +357,29 @@ class DatabaseQuery extends ConcreteQuery {
 				// figure out which side of the path to pivot on
 				reset($path);
 				
-				if($pivot_type & AbstractQuery::PIVOT_LEFT)
+				if($pivot_type & Query::PIVOT_LEFT)
 					$path_part = current($path);
 				else
 					$path_part = end($path);
 				
 				// add in a condition
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERAND | 
-					AbstractPredicates::VALUE_REFERENCE,
+					QueryPredicates::OP_OPERAND | 
+					QueryPredicates::VALUE_REFERENCE,
 					$path_part
 				);
 				
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERATOR, 
-					AbstractPredicates::LOG_EQ,
+					QueryPredicates::OP_OPERATOR, 
+					QueryPredicates::LOG_EQ,
 				);
 				
 				// TODO: this is sort of a hack. I think this should really
 				//       be rethought out as pivots now only serve a single
 				//       purpose which is unfortunate
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERAND | 
-					AbstractPredicates::VALUE_SUBSTITUTE,
+					QueryPredicates::OP_OPERAND | 
+					QueryPredicates::VALUE_SUBSTITUTE,
 					$path_part[1],
 				);				
 			}
@@ -445,13 +445,13 @@ class DatabaseQuery extends ConcreteQuery {
 			$where = array_shift($predicates);
 			
 			array_unshift($predicates, $where, array(
-				AbstractPredicates::OP_OPERATOR, 
-				AbstractPredicates::OPEN_SUBSET,
+				QueryPredicates::OP_OPERATOR, 
+				QueryPredicates::OPEN_SUBSET,
 			));
 			
 			$predicates[] = array(
-				AbstractPredicates::OP_OPERATOR, 
-				AbstractPredicates::CLOSE_SUBSET
+				QueryPredicates::OP_OPERATOR, 
+				QueryPredicates::CLOSE_SUBSET
 			);
 		}
 	}
@@ -505,7 +505,7 @@ class DatabaseQuery extends ConcreteQuery {
 			
 			list($type, $value) = $predicate;
 			
-			if($type & AbstractPredicates::VALUE_REFERENCE)
+			if($type & QueryPredicates::VALUE_REFERENCE)
 				$pivots[$value[0]] = $value[1];
 		}
 		
@@ -520,7 +520,7 @@ class DatabaseQuery extends ConcreteQuery {
 			foreach($rights as $right) {
 				
 				// find a path
-				$path = AbstractRelation::findPath(
+				$path = ModelRelation::findPath(
 					$aliases[$right],
 					$aliases[$left],
 					$models
@@ -541,24 +541,24 @@ class DatabaseQuery extends ConcreteQuery {
 				// join this condition into the predicates
 				if($join_with_and) {
 					$predicates[] = array(
-						AbstractPredicates::OP_OPERATOR, 
-						AbstractPredicates::LOG_AND,
+						QueryPredicates::OP_OPERATOR, 
+						QueryPredicates::LOG_AND,
 					);
 				}
 				
 				// add in the condition to join these tables in the update
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERAND | 
-					AbstractPredicates::VALUE_REFERENCE,
+					QueryPredicates::OP_OPERAND | 
+					QueryPredicates::VALUE_REFERENCE,
 					$path[0],
 				);
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERATOR, 
-					AbstractPredicates::LOG_EQ,
+					QueryPredicates::OP_OPERATOR, 
+					QueryPredicates::LOG_EQ,
 				);
 				$predicates[] = array(
-					AbstractPredicates::OP_OPERAND | 
-					AbstractPredicates::VALUE_REFERENCE,
+					QueryPredicates::OP_OPERAND | 
+					QueryPredicates::VALUE_REFERENCE,
 					$path[1],
 				);
 			}
