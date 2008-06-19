@@ -6,22 +6,22 @@
 
 if(!function_exists('where')) {
 	
-	function &where() {
+	function where() {
 		$predicates = new QueryPredicates;
 		return $predicates->where();
 	}
 	
-	function &limit($start, $offset = NULL) {
+	function limit($start, $offset = NULL) {
 		$predicates = new QueryPredicates;
 		return $predicates->limit($start, $offset);
 	}
 	
-	function &order() {
+	function order() {
 		$predicates = new QueryPredicates;
 		return $predicates->order();
 	}
 	
-	function &group() {
+	function group() {
 		$predicates = new QueryPredicates;
 		return $predicates->group();
 	}
@@ -31,18 +31,20 @@ if(!function_exists('where')) {
  * Build up predicates for a PQL query.
  * @author Peter Goodman
  */
-class QueryPredicates extends Stack {
+class QueryPredicates extends StackOfStacks {
 	
 	// an array of sets of predicates
 	protected $_predicates, // the predicates are stored in reverse-polish
 	          $_operators,
 	          $_operands,
 	          $_query,
-	          $_context;
+	          $_context,
+	          $_values;
 		
 	const OPERAND = 1,
 	      OPERATOR = 2,
-	      SUBSTITUTE = 4;
+	      SUBSTITUTE = 4,
+	      IMMEDIATE = 8;
 	
 	/**
 	 * Constructor, set up the default set of predicates.
@@ -61,16 +63,27 @@ class QueryPredicates extends Stack {
 		// operators and their precedence levels. high precedence level means
 		// that the operator is more difficult to tear apart
 		$this->_operators = array(
-			'mul' => 4, 'div' => 4,
-			'add' => 3, 'sub' => 3,
-			'eq' => 2, 'leq' => 2, 'geq' => 2, 'lt' => 2, 'gt' => 2, 'neq' => 2,
-			'and' => 1, 'or' => 1, 'xor' => 1,
+			
+			// braces
+			'in' => 7, 'out' => 7,
 			
 			// prefix operators
-			'not' => 5, 'like' => 5, 'search' => 5, 'for' => 5,
+			'not' => 6, 'like' => 6,
+			
+			// arithmetic
+			'mul' => 5, 'div' => 5,
+			'add' => 4, 'sub' => 4,
+			
+			// comparison
+			'eq' => 3, 'leq' => 3, 'geq' => 3, 'lt' => 3, 'gt' => 3, 'neq' => 3,
+			'and' => 2, 'or' => 2, 'xor' => 2,
+			
+			// pseudo operators that have actual functions
+			'search' => -1, 'with' => -1,
 		);
 		
 		$this->_query = $query;
+		$this->setContext('where');
 	}
 	
 	/**
@@ -88,12 +101,30 @@ class QueryPredicates extends Stack {
 	}
 	
 	/**
+	 * Get the predicates, and make sure to finish off anything still left
+	 * on the stack.
+	 */
+	public function getPredicates() {
+		$this->addTrailingOperators();
+		return $this->_predicates;
+	}
+	
+	/**
 	 * Set what part of the query we are modifying.
 	 * @internal
 	 */
 	public function setContext($context) {
+		$this->addTrailingOperators();
 		$this->_context = &$this->_predicates[$context];
 		return $this;
+	}
+	
+	/** 
+	 * Add in any operators left on the stack.
+	 */
+	public function addTrailingOperators() {
+		while(!$this->isEmpty())
+			$this->addOperator($this->pop());
 	}
 	
 	/**
@@ -109,7 +140,7 @@ class QueryPredicates extends Stack {
 	 * the conditions list.
 	 */
 	protected function addOperator($key) {
-		$this->_context = $array(self::OPERATOR, $key, NULL);
+		$this->_context[] = array(self::OPERATOR, $key, NULL);
 		return $this;
 	}
 	
@@ -131,7 +162,7 @@ class QueryPredicates extends Stack {
 	
 	/**
 	 * Special case for searching. There are two search operators that work
-	 * in conjunction. SEARCH <field list> FOR <value>.
+	 * in conjunction. SEARCH <field list> WITH <value>.
 	 */
 	public function search() {
 		$this->setContext('search');
@@ -141,7 +172,7 @@ class QueryPredicates extends Stack {
 	/**
 	 * Take us out of the search context and perform a bit of magic :D
 	 */
-	public function for($val) {
+	public function with($val) {
 		$this->setContext('where');
 		
 		// add in the special search predicate
@@ -157,43 +188,63 @@ class QueryPredicates extends Stack {
 	}
 	
 	/**
+	 * Parse for an operator.
+	 */
+	public function parseOperator($op, array $args = NULL) {
+		$op = strtolower($op);
+		$ops = $this->_operators;
+		
+		// a opening brace is being used, push on a new stack
+		if($op == 'in')
+			$this->pushStack();
+		
+		// closing brace, add in remaining operators in the top stack and
+		// pop it off
+		else if($op == 'out') {
+			$this->addTrailingOperators();
+			$this->popStack();
+			
+		// try to parse a normal operator
+		} else if(isset($ops[$op])) {
+			
+			// the incoming operator precedence
+			$p = $ops[$op];
+			
+			// while there are operators on the stack whose precedence is >=
+			// to the precedence of the operator we're trying to add, pop them
+			// off the stack and add them to the predicates list
+			while(!$this->isEmpty() && $ops[$this->top()] >= $p)
+				$this->addOperator($this->pop());
+			
+			// push the operator onto the stack
+			$this->push($op);
+			
+			// was there also an argument?
+			if(!empty($args)) {
+				if($args[0] === _)
+					$this->addOperand(NULL, _);
+				else
+					$this->imm($args[0]);
+					
+			}
+		
+		// we didn't find an operator, oh well
+		} else {
+			return FALSE;
+		}
+		
+		return TRUE;
+	}
+	
+	/**
 	 * Add in predicates. This uses the shunting algorithm for dealing with
 	 * operators.
 	 */
 	public function __call($fn, array $args = array()) {
-		$fn_lower = strtolower($fn);
 		
-		// parse in the operator
-		if(isset($this->_operators[$fn_lower])) {
-			
-			// special case, NOT is prefix notation
-			if($fn_lower === 'not' || $fn_lower === 'like')
-				return $this->addOperator($fn_lower);
-			
-			// the incoming operator precedence
-			$ops = $this->_operators;
-			$p = $ops[$fn];
-			
-			// stack is empty, add the operator to the predicates
-			if($this->isEmpty())
-				$this->addOperator($fn_lower);
-			
-			// stack is empty, deal with operators
-			else {
-				while(!$stack->isEmpty() && $ops[$this->top()] >= $p)
-					$this->addOperator($stack->pop());
-				
-				// push the operator onto the stack
-				$this->push($fn_lower);
-			}
-			
-			// was there also an argument?
-			if(!empty($args))
-				$this->addOperand(NULL, $args[0]);
-			
 		// assume it's an aliased operand, the function name is the alias and
 		// $args[0] is the field
-		} else if(!empty($args))
+		if(!$this->parseOperator($fn, $args) && !empty($args))
 			return $this->addOperand($fn, $args[0]);
 		
 		return $this;
@@ -204,7 +255,15 @@ class QueryPredicates extends Stack {
 	 * sort such as ASC or DESC.
 	 */
 	public function __get($key) {
-		return $this->addOperand(strtolower($key), NULL);
+		if(!$this->parseOperator($key)) {
+			
+			if($key != '_')
+				$this->addOperand(strtolower($key), NULL);
+			else
+				$this->addOperand(NULL, _);
+		}
+		
+		return $this;
 	}
 	
 	/**
@@ -216,15 +275,10 @@ class QueryPredicates extends Stack {
 	}
 	
 	/**
-	 * Get the predicates, and make sure to finish off anything still left
-	 * on the stack.
+	 * Put in an immediate value.
 	 */
-	public function getPredicates() {
-		
-		// close off the shunting algorithm
-		while(!$this->isEmpty())
-			$this->addOperator($this->pop());
-		
-		return $this->_predicates;
+	public function imm($val) {
+		$this->_context[] = array(self::IMMEDIATE, NULL, $val);
+		return $this;
 	}
 }

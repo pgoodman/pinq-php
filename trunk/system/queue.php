@@ -21,81 +21,81 @@ if(!function_exists("queue")) {
 class Queue implements Countable, IteratorAggregate {
 	
 	// public for cloning purposes
-	public $queue = array(),
-		   $end = -1;
+	public $_queue = array(),
+		   $_end = -1;
 	
 	/**
 	 * Push something onto the stack.
 	 */
 	public function push($val) {
-		$this->queue[] = $val;
-		$this->end++;
+		$this->_queue[] = $val;
+		$this->_end++;
 	}
 	
 	/**
 	 * Pop a scope off the stack.
 	 */
 	public function shift($null = NULL) {
-		if($this->end < 0)
+		if($this->_end < 0)
 			throw new QueueException("Nothing to shift off queue.");
 		
-		$this->end--;
-		return array_shift($this->queue);
+		$this->_end--;
+		return array_shift($this->_queue);
 	}
 	
 	/**
 	 * Return whatever's on the top of the stack.
 	 */
 	public function &front() {
-		if($this->end < 0) {
+		if($this->_end < 0) {
 			throw new QueueException(
 				"Queue is empty. Cannot access front element."
 			);
 		}
 		
-		return $this->queue[0];
+		return $this->_queue[0];
 	}
 	
 	/**
 	 * Return how many items are in the stack.
 	 */
 	public function count() {
-		return $this->end + 1;
+		return $this->_end + 1;
 	}
 	
 	/**
 	 * Is the queue empty? */
 	public function isEmpty() {
-		return $this->end < 0;
+		return $this->_end < 0;
 	}
 
 	/**
 	 * Clear the queue.
 	 */
 	public function clear() {
-		$this->end = -1;
-		$this->queue = array();
+		$this->_end = -1;
+		$this->_queue = array();
 	}
 	
 	/**
 	 * Extend the queue.
 	 */
 	public function extend(array $items) {
-		$this->queue = array_merge($this->queue, array_values($items));
-		$this->end = count($this->queue) - 1;
+		$this->_queue = array_merge($this->_queue, array_values($items));
+		$this->_end = count($this->_queue) - 1;
 	}
 	
 	/**
 	 * Get the queue as an array.
 	 */
 	public function getArray() {
-		return $this->queue;
+		return $this->_queue;
 	}
 	
 	/**
 	 * Get an iterator.
 	 */
 	public function getIterator() {
-		return new ArrayIterator($this->queue);
+		return new ArrayIterator($this->_queue);
 	}
 }
