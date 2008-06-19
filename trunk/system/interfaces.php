@@ -55,16 +55,8 @@ interface Object {
  * Handle compiling (translating) one form into another.
  * @author Peter Goodman
  */
-abstract class Compilable {
-	private $buffer = "";
-		
-	public function compile() {
-		return $this->buffer;
-	}
-	
-	public function buffer($input = "") {
-		$this->buffer .= $input;
-	}
+interface Compiler {
+	public function compile($flags = 0);
 }
 
 /**

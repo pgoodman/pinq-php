@@ -85,7 +85,7 @@ abstract class RecordGateway {
 	/**
 	 * Compile a query for a specific data source.
 	 */
-	abstract protected function compileQuery(AbstractQuery $query, $type);
+	abstract protected function compileQuery(Query $query, $type);
 	
 	/**
 	 * Get a string representation for a datasource-specic query. Even if
@@ -95,21 +95,21 @@ abstract class RecordGateway {
 		
 		// the query object actually returns a predicates object at once point
 		// so we need to get it out of the predicates object
-		if($query instanceof AbstractPredicates)
+		if($query instanceof QueryPredicates)
 			$query = $query->getQuery();
 		
 		// if we were given or derived an abstract query object then we need
 		// to compile it.
-		if($query instanceof AbstractQuery) {
+		if($query instanceof Query) {
 			
 			// the query has already been compiled and cached, use it
-			if(NULL !== ($cached = ConcreteQuery::getCachedQuery($query)))
+			if(NULL !== ($cached = QueryCompiler::getCachedQuery($query)))
 				return $cached;
 			
 			// nope, we need to compile the query
 			$stmt = $this->compileQuery($query, $type);
 			
-			ConcreteQuery::cacheQuery($query, $stmt);
+			QueryCompiler::cacheQuery($query, $stmt);
 			
 			$query = $stmt;
 		}
@@ -125,7 +125,7 @@ abstract class RecordGateway {
 	public function find($query, array $args = array()) {
 		
 		// add in a limit to the query
-		if($query instanceof AbstractPredicates)
+		if($query instanceof QueryPredicates)
 			$query->limit(1);
 		
 		// find all results
@@ -171,7 +171,7 @@ abstract class RecordGateway {
 	 * substitute into the query.
 	 */
 	public function findAll($query, array $args = array()) {
-		$query = $this->getQuery($query, ConcreteQuery::SELECT);
+		$query = $this->getQuery($query, QueryCompiler::SELECT);
 		return $this->ds->select($query, $args);
 	}
 	
@@ -184,9 +184,9 @@ abstract class RecordGateway {
 	public function delete($what, array $args = array()) {
 		
 		// deleting based on a query
-		if(is_string($what) || $what instanceof AbstractQuery) {
+		if(is_string($what) || $what instanceof Query) {
 			
-			$query = $this->getQuery($query, ConcreteQuery::DELETE);
+			$query = $this->getQuery($query, QueryCompiler::DELETE);
 			return $this->ds->update($query, $args);
 			
 		// deleting based on a record

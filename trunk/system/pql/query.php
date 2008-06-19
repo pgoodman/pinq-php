@@ -17,7 +17,7 @@ if(!function_exists("from")) {
 	
 	// return a new pinq object
 	function &from($ds, $alias = NULL) {
-		$pinq = new AbstractQueryLanguage;
+		$pinq = new QueryLanguage;
 		$pinq->setDataSource($ds, $alias);
 		return $pinq;
 	}
@@ -42,7 +42,7 @@ if(!function_exists("from")) {
  * but it was simple :P 
  * @author Peter Goodman
  */
-abstract class AbstractQuery extends Stack {
+abstract class Query extends Stack {
 	
 	// relation options
 	const PIVOT_LEFT = 1,
@@ -257,11 +257,11 @@ abstract class AbstractQuery extends Stack {
 	}
 	
 	/**
-	 * Set the predicates array. This is usually called by AbstractPredicates
+	 * Set the predicates array. This is usually called by QueryPredicates
 	 * right before the query is compiled.
 	 * @internal
 	 */
-	public function setPredicates(AbstractPredicates $predicates) {
+	public function setPredicates(QueryPredicates $predicates) {
 		$this->predicates = $predicates->getPredicates();
 	}
 }
@@ -272,7 +272,7 @@ abstract class AbstractQuery extends Stack {
  * data. Given this, there are no defined 'update' or 'delete' methods.
  * @author Peter Goodman
  */
-class AbstractQueryLanguage extends AbstractQuery {
+class QueryLanguage extends Query {
 	
 	/**
 	 * Constructor, set up the operator table if it hasn't been yet.
@@ -281,7 +281,7 @@ class AbstractQueryLanguage extends AbstractQuery {
 		parent::__construct();
 	}
 	
-	protected function &getAbstractPredicates($type) {
+	protected function &getQueryPredicates($type) {
 		
 		// if we're only working with one source then it makes more sense
 		// to work with less clunky operators
@@ -305,13 +305,13 @@ class AbstractQueryLanguage extends AbstractQuery {
 		$op = strtolower($op);
 		
 		$types = array(
-			'where' => AbstractPredicates::WHERE,
-			'group' => AbstractPredicates::GROUP_BY,
-			'order' => AbstractPredicates::ORDER_BY,
+			'where' => QueryPredicates::WHERE,
+			'group' => QueryPredicates::GROUP_BY,
+			'order' => QueryPredicates::ORDER_BY,
 		);
 		
 		if(isset($types[$op]))
-			return $this->getAbstractPredicates($types[$op]);
+			return $this->getQueryPredicates($types[$op]);
 
 		return $this;
 	}
@@ -324,12 +324,12 @@ class AbstractQueryLanguage extends AbstractQuery {
 	public function limit() {
 		$args = func_get_args();
 		$predicates = pql_create_predicates(
-			AbstractPredicates::LIMIT, 
+			QueryPredicates::LIMIT, 
 			$this,
 			'Abstract'. (count($this->sources) > 1 ? 'SingleSource' : '') .
 			'Predicates'
 		);
-		$predicates->addOperand(AbstractPredicates::VALUE_CONSTANT, $args);
+		$predicates->addOperand(QueryPredicates::VALUE_CONSTANT, $args);
 		
 		return $this;
 	}
@@ -371,7 +371,7 @@ class AbstractQueryLanguage extends AbstractQuery {
 
 			// where clause
 			case 'where';
-				return $this->getAbstractPredicates();
+				return $this->getQueryPredicates();
 		}
 		
 		return $this;

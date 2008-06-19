@@ -6,7 +6,7 @@
 
 abstract class ModelGateway extends RecordGateway {
 	
-	// an instance of AbstractQuery
+	// an instance of Query
 	protected $partial_query,
 	          $model_name,
 	          $cached_relations = array();
@@ -44,7 +44,7 @@ abstract class ModelGateway extends RecordGateway {
 		
 		// we've got a predicates object and we also have a query object
 		// as an instance method
-		if($predicates instanceof AbstractPredicates)
+		if($predicates instanceof QueryPredicates)
 			$query->setPredicates($predicates);
 				
 		// compile the query
@@ -61,7 +61,7 @@ abstract class ModelGateway extends RecordGateway {
 	 * Set this gateway's partial query. This is really only an query on a
 	 * specific model that selects all of its fields.
 	 */
-	public function setPartialQuery(AbstractQuery $query) {
+	public function setPartialQuery(Query $query) {
 		$this->partial_query = $query;
 	}
 	
@@ -119,14 +119,14 @@ abstract class ModelGateway extends RecordGateway {
 				$query->from($record_name)->link(
 					$this->model_name, 
 					$record_name, 
-					AbstractQuery::PIVOT_RIGHT
+					Query::PIVOT_RIGHT
 				);
 			
 				// cache the compiled query, note that uses record gateway's
 				// compile query method
 				$this->cached_relations[$record_name] = parent::getQuery(
 					$query, 
-					ConcreteQuery::SELECT
+					QueryCompiler::SELECT
 				);
 			}
 			
