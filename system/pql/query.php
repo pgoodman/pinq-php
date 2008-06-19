@@ -281,57 +281,27 @@ class QueryLanguage extends Query {
 		parent::__construct();
 	}
 	
-	protected function &getQueryPredicates($type) {
-		
-		// if we're only working with one source then it makes more sense
-		// to work with less clunky operators
-		$class = 'Abstract'. (count($this->sources) > 1 ? 'SingleSource' : '') .
-		         'Predicates';
-		
-		// reference into the predicates array and return
-		$predicates = pql_create_predicates($type, $this, $class);
-		$this->setPredicates($predicates);
-		
-		return $predicates;
-	}
-	
 	/**
-	 * Parse variable requests, these are usually operators.
-	 * TODO: refactor
+	 * If we link into predicates using 
 	 */
 	public function __get($op) {
-		//$this->parseOperator($op);
-		
-		$op = strtolower($op);
-		
-		$types = array(
-			'where' => QueryPredicates::WHERE,
-			'group' => QueryPredicates::GROUP_BY,
-			'order' => QueryPredicates::ORDER_BY,
-		);
-		
-		if(isset($types[$op]))
-			return $this->getQueryPredicates($types[$op]);
+				
+		// return a new predicates object if this is a valid predicate
+		// operator
+		if(in_array(strtolower($op), array('where',	'group', 'order'))) {
+			$predicates = new QueryPredicates($this);
+			return $predicates->$op();
+		}
 
 		return $this;
 	}
 	
 	/**
-	 * Predicates limit function. This is an unfortunate duplication of some
-	 * stuff in abstract-predicates.
-	 * TODO: refactor
+	 * Predicates limit function.
 	 */
-	public function limit() {
-		$args = func_get_args();
-		$predicates = pql_create_predicates(
-			QueryPredicates::LIMIT, 
-			$this,
-			'Abstract'. (count($this->sources) > 1 ? 'SingleSource' : '') .
-			'Predicates'
-		);
-		$predicates->addOperand(QueryPredicates::VALUE_CONSTANT, $args);
-		
-		return $this;
+	public function limit($start, $offset = NULL) {
+		$predicates = new QueryPredicates($this);
+		return $predicates->limit($start, $offset);
 	}
 	
 	/**

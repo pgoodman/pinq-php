@@ -44,7 +44,6 @@ class MysqlDatabase extends Database {
 	 */
 	protected function query($query, array $args) {
 		$query = $this->substituteArgs($query, $args);
-		echo "here: {$query}\n\n";
 		return mysql_query($query, $this->conn);
 	}
 	
