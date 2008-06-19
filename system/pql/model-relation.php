@@ -8,7 +8,7 @@
  * A class that given two models will find an abstract path between them.
  * @author Peter Goodman
  */
-class AbstractRelation {
+class ModelRelation {
 	
 	const DIRECT = 1,
 		  INDIRECT = 2;

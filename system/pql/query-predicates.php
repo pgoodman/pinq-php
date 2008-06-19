@@ -6,29 +6,29 @@
 
 if(!function_exists('where')) {
 	
-	function &pql_create_predicates($pred_type, AbstractQuery $query = NULL, $class = 'AbstractSingleSourcePredicates') {
+	function &pql_create_predicates($pred_type, Query $query = NULL, $class = 'AbstractSingleSourcePredicates') {
 		$predicates = new $class($query);
 		$predicates->addOperator($pred_type);
 		return $predicates;
 	}
 	
 	function &where() {
-		return pql_create_predicates(AbstractPredicates::WHERE);
+		return pql_create_predicates(QueryPredicates::WHERE);
 	}
 	
 	function &limit() {
 		$args = func_get_args();
-		$predicates = pql_create_predicates(AbstractPredicates::LIMIT);
-		$predicates->addOperand(AbstractPredicates::VALUE_CONSTANT, $args);
+		$predicates = pql_create_predicates(QueryPredicates::LIMIT);
+		$predicates->addOperand(QueryPredicates::VALUE_CONSTANT, $args);
 		return $predicates;
 	}
 	
 	function &order() {
-		return pql_create_predicates(AbstractPredicates::ORDER_BY);
+		return pql_create_predicates(QueryPredicates::ORDER_BY);
 	}
 	
 	function &group() {
-		return pql_create_predicates(AbstractPredicates::GROUP_BY);
+		return pql_create_predicates(QueryPredicates::GROUP_BY);
 	}
 }
 
@@ -41,7 +41,7 @@ class QueryPredicates {
 	/**
 	 * Constructor, set up the default set of predicates.
 	 */
-	public function __construct(AbstractQuery $query) {
+	public function __construct(Query $query) {
 		
 		// the predicates table
 		$this->_predicates = array(

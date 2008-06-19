@@ -9,7 +9,7 @@
  * statement, out of an abstract query. Amusingly, this class is abstract.
  * @author Peter Goodman
  */
-abstract class ConcreteQuery {
+abstract class QueryCompiler implements Compiler {
 	
 	// query types
 	const SELECT = 1,
@@ -26,7 +26,7 @@ abstract class ConcreteQuery {
 	/**
 	 * Constructor, bring in the query and models.
 	 */
-	public function __construct(AbstractQuery $query, Dictionary $models) {
+	public function __construct(Query $query, Dictionary $models) {
 		$this->query = $query;
 		$this->models = $models;
 	}
@@ -35,7 +35,7 @@ abstract class ConcreteQuery {
 	 * See if a compiled query is already in the cache.
 	 * @internal
 	 */
-	static public function getCachedQuery(AbstractQuery $query) {
+	static public function getCachedQuery(Query $query) {
 		if(isset(self::$cache[$query->id]))
 			return self::$cache[$query->id];
 		
@@ -47,7 +47,7 @@ abstract class ConcreteQuery {
 	 * an array of string statements.
 	 * @internal
 	 */
-	static public function cacheQuery(AbstractQuery $query, $stmt) {
+	static public function cacheQuery(Query $query, $stmt) {
 		self::$cache[$query->id] = $stmt;
 	}
 	
@@ -93,7 +93,7 @@ abstract class ConcreteQuery {
 				// going through other models to get from $left to $right.
 				// if that's the case then we will add these dependencies
 				// into the graph.
-				$path = AbstractRelation::findPath(
+				$path = ModelRelation::findPath(
 					$aliases[$left], 
 					$aliases[$right], 
 					$this->models
@@ -209,7 +209,7 @@ abstract class ConcreteQuery {
 	/**
 	 * Compile a certain type of query.
 	 */
-	public function compileByType($type) {
+	public function compile($type) {
 		switch($type) {
 			case self::SELECT:
 				return $this->compileSelect();

@@ -13,7 +13,7 @@ if(!function_exists('struct')) {
 	 * @author Peter Goodman
 	 */
 	function &struct($name = NULL) {
-		$model = new AbstractModel($name);
+		$model = new Model($name);
 		return $model;
 	}
 	
@@ -33,7 +33,7 @@ if(!function_exists('struct')) {
  * instantiate and use this class.
  * @author Peter Goodman
  */
-class AbstractModel extends Stack {
+class Model extends Stack {
 	
 	const TYPE_STRING = 1,
 		  TYPE_INT = 2,
@@ -257,8 +257,8 @@ class AbstractModel extends Stack {
 	public function relatesTo($alias, array $through = NULL) {
 		
 		// add the relationship
-		$how = !empty($through) ? AbstractRelation::INDIRECT
-		                        : AbstractRelation::DIRECT;
+		$how = !empty($through) ? ModelRelation::INDIRECT
+		                        : ModelRelation::DIRECT;
 		
 		$this->_relations[$alias] = array($how, $through);
 		
@@ -273,7 +273,7 @@ class AbstractModel extends Stack {
 			// isn't then we'll assume direct
 			if(!isset($this->_relations[$alias])) {
 				$this->_relations[$alias] = array(
-					AbstractRelation::DIRECT, 
+					ModelRelation::DIRECT, 
 					NULL
 				);
 			}

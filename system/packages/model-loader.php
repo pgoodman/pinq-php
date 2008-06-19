@@ -67,7 +67,7 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 	/**
 	 * This is more for semantic meaning than actual practical use.
 	 */
-	public function create($key, AbstractModel $model) {		
+	public function create($key, Model $model) {		
 		parent::offsetSet($key, $model);
 	}
 }
