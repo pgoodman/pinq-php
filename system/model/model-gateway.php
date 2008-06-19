@@ -54,8 +54,6 @@ abstract class ModelGateway extends RecordGateway {
 		if(is_string($predicates))
 			$query .= " {$predicates}";
 		
-		echo "{$query}\n\n";
-		
 		return (string)$query;
 	}
 	
@@ -132,6 +130,7 @@ abstract class ModelGateway extends RecordGateway {
 				);
 			}
 			
+			$args = $record->toArray();
 			$query = $this->cached_relations[$record_name];
 		}
 		

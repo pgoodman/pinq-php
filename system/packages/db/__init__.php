@@ -43,7 +43,7 @@ class PinqDb implements ConfigurablePackage {
 		
 		// take the first db config by default
 		if(!empty($info) && $argc === 0)
-			$argv[0] = current(array_keys($info));
+			$argv[0] = key($info);
 		
 		// we've been given a database alias but it hasn't been configured
 		// if $argv[0] also doesn't exist then the isset will fail, which is
