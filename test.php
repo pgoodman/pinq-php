@@ -2,22 +2,18 @@
 
 error_reporting(E_ALL | E_STRICT);
 
+define('DIR_SYSTEM', dirname(__FILE__) .'/system/');
 
-function get_data($url) {
-	$ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HEADER, TRUE);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($ch, CURLOPT_FAILONERROR, TRUE);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-	//curl_setopt($ch, CURLOPT_HTTPHEADER, array('Host: ere.net'));
-	$data = curl_exec($ch);
-    curl_close($ch);
-	return $data;
-}
+require_once DIR_SYSTEM .'/interfaces.php';
+require_once DIR_SYSTEM .'/stack.php';
+require_once DIR_SYSTEM .'/pql/__init__.php';
 
-echo get_data('http://localhost/PINQ/public_html/');
+$query = where()->imm(1)->add->in->imm(2)->mul->imm(3)->add->imm(4)->out->sub->imm(5)->
+         order()->left->ASC;
+
+print_r($query->getPredicates());
+
+exit;
 
 /*
 define('DIR_WORKING', dirname(__FILE__));

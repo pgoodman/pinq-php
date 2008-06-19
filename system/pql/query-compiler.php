@@ -207,9 +207,18 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
+	 * Predicates iterator.
+	 */
+	public function getPredicates($context) {
+		
+		$predicates = &$this->query->predicates[$context];
+	}
+	
+	/**
 	 * Compile a certain type of query.
 	 */
-	public function compile($type) {
+	public function compile($flags = 0) {
+		
 		switch($type) {
 			case self::SELECT:
 				return $this->compileSelect();
@@ -226,8 +235,11 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Compile the abstract query into something concrete.
+	 * Abstract methods.
 	 */
+	abstract protected function compileOperator($key, $value);
+	abstract protected function compileOperand($key, $value);
+	
 	abstract protected function compileSelect();
 	abstract protected function compileUpdate();        
 	abstract protected function compileInsert();   
