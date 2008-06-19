@@ -11,7 +11,7 @@ require_once DIR_PACKAGE_DATABASE .'/exceptions.php';
 require_once DIR_PACKAGE_DATABASE .'/data-source.php';
 require_once DIR_PACKAGE_DATABASE .'/record-iterator.php';
 require_once DIR_PACKAGE_DATABASE .'/record.php';
-require_once DIR_PACKAGE_DATABASE .'/concrete-query.php';
+require_once DIR_PACKAGE_DATABASE .'/query-compiler.php';
 require_once DIR_PACKAGE_DATABASE .'/record-gateway.php';
 require_once DIR_PACKAGE_DATABASE .'/model-gateway.php';
 
