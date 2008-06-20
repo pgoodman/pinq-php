@@ -17,7 +17,7 @@ abstract class QueryCompiler implements Compiler {
 	      UPDATE = 4,
 	      DELETE = 8;
 	
-	static protected $cache = array();
+	//static protected $cache = array();
 	
 	// the query and models
 	protected $query,
@@ -36,21 +36,21 @@ abstract class QueryCompiler implements Compiler {
 	 * See if a compiled query is already in the cache.
 	 * @internal
 	 */
-	static public function getCachedQuery(Query $query) {
+	/*static public function getCachedQuery(Query $query) {
 		if(isset(self::$cache[$query->_id]))
 			return self::$cache[$query->_id];
 		
 		return NULL;
-	}
+	}*/
 	
 	/**
 	 * Cache a compiled query. $stmt is expected to be a string statement or
 	 * an array of string statements.
 	 * @internal
 	 */
-	static public function cacheQuery(Query $query, $stmt) {
+	/*static public function cacheQuery(Query $query, $stmt) {
 		self::$cache[$query->_id] = $stmt;
-	}
+	}*/
 	
 	/**
 	 * Return a graph of the dependencies for this query, that is, lay out the
@@ -235,7 +235,7 @@ abstract class QueryCompiler implements Compiler {
 					
 				$op = $predicate[1];
 				
-				// prefix
+				// prefix, special cases
 				if($op == 'like' || $op == 'not') {
 					
 					$stack->push($this->compilePrefixOperator(

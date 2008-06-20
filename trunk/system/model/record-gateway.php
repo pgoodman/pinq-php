@@ -10,10 +10,11 @@
  */
 abstract class RecordGateway {
 	
-	// the data source
+	// the data source and some related stuff
 	protected $ds,
 	          $models,
-	          $cached_gateways = array();
+	          $cached_gateways = array(),
+	          $cached_queries = array();
 	
 	/**
 	 * Constructor, bring in the data source.
@@ -92,7 +93,7 @@ abstract class RecordGateway {
 	 * abstract query isn't being used, the type can stille be helpful.
 	 */
 	protected function getQuery($query, $type) {
-		
+				
 		if(is_string($query))
 			return $query;
 				
@@ -106,14 +107,19 @@ abstract class RecordGateway {
 		if($query instanceof Query) {
 			
 			// the query has already been compiled and cached, use it
-			if(NULL !== ($cached = QueryCompiler::getCachedQuery($query)))
-				return $cached;
+			//if(NULL !== ($cached = QueryCompiler::getCachedQuery($query)))
+			if(isset($this->cached_queries[$query->_id]))
+				return $this->cached_queries[$query->_id];
 			
 			// nope, we need to compile the query
-			$stmt = $this->compileQuery($query, $type);
-			QueryCompiler::cacheQuery($query, $stmt);
+			$query = $this->cached_queries[$query->_id] = $this->compileQuery(
+				$query, 
+				$type
+			);
 			
-			$query = $stmt;
+			//QueryCompiler::cacheQuery($query, $stmt);
+			
+			//$query = $stmt;
 		}
 						
 		return (string)$query;

@@ -114,7 +114,7 @@ abstract class ModelGateway extends RecordGateway {
 			// because if they are called on in a loop then this function
 			// would otherwise be very slow
 			if(!isset($this->cached_relations[$record_name])) {
-								
+												
 				// clone it so that we can use it again if necessary
 				$query = clone $this->partial_query;
 				

@@ -365,7 +365,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	}
 	
 	/**
-	 * Compile and abstract query into a SQL SELECT statement.
+	 * Compile a PQL query into a SQL SELECT statement.
+	 * @internal
 	 */
 	protected function compileSelect() {
 		
