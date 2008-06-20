@@ -10,10 +10,10 @@ class IndexController extends PinqController {
         
         // import the ere database and its associated models
         $db = $this->import('db.ere');
-        
+		
         // find all jobs including with their content information by a
         // specific tag name passed in through the route
-        /*$jobs = $db->findAll(
+        $jobs = $db->findAll(
         
             // get all columns from the job posting table
             from('job_postings', 'jp')->select(ALL)->
@@ -24,30 +24,16 @@ class IndexController extends PinqController {
 
             // link tags to job postings with an implicit through join
             from('tags')->link('jp', 'tags')->where->tags('Name')->eq(_)->
-			limit(5),
+			limit(2),
 
             // substitute into the query for the tag name
             array($tag_name)
-        );*/
-		
-		
-		/*$tags_gateway = $db->tags;
-		
-		// find all jobs
-		foreach($db->job_postings->findAll(limit(2)) as $job) {
-			print_r($job);
-			
-			$tags = $tags_gateway->findAll($job);
-			
-			var_dump($tags);
-		}*/
-		
-		// find al jobs by a tag	
-		
+        );
+
 		
         // iterate over the jobs and output html for them. this would
         // eventually be moved to some sort of view
-        /*foreach($jobs as $job) {
+        foreach($jobs as $job) {
 						
 			// output the job posting content
             outln(
@@ -55,16 +41,19 @@ class IndexController extends PinqController {
                 '<hr />',
                 '<div>',
                 $job['ContentHtml'],
-                '</div>'
+                '</div>',
+				'<strong>Tags:</strong>',
+				'<ul>'
             );
 			
-			// output the tags
-			$sep = '';
-			foreach($db->findAll($job->content->tags) as $tag) {
-				out('<span>', $tag['Name'], '</span>', $sep);
-				$sep = ',';
-			}
-        }*/
+			// output the tags. the tags need to be found using
+			// $job->job_postings because $job is an ambiguous record, meaning
+			// it is actually two records in one.
+			foreach($db->tags->findAll($job->job_postings) as $tag)
+				out('<li>', $tag['Name'], '</li>');
+			
+			out('</ul>');
+        }
         
         // all done :D
     }

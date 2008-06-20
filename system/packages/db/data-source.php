@@ -13,7 +13,7 @@ abstract class Database implements DataSource {
 	abstract protected function query($query, array $args);
 	abstract protected function error();
 	abstract protected function insertId();
-	abstract protected function quote($str);
+	abstract public function quote($str);
 	abstract protected function affectedRows();
 	abstract protected function getRecordIterator($result);
 	
@@ -58,7 +58,7 @@ abstract class Database implements DataSource {
 		// in the query are also associative and turn them into question marks
 		if(is_string(key($args))) {
 			
-			$key_pattern = '~:([^:\s\b]+)~';
+			$key_pattern = '~:([^:\s\b\W]+)~';
 			$matches = array();
 			
 			if(!preg_match_all($key_pattern, $stmt, $matches))
@@ -67,16 +67,28 @@ abstract class Database implements DataSource {
 			// replace all key patterns with question marks
 			$stmt = preg_replace($key_pattern, '?', $stmt);
 			
+			// the intersection
+			$intersection = array_intersect_key(
+				$args, 
+				array_flip($matches[1])
+			);
+			
+			// crap, the args passed don't have all of the proper keys
+			if(count($intersection) < count($matches[1])) {
+				throw new UnexpectedValueException(
+					"Argument passed to database query function expected ".
+					"that the following keys be present: [". 
+					implode(',', $matches[1]) ."]. Not all keys are present."
+				);
+			}
+			
 			// what we are doing is taking the $args array, moving the keys
 			// into the order that they appear in in $stmt, matching the
 			// values to those keys, then dumping the keys so that we can
 			// easily substitute the new args in for question marks.
 			$args = array_values(array_combine(
 				$matches[1], 
-				array_intersect_key(
-					$args, 
-					array_flip($matches[1])
-				)
+				$intersection
 			));
 		}
 		

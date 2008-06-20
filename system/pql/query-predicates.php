@@ -35,16 +35,37 @@ class QueryPredicates extends StackOfStacks {
 	
 	// an array of sets of predicates
 	protected $_predicates, // the predicates are stored in reverse-polish
-	          $_operators,
 	          $_operands,
 	          $_query,
 	          $_context,
 	          $_values;
+	
+	// operators and their precedence levels. high precedence level means
+	// that the operator is more difficult to tear apart
+	static protected $_operators = array(
+		// braces
+		'in' => 7, 'out' => 7,
+
+		// prefix operators
+		'not' => 6, 'like' => 6,
+
+		// arithmetic
+		'mul' => 5, 'div' => 5,
+		'add' => 4, 'sub' => 4,
+
+		// comparison
+		'eq' => 3, 'leq' => 3, 'geq' => 3, 'lt' => 3, 'gt' => 3, 'neq' => 3,
+		'and' => 2, 'or' => 2, 'xor' => 2,
+
+		// pseudo operators that have actual functions
+		'search' => -1, 'with' => -1,
+	);
 		
 	const OPERAND = 1,
 	      OPERATOR = 2,
 	      SUBSTITUTE = 4,
-	      IMMEDIATE = 8;
+	      IMMEDIATE = 8,
+	      REFERENCE = 16;
 	
 	/**
 	 * Constructor, set up the default set of predicates.
@@ -60,28 +81,6 @@ class QueryPredicates extends StackOfStacks {
 			'search' => array(), // a pseudo context
 		);
 		
-		// operators and their precedence levels. high precedence level means
-		// that the operator is more difficult to tear apart
-		$this->_operators = array(
-			
-			// braces
-			'in' => 7, 'out' => 7,
-			
-			// prefix operators
-			'not' => 6, 'like' => 6,
-			
-			// arithmetic
-			'mul' => 5, 'div' => 5,
-			'add' => 4, 'sub' => 4,
-			
-			// comparison
-			'eq' => 3, 'leq' => 3, 'geq' => 3, 'lt' => 3, 'gt' => 3, 'neq' => 3,
-			'and' => 2, 'or' => 2, 'xor' => 2,
-			
-			// pseudo operators that have actual functions
-			'search' => -1, 'with' => -1,
-		);
-		
 		$this->_query = $query;
 		$this->setContext('where');
 	}
@@ -90,23 +89,30 @@ class QueryPredicates extends StackOfStacks {
 	 * Set/change the current query these predicates work for.
 	 */
 	public function setQuery(Query $query) {
-		$this->query = $query;
+		$this->_query = $query;
 	}
 	
 	/**
 	 * Get the query that these predicates link to.
 	 */
 	public function getQuery() {
-		return $this->query;
+		return $this->_query;
 	}
 	
 	/**
 	 * Get the predicates, and make sure to finish off anything still left
 	 * on the stack.
 	 */
-	public function getPredicates() {
+	public function getPredicates($context) {
 		$this->addTrailingOperators();
-		return $this->_predicates;
+		return $this->_predicates[$context];
+	}
+	
+	/**
+	 * Check if the context is empty.
+	 */
+	public function contextIsEmpty() {
+		return empty($this->_context);
 	}
 	
 	/**
@@ -131,7 +137,8 @@ class QueryPredicates extends StackOfStacks {
 	 * Add an operand.
 	 */
 	protected function addOperand($key, $value) {
-		$this->_context[] = array(self::OPERAND, $key, $value);
+		$type = ($value === _) ? self::SUBSTITUTE : self::OPERAND;
+		$this->_context[] = array($type, $key, $value);
 		return $this;
 	}
 	
@@ -145,11 +152,32 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
+	 * Add a model/field reference.
+	 */
+	protected function addReference($model, $field) {
+		$this->_context[] = array(self::REFERENCE, $model, $field);
+		return $this;
+	}
+	
+	/**
 	 * Add to the limit clause. Limit does not need a context.
 	 */
 	public function limit($start, $offset = NULL) {
-		$array = NULL === $offset ? array($start) : array($start, $offset);
-		$this->_predicates['limit'] = $array;
+		//$array = NULL === $offset ? array($start) : array($start, $offset);
+		
+		$this->_predicates['limit'] = array();
+		$this->setContext('limit');
+		
+		// clear any previous stuff
+		
+		
+		if($start === _) $this->_(NULL); else $this->imm($start);
+		
+		if($offset !== NULL) {
+			$this->addOperand(NULL, 'offset');
+			if($offset === _) $this->_(NULL); else $this->imm($offset);
+		}		
+		
 		return $this;
 	}
 	
@@ -176,7 +204,7 @@ class QueryPredicates extends StackOfStacks {
 		$this->setContext('where');
 		
 		// add in the special search predicate
-		$this->_predicates[] = array(self::OPERATOR, 'search', array(
+		$this->_context[] = array(self::OPERATOR, 'search', array(
 			'fields' => $this->_predicates['search'],
 			'value' => $val,
 		));
@@ -192,7 +220,7 @@ class QueryPredicates extends StackOfStacks {
 	 */
 	public function parseOperator($op, array $args = NULL) {
 		$op = strtolower($op);
-		$ops = $this->_operators;
+		$ops = self::$_operators;
 		
 		// a opening brace is being used, push on a new stack
 		if($op == 'in')
@@ -221,8 +249,12 @@ class QueryPredicates extends StackOfStacks {
 			
 			// was there also an argument?
 			if(!empty($args)) {
+				
+				// add in the substitute
 				if($args[0] === _)
-					$this->addOperand(NULL, _);
+					$this->_(NULL);
+				
+				// add in the immediate constant
 				else
 					$this->imm($args[0]);
 					
@@ -245,7 +277,7 @@ class QueryPredicates extends StackOfStacks {
 		// assume it's an aliased operand, the function name is the alias and
 		// $args[0] is the field
 		if(!$this->parseOperator($fn, $args) && !empty($args))
-			return $this->addOperand($fn, $args[0]);
+			return $this->addReference($fn, $args[0]);
 		
 		return $this;
 	}
@@ -257,10 +289,20 @@ class QueryPredicates extends StackOfStacks {
 	public function __get($key) {
 		if(!$this->parseOperator($key)) {
 			
-			if($key != '_')
-				$this->addOperand(strtolower($key), NULL);
-			else
-				$this->addOperand(NULL, _);
+			if($key != '_') {
+				$lower = strtolower($key);
+				
+				// special cases
+				if($lower == 'asc' || $lower == 'desc' || $lower == 'having')
+					$this->addOperand(NULL, $key);
+				
+				// assume it's a model/field reference
+				else
+					$this->addReference(NULL, $key);
+			
+			// substitiute
+			} else
+				$this->_(NULL);
 		}
 		
 		return $this;
@@ -278,6 +320,10 @@ class QueryPredicates extends StackOfStacks {
 	 * Put in an immediate value.
 	 */
 	public function imm($val) {
+		
+		if($val === _)
+			return $this->_(NULL);
+		
 		$this->_context[] = array(self::IMMEDIATE, NULL, $val);
 		return $this;
 	}

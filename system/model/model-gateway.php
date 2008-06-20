@@ -44,15 +44,17 @@ abstract class ModelGateway extends RecordGateway {
 		
 		// we've got a predicates object and we also have a query object
 		// as an instance method
-		if($predicates instanceof QueryPredicates)
+		if($predicates instanceof QueryPredicates) {
+			$predicates->setQuery($query);
 			$query->setPredicates($predicates);
+		}
 				
 		// compile the query
 		$query = $this->compileQuery($query, $type);
-		
+				
 		// a string was passed instead of a predicates object
-		if(is_string($predicates))
-			$query .= " {$predicates}";
+		//if(is_string($predicates))
+		//	$query .= " {$predicates}";
 		
 		return (string)$query;
 	}
