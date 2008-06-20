@@ -33,6 +33,9 @@ define('PINQ_IN_IIS', defined('SERVER_IIS') && TRUE === SERVER_IIS);
 define('DIR_SYSTEM', dirname(__FILE__));
 define('DIR_PACKAGES', DIR_SYSTEM .'/packages/');
 
+// for when getting the raw POST data
+define('RAW_POST_DATA', 'php://input');
+
 // start the session and regenerate the id
 session_start();
 //session_regenerate_id(FALSE);
@@ -159,19 +162,21 @@ function pinq($script_file, $app_dir) {
 	// HTTP request errors, Thus is for allall http status codes >= 400.
 	} catch(HttpRequestException $e) {
 
-		print_r($e);
+		echo 'request exception';
 
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.
 	} catch(HttpRedirectException $e) {
 
-		echo 'redirect';
+		echo 'redirect exception';
 
 	// catch ALL exceptions that have bubbled up this far. We hope there are 
 	// none but there's no guarantee	
 	} catch(Exception $e) {
-		echo 'oh noes!';
-		print_r($e);
+		
+		print_r($e->getMessage());
+		echo 'top-level exception';
+		
 	}
 
 	// break references, we're done.

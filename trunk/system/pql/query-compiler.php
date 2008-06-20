@@ -21,7 +21,8 @@ abstract class QueryCompiler implements Compiler {
 	
 	// the query and models
 	protected $query,
-	          $models;
+	          $models,
+	          $operands;
 	
 	/**
 	 * Constructor, bring in the query and models.
@@ -36,8 +37,8 @@ abstract class QueryCompiler implements Compiler {
 	 * @internal
 	 */
 	static public function getCachedQuery(Query $query) {
-		if(isset(self::$cache[$query->id]))
-			return self::$cache[$query->id];
+		if(isset(self::$cache[$query->_id]))
+			return self::$cache[$query->_id];
 		
 		return NULL;
 	}
@@ -48,7 +49,7 @@ abstract class QueryCompiler implements Compiler {
 	 * @internal
 	 */
 	static public function cacheQuery(Query $query, $stmt) {
-		self::$cache[$query->id] = $stmt;
+		self::$cache[$query->_id] = $stmt;
 	}
 	
 	/**
@@ -62,8 +63,8 @@ abstract class QueryCompiler implements Compiler {
 		// the table of relations established through the query. we actually
 		// use a copy of the relations because later on it will be modified
 		// and added to (for through relations).
-		$relations = $this->query->relations;
-		$aliases = &$this->query->aliases;
+		$relations = $this->query->_relations;
+		$aliases = &$this->query->_aliases;
 		
 		// to quickly access deeper areas in the graph, we will store
 		// references to each place where these nodes show up in the graph
@@ -207,11 +208,65 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Predicates iterator.
+	 * Predicates compiler. This essentially turns things back into infix from
+	 * postfix.
+	 * @internal
 	 */
-	public function getPredicates($context) {
+	public function compilePredicates($context) {
 		
-		$predicates = &$this->query->predicates[$context];
+		if(!$this->query->_predicates)
+			return NULL;
+		
+		$predicates = $this->query->_predicates->getPredicates($context);
+		
+		if(empty($predicates))
+			return;
+		
+		$stack = new Stack;
+		
+		// go over the predicates from left to right
+		foreach($predicates as $predicate) {
+			
+			if(!is_array($predicate))
+				continue;
+			
+			// operators
+			if($predicate[0] & QueryPredicates::OPERATOR) {
+					
+				$op = $predicate[1];
+				
+				// prefix
+				if($op == 'like' || $op == 'not') {
+					
+					$stack->push($this->compilePrefixOperator(
+						$op,
+						$stack->pop()
+					));
+					
+				// special search operator
+				} else if($op == 'search') {
+				
+					$stack->push($this->compileSearchOperator(
+						$predicate
+					));
+				
+				// infix
+				} else {
+					$right = $stack->pop();					
+					$stack->push($this->compileInfixOperator(
+						$op,
+						$stack->pop(),
+						$right
+					));
+				}
+					
+			// operands	
+			} else {
+				$stack->push($this->compileOperand($predicate));
+			}
+		}
+				
+		return $stack->isEmpty() ? NULL : $stack->toArray();
 	}
 	
 	/**
@@ -219,7 +274,7 @@ abstract class QueryCompiler implements Compiler {
 	 */
 	public function compile($flags = 0) {
 		
-		switch($type) {
+		switch($flags) {
 			case self::SELECT:
 				return $this->compileSelect();
 			
@@ -235,10 +290,41 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
+	 * Compile an operand.
+	 * @internal
+	 */
+	protected function compileOperand(array $op) {
+		
+		// substitute key or value		
+		if($op[0] & QueryPredicates::SUBSTITUTE)
+			return $this->compileSubstitute($op[1]);
+		
+		// reference to a model/field
+		else if($op[0] & QueryPredicates::REFERENCE)
+			return $this->compileReference($op[2], $op[1]);
+		
+		// if we've found a straight operand type
+		else if($op[0] & QueryPredicates::OPERAND)
+			return $this->compileLiteral($op[2]);
+		
+		// immediate constant
+		else
+			return $this->compileImmediate($op[2]);
+	}
+	
+	/**
 	 * Abstract methods.
 	 */
-	abstract protected function compileOperator($key, $value);
-	abstract protected function compileOperand($key, $value);
+	abstract protected function compileReference($field, $model = NULL);
+	abstract protected function compileSubstitute($key);
+	abstract protected function compileLiteral($value);
+	abstract protected function compileImmediate($value);
+	
+	abstract protected function compilePrefixOperator($operator, $operand);
+	abstract protected function compileInfixOperator($operator, $op1, $op2);
+	abstract protected function compileSearchOperator(array $search);
+	
+	abstract protected function compileFields();
 	
 	abstract protected function compileSelect();
 	abstract protected function compileUpdate();        

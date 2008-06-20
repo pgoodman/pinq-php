@@ -93,11 +93,14 @@ abstract class RecordGateway {
 	 */
 	protected function getQuery($query, $type) {
 		
+		if(is_string($query))
+			return $query;
+				
 		// the query object actually returns a predicates object at once point
 		// so we need to get it out of the predicates object
-		if($query instanceof QueryPredicates)
+		if($query instanceof QueryPredicates)	
 			$query = $query->getQuery();
-		
+				
 		// if we were given or derived an abstract query object then we need
 		// to compile it.
 		if($query instanceof Query) {
@@ -108,7 +111,6 @@ abstract class RecordGateway {
 			
 			// nope, we need to compile the query
 			$stmt = $this->compileQuery($query, $type);
-			
 			QueryCompiler::cacheQuery($query, $stmt);
 			
 			$query = $stmt;
@@ -125,8 +127,8 @@ abstract class RecordGateway {
 	public function find($query, array $args = array()) {
 		
 		// add in a limit to the query
-		if($query instanceof QueryPredicates)
-			$query->limit(1);
+		//if($query instanceof QueryPredicates)
+		$query->limit(1);
 		
 		// find all results
 		$result = $this->findAll($query, $args);
@@ -171,7 +173,10 @@ abstract class RecordGateway {
 	 * substitute into the query.
 	 */
 	public function findAll($query, array $args = array()) {
-		$query = $this->getQuery($query, QueryCompiler::SELECT);
+		
+		if(!is_string($query))
+			$query = $this->getQuery($query, QueryCompiler::SELECT);
+		
 		return $this->ds->select($query, $args);
 	}
 	

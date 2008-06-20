@@ -25,6 +25,16 @@ class Stack implements Countable, IteratorAggregate {
 		   $_top = -1;
 	
 	/**
+	 * Constructor, bring in a default stack.
+	 */
+	public function __construct(array $default = NULL) {
+		if(NULL !== $default) {
+			$this->_stack = array_values($default);
+			$this->_top = count($default) - 1;
+		}
+	}
+	
+	/**
 	 * Push something onto the stack.
 	 */
 	public function push($val) {
@@ -37,11 +47,11 @@ class Stack implements Countable, IteratorAggregate {
 	 * anything to pop.
 	 */
 	public function silentPop() {
+		$ret = NULL;
 		try {
 			$ret = $this->pop();
-		} catch(StackException $e) {
-			$ret = NULL;
-		}
+		} catch(StackException $e) { }
+		
 		return $ret;
 	}
 	
@@ -49,8 +59,10 @@ class Stack implements Countable, IteratorAggregate {
 	 * Pop something off the stack.
 	 */
 	public function pop($null = NULL) {
-		if($this->_top-- < 0)
+		if($this->_top < 0)
 			throw new StackException("Nothing to pop off stack.");
+		
+		$this->_top--;
 		
 		return array_pop($this->_stack);
 	}
@@ -94,6 +106,13 @@ class Stack implements Countable, IteratorAggregate {
 	 */
 	public function getIterator() {
 		return new ArrayIterator(array_reverse($this->_stack));
+	}
+	
+	/**
+	 * Get the array inside the stack.
+	 */
+	public function toArray() {
+		return $this->_stack;
 	}
 }
 

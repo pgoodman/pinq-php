@@ -9,9 +9,8 @@ require_once DIR_SYSTEM .'/stack.php';
 require_once DIR_SYSTEM .'/pql/__init__.php';
 
 $query = where()->imm(1)->add->in->imm(2)->mul->imm(3)->add->imm(4)->out->sub->imm(5)->
-         order()->left->ASC;
-
-print_r($query->getPredicates());
+         order()->left->ASC->
+         limit(0, 5);
 
 exit;
 
@@ -109,7 +108,6 @@ $query = in('posts')->set(array('user_id' => _, 'title' => _))->
 
 // from the above query, compile the UPDATE, INSERT, and DELETE queries
 echo SqlQuery::compileUpdate($query, $model) ."\n";
-print_r(SqlQuery::compileInsert($query, $model));
 echo SqlQuery::compileDelete($query, $model);
 */
 /*

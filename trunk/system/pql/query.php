@@ -50,17 +50,16 @@ abstract class Query extends Stack {
 	
 	static protected $query_id = 0;
 	
-	public $aliases		 = array(), // maps aliases to source names
-		   $sources		 = array(), // the data sources being used
-		   $items		 = array(), // what do we want to find from each 
+	public $_aliases = array(), // maps aliases to source names
+		   $_sources = array(), // the data sources being used
+		   $_fields = array(), // what do we want to find from each 
 									// data source?
-		   $item_aliases = array(), // aliases => items
-		   $counts		 = array(), // things in the datasources to count
-		   $values		 = array(), // values for a create / delete / update
-		   $relations	 = array(),
-		   $pivots       = array(),
-		   $predicates   = array(), // conditions to be met on the data 
-		   $id;						// returned
+		   $_counts = array(), // things in the datasources to count
+		   $_values = array(), // values for a create / delete / update
+		   $_relations = array(),
+		   $_pivots = array(),
+		   $_predicates = NULL, // conditions to be met on the data 
+		   $_id;						// returned
 	
 	/** 
 	 * Constructor, very little to set up.
@@ -69,7 +68,7 @@ abstract class Query extends Stack {
 		
 		// give this abstract query a unique id. this is used for query
 		// caching purposes
-		$this->id = self::$query_id++;
+		$this->_id = self::$query_id++;		
 	}
 	
 	/**
@@ -77,16 +76,13 @@ abstract class Query extends Stack {
 	 */
 	public function __destruct() {
 		unset(
-			$this->operands, 
-			$this->operators, 
-			$this->sources,
-			$this->items, 
-			$this->item_aliases, 
-			$this->counts, 
-			$this->values, 
-			$this->predicates,
-			$this->relations,
-			$this->pivots
+			$this->_sources,
+			$this->_fields, 
+			$this->_counts, 
+			$this->_values, 
+			$this->_predicates,
+			$this->_relations,
+			$this->_pivots
 		);
 	}
 	
@@ -94,7 +90,7 @@ abstract class Query extends Stack {
 	 * Clone the query. We need to make sure to change the query id.
 	 */
 	public function __clone() {
-		$this->id = self::$query_id++;
+		$this->_id = self::$query_id++;
 	}
 	
 	/**
@@ -106,8 +102,8 @@ abstract class Query extends Stack {
 		
 		// map the alias back to the source name for later use (in the
 		// concrete query)		
-		$this->aliases[$alias] = $ds;
-		$this->aliases[$ds] = $ds;
+		$this->_aliases[$alias] = $ds;
+		$this->_aliases[$ds] = $ds;
 		
 		// are we dealing with heriarchical data?
 		if(FALSE !== strpos($ds, '.')) {
@@ -117,13 +113,13 @@ abstract class Query extends Stack {
 		// references can only be made through aliasing. why? well, if we are
 		// linking a source to itself, the only way to reliably do this is to
 		// use aliasing.
-		$this->sources[$alias] = $ds;
+		$this->_sources[$alias] = $ds;
 		
 		// set up the default values for this alias
-		$this->items[$alias] = array();
-		$this->counts[$alias] = array();
-		$this->values[$alias] = array();
-		$this->relations[$alias] = array();
+		$this->_fields[$alias] = array();
+		$this->_counts[$alias] = array();
+		$this->_values[$alias] = array();
+		$this->_relations[$alias] = array();
 		$this->push($alias);
 	}
 	
@@ -141,7 +137,7 @@ abstract class Query extends Stack {
 			$alias = (string)$ds;
 		
 		// this data source doesn't yet exist in the query, add it
-		if(!isset($this->sources[$alias]))
+		if(!isset($this->_sources[$alias]))
 			$this->addDataSource($ds, $alias);
 		
 		// this data source exists, push its alias the stack
@@ -162,9 +158,6 @@ abstract class Query extends Stack {
 			if(!is_string($alias))
 				$alias = (string)$item;
 			
-			// a global lookup table for later
-			$this->item_aliases[$alias] = $item;
-			
 			// add the count/find array
 			$array[$ds_alias][$alias] = $item;
 		}
@@ -176,13 +169,14 @@ abstract class Query extends Stack {
 	 * data source to look in.
 	 */
 	public function addItemsToFind(array $items = array()) {
+		
 		$alias = $this->top();
 		
 		// so that we can pass an associative array of mappings in
 		if(count($items) === 1 && is_array($items[0]))
 			$items = $items[0];
 		
-		$this->addTo($this->items, $alias, $items);
+		$this->addTo($this->_fields, $alias, $items);
 	}
 	
 	/**
@@ -192,7 +186,7 @@ abstract class Query extends Stack {
 	 */
 	public function addCount(array $items = array()) {
 		$alias = $this->top();
-		$this->addTo($this->counts, $alias, $items);
+		$this->addTo($this->_counts, $alias, $items);
 	}
 
 	/**
@@ -215,7 +209,7 @@ abstract class Query extends Stack {
 		} else
 			$values = array_shift($values);
 		
-		$this->values[$alias] = array_merge($this->values[$alias], $values);
+		$this->_values[$alias] = array_merge($this->_values[$alias], $values);
 	}
 
 	/**
@@ -228,20 +222,20 @@ abstract class Query extends Stack {
 		$a1 = (string)$a1;
 		$a2 = (string)$a2;
 		
-		if(isset($this->sources[$a1]) && isset($this->sources[$a2])) {
+		if(isset($this->_sources[$a1]) && isset($this->_sources[$a2])) {
 			
-			if(!isset($this->relations[$a1]))
-				$this->relations[$a1] = array();
+			if(!isset($this->_relations[$a1]))
+				$this->_relations[$a1] = array();
 			
-			$this->relations[$a1][] = $a2;
+			$this->_relations[$a1][] = $a2;
 			
 			$pivot = $options & (self::PIVOT_LEFT | self::PIVOT_RIGHT);
 			
 			if($pivot) {
-				if(!isset($this->pivots[$a1]))
-					$this->pivots[$a1] = array();
+				if(!isset($this->_pivots[$a1]))
+					$this->_pivots[$a1] = array();
 				
-				$this->pivots[$a1][$a2] = $pivot;
+				$this->_pivots[$a1][$a2] = $pivot;
 			}
 			
 			return TRUE;
@@ -262,7 +256,7 @@ abstract class Query extends Stack {
 	 * @internal
 	 */
 	public function setPredicates(QueryPredicates $predicates) {
-		$this->predicates = $predicates->getPredicates();
+		$this->_predicates = $predicates;
 	}
 }
 
@@ -289,19 +283,23 @@ class QueryLanguage extends Query {
 		// return a new predicates object if this is a valid predicate
 		// operator
 		if(in_array(strtolower($op), array('where',	'group', 'order'))) {
-			$predicates = new QueryPredicates($this);
-			return $predicates->$op();
+			$this->_predicates = new QueryPredicates($this);
+			return $this->_predicates->$op();
 		}
 
 		return $this;
 	}
 	
+	public function where() { return $this->__get('where'); }
+	public function group() { return $this->__get('group'); }
+	public function order() { return $this->__get('order'); }
+	
 	/**
 	 * Predicates limit function.
 	 */
 	public function limit($start, $offset = NULL) {
-		$predicates = new QueryPredicates($this);
-		return $predicates->limit($start, $offset);
+		$this->_predicates = new QueryPredicates($this);
+		return $this->_predicates->limit($start, $offset);
 	}
 	
 	/**
