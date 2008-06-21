@@ -26,7 +26,7 @@ class ModelRelation {
 		// the while loop is variable, of course.
 		
 		// check if we've already found the path that we're about to compute
-		if(NULL !== ($start = &$models[$current])) {
+		if(NULL !== ($start = $models[$current])) {
 			if(isset($start->_cached_paths[$to_alias]))
 				return $start->_cached_paths[$to_alias];
 		}
