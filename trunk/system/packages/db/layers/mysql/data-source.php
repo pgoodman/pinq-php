@@ -43,19 +43,7 @@ class MysqlDatabase extends Database {
 	 * Query a MySQL database and return a result.
 	 */
 	protected function query($query, array $args) {
-		list($sm, $ss) = explode(' ', microtime());
-		$query = $this->substituteArgs($query, $args);
-		
-		out('<pre>', $query, '</pre>');
-		list($em, $es) = explode(' ', microtime());
-		out('<pre>', 'Query argument substitution time:', ($em + $es) - ($sm + $ss), '</pre>');
-		
-		list($sm, $ss) = explode(' ', microtime());
-		$result = mysql_query($query, $this->conn);
-		list($em, $es) = explode(' ', microtime());
-		out('<pre>', 'Query time:', ($em + $es) - ($sm + $ss), '</pre>');
-		
-		return $result;
+		return mysql_query($this->substituteArgs($query, $args), $this->conn);
 	}
 	
 	/**

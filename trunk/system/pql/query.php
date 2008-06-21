@@ -43,17 +43,18 @@ class Query {
 	static protected $query_id = 0;
 	
 	// stuff needed
-	public $_contexts = array(),
-	       $_context,
-	       $_links = array(),
-	       $_pivots = array(),
-	       $_predicates,
-	       $_aliases = array();
+	public $_contexts = array(), // an array of the different sources
+	       $_context, // a reference to one of the sources in $_contexts
+	       $_links = array(), // query relationships to be satisfied
+	       $_pivots = array(), // query pivots following the relationships
+	       $_predicates, // query-predicates instance or null
+	       $_aliases = array(); // maps query aliases to the model names
 	
 	/** 
 	 * Constructor, very little to set up.
 	 */
 	public function __construct() {
+		
 		// give this abstract query a unique id. this is used for transient 
 		// query caching
 		$this->_id = self::$query_id++;
