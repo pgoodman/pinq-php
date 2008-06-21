@@ -10,7 +10,7 @@ $model->store('job_postings', struct('jobs_JobPostings')->
     Instructions            ->string()->
     EmployerName            ->string(100)->
     ClickThroughUrl         ->string(150)->
-    relatesTo('content')->
+
     relatesTo('users', through('user_content_roles'))->
     relatesTo('tags', through('content'))
 );
@@ -23,7 +23,6 @@ $model->store('content', struct('www_Content')->
     Title                   ->string(75)->
     ContentHtml             ->string()->
     
-    relatesTo('job_postings')->
     relatesTo('tags', through('content_tags'))->
     relatesTo('users', through('user_content_roles'))
 );
@@ -32,10 +31,7 @@ $model->store('content', struct('www_Content')->
 $model->store('content_tags', struct('www_ContentTags')->
     Id                      ->int(11)->primary_key()->auto_increment(1)->
     ContentId               ->int(11)->mapTo('content', 'Id')->
-    TagId                   ->int(11)->mapTo('tags', 'Id')->
-    
-    relatesTo('content')->
-    relatesTo('tags')
+    TagId                   ->int(11)->mapTo('tags', 'Id')
 );
 
 // tags
@@ -61,8 +57,5 @@ $model->store('users', struct('auth_Users')->
 $model->store('user_content_roles', struct('www_UserContentRoles')->
     Id                      ->int(11)->primary_key()->auto_increment(1)->
     UserId                  ->int(11)->mapTo('users', 'Id')->
-    ContentId               ->int(11)->mapTo('content', 'Id')->
-    
-    relatesTo('users')->
-    relatesTo('content')
+    ContentId               ->int(11)->mapTo('content', 'Id')
 );

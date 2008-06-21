@@ -122,7 +122,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
-			if($model_name == ($table_name = $this->getAbsoluteModelName($model_name)))
+			$table_name = $this->getAbsoluteModelName($model_name);
+			if($model_name == $table_name)
 				$table_name = '';
 			
 			// add in a leading comma for top-level froms and a join prefix
@@ -301,7 +302,6 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	protected function createPivots() {
 		
 		$query = $this->query;
-		$predicates = $query->getPredicates();
 		$pivots = $query->getPivots();
 		
 		// no pivoting needed
@@ -310,7 +310,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// set the predicates context and figure out if we need to begin by
 		// joining with an AND or not
-		$predicates
+		($predicates = $query->getPredicates())
 		 and ($predicates = $predicates->where())
 		 or ($predicates = where());
 				
@@ -319,11 +319,13 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		// add in the pivots
 		foreach($pivots as $left_alias => $rights) {
 			
+			$left_name = $query->getUnaliasedModelName($left_alias);
+			
 			foreach($rights as $right_alias => $pivot_type) {
 				
 				// find a path between the two models
 				$path = ModelRelation::findPath(
-					$query->getUnaliasedModelName($left_alias), 
+					$left_name, 
 					$query->getUnaliasedModelName($right_alias),
 					$this->models
 				);
@@ -398,13 +400,12 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Compile a query that works for both UPDATES and DELETES.
 	 */
-	protected function compileModify($prefix, $set = TRUE) {
+	protected function compileModify($sql, $set = TRUE) {
 		
 		$query = $this->query;
 		
 		// query isn't cached, build up the sql then cache it.
 		$fields = array();
-		$sql = "{$prefix} ";
 		$comma = '';
 		
 		// go over the tables being modified and construct the beginning of
@@ -432,107 +433,12 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			$sql .= ' SET '. implode(', ', $fields);
 		
 		// compile the conditions
+		$this->compileRelationsAsPredicates();
 		$where = $this->compilePredicates('where');
+		
 		if(!empty($where)) $sql .= ' WHERE '. implode(' ', $where);
-		
+				
 		return $sql;
-		
-		/*
-		if($set) {
-			$sql .= ' SET';
-		
-			$comma = '';
-			foreach($query->_values as $alias => $fields) {
-			
-				foreach($fields as $column => $value) {
-					
-					$sql .= "{$comma} {$alias}.{$column}=";
-					$sql .= $models[$alias]->castValue($column, $value);
-					$comma = ',';
-				}
-			}
-		}*/
-		/*
-		// note it's not by reference!! why? well if we use the same query
-		// for multiple things (inser/update/delete) and pass it around, then
-		// each time it will grow the predicates and a useless way.
-		$predicates = $query->getPredicates();
-				
-		// find what value we're pivoting on. unfortunately this doesn't do
-		// extensive checks on the predicates to make sure such things ought
-		// be pivots, but whatever.
-		$pivots = array();
-		foreach($predicates as $predicate) {
-			
-			list($type, $value) = $predicate;
-			
-			if($type & QueryPredicates::VALUE_REFERENCE)
-				$pivots[$value[0]] = $value[1];
-		}
-		
-		$aliases = &$query->getAliases();
-		
-		$predicates->where();
-		$join_with_and = !$predicates->contextIsEmpty();
-		
-		// isolate the original predicates
-		//$this->isolatePredicates();
-		
-		// add in the relationships as predicates
-		foreach($query->getRelations() as $left => $rights) {
-			foreach($rights as $right) {
-				
-				// find a path
-				$path = ModelRelation::findPath(
-					$aliases[$right],
-					$aliases[$left],
-					$models
-				);
-				
-				// make sure we're not using an indirect relationship
-				if(empty($path) || count($path) > 2) {
-					throw new DomainException(
-						"Models related in an update/insert query must be ".
-						"directly related."
-					);
-				}
-				
-				// adjust for aliasing
-				$path[0][0] = $aliases[$path[0][0]];
-				$path[1][0] = $aliases[$path[1][0]];
-				
-				// join this condition into the predicates
-				if($join_with_and) {
-					$predicates[] = array(
-						QueryPredicates::OP_OPERATOR, 
-						QueryPredicates::LOG_AND,
-					);
-				}
-				
-				// add in the condition to join these tables in the update
-				$predicates[] = array(
-					QueryPredicates::OP_OPERAND | 
-					QueryPredicates::VALUE_REFERENCE,
-					$path[0],
-				);
-				$predicates[] = array(
-					QueryPredicates::OP_OPERATOR, 
-					QueryPredicates::LOG_EQ,
-				);
-				$predicates[] = array(
-					QueryPredicates::OP_OPERAND | 
-					QueryPredicates::VALUE_REFERENCE,
-					$path[1],
-				);
-			}
-		}
-		
-		// add in the predicates
-		$sql .= $this->rebuildPredicates();
-		
-		// add in the predicates and return
-		return $sql;
-		*/
 	}
 	
 	/**
@@ -595,13 +501,13 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * Compile an UPDATE query.
 	 */
 	protected function compileUpdate() {
-		return $this->compileModify('UPDATE', TRUE);
+		return $this->compileModify('UPDATE ', TRUE);
 	}
 	
 	/**
 	 * Compile a DELETE query.
 	 */
 	protected function compileDelete() {
-		return $this->compileModify('DELETE FROM', FALSE);
+		return $this->compileModify('DELETE FROM ', FALSE);
 	}
 }

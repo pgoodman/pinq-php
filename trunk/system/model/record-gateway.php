@@ -99,8 +99,16 @@ abstract class RecordGateway {
 				
 		// the query object actually returns a predicates object at once point
 		// so we need to get it out of the predicates object
-		if($query instanceof QueryPredicates)	
+		if($query instanceof QueryPredicates) {
 			$query = $query->getQuery();
+			
+			if(NULL === $query) {
+				throw new InvalidArgumentException(
+					"Argument passed to RecordGateway method is not string ".
+					"PQL query."
+				);
+			}
+		}
 				
 		// if we were given or derived an abstract query object then we need
 		// to compile it.
@@ -176,26 +184,14 @@ abstract class RecordGateway {
 	 */
 	public function findAll($query, array $args = array()) {
 		
-		// if we've sneakily been given predicates then we'll try to derive
-		// a query from them.
-		if($query instanceof QueryPredicates) {
-			$query = $query->getQuery();
-			
-			if(NULL === $query) {
-				throw new UnexpectedValueException(
-					"RecordGateway::find[All]() expected PQL or SQL query, ".
-					"query predicate list given insteas."
-				);
-			}
-		}
-		
 		// compile the query
-		if($query instanceof Query)
+		if($query instanceof Query || $query instanceof QueryPredicates)
 			$query = $this->getQuery($query, QueryCompiler::SELECT);
 		
 		if(!is_string($query)) {
 			throw new UnexpectedValueException(
-				"RecordGateway::find[All]() expected either PQL or SQL query."
+				"RecordGateway::find[All]() expected either PQL or string ".
+				"query."
 			);
 		}
 		
@@ -240,7 +236,7 @@ abstract class RecordGateway {
 	 * named record, a PQL query, or a SQL query.
 	 */
 	public function create($query, array $args = array(), $return = TRUE) {
-		$query = $this->getQuery($query, QueryCompiler::INSERT);
+		$query = $this->getQuery($query, QueryCompiler::CREATE);
 		
 		if(!is_array($query))
 			$query = array($query);
@@ -257,7 +253,8 @@ abstract class RecordGateway {
 	 * Update a record and return the updated record. This accepts a named
 	 * record, a PQL query, or a SQL query.
 	 */
-	public function save($query, array $args = array()) {
-		
+	public function modify($query, array $args = array()) {
+		$query = $this->getQuery($query, QueryCompiler::MODIFY);
+		return $this->ds->update($query);
 	}
 }
