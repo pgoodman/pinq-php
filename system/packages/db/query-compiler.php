@@ -35,11 +35,10 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$select[] = "1 AS __pql__";
 
 		// build up the SELECT columns, including any columns being COUNTed.
-		foreach($query->_fields as $table => $columns) {
+		foreach($query->_contexts as $model_alias => $context) {
 			
-			// we assume this exists because abstract-query makes it exist
-			// for each model name
-			$counts = &$query->_counts[$table];
+			$counts = $context['select_counts'];
+			$columns = $context['select_fields'];
 			
 			// skip this, we don't care
 			if(empty($columns) && empty($counts))
@@ -48,16 +47,14 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// we assume that this exists. if we are being passed the model
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
-			if(!isset($query->_aliases[$table]))
-				$table = $this->resolveReference($table);
-			
-			// figure out the model name, then find the associated model
-			$model_name = $query->_aliases[$table];
-			$model = &$this->models[$model_name];
+			$model_name = $query->_aliases[$model_alias];
+			$table_alias = $model_alias;
+			//$table_name = $this->getModelStructName($model_name);
 			
 			// if we're selecting all of the columns from this table then we
 			// will remove the ALL flag an merge the expanded column names
 			// into the query.
+						
 			if(isset($columns[(string)ALL])) {
 				
 				// get rid of this, it is no longer needed
@@ -65,7 +62,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				
 				// get the expanded model fields and merge them into the
 				// select column, preserving any other custom select columns.
-				$temp = array_keys($model->_properties);
+				$temp = array_keys($this->models[$model_name]->_properties);
 				$columns = array_merge(array_combine($temp, $temp), $columns);
 			}
 			
@@ -91,16 +88,14 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			$select[] = "1 AS __{$model_name}";
 						
 			// we're getting multiple columns from this table
-			foreach($columns as $alias => $column) {
-				
-				// add the select column + its alias to the query
-				$select[] = "{$table}.{$column} AS {$model_name}_{$alias}" ;
-			}
+			foreach($columns as $alias => $column)
+				$select[] = "{$table_alias}.{$column} AS {$model_name}_{$alias}";
 			
 			// if we're doing any counting the we need to include these columns
 			// as well
 			foreach($counts as $allias => $column) {
-				$select[] = "COUNT({$table}.{$column}) AS {$model_name}_{$alias}";
+				$select[] = "COUNT({$table_alias}.{$column}) AS ".
+				            "{$model_name}_{$alias}";
 			}
 		}
 		
@@ -113,48 +108,49 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * the joins recursively.
 	 * @internal
 	 */
-	protected function recursiveJoin($right, array &$graph = array(), $prefix) {
+	protected function recursiveJoin($dependent_model_name, 
+		                             array &$graph = array(), 
+		                             $prefix) {
+		
 		$sql = "";
 		$comma = "";
 		
 		$models = &$this->models;
 		$aliases = &$this->query->_aliases;
 		
-		foreach($graph as $left => $rights) {
+		foreach($graph as $model_name => $dependencies) {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
-			$name = $this->resolveReference($left);
-			
-			if($name == $left)
-				$name = '';
+			if($model_name == ($table_name = $this->getModelStructName($model_name)))
+				$table_name = '';
 			
 			// add in a leading comma for top-level froms and a join prefix
 			$sql .= "{$comma} {$prefix} ";
 			
 			// recursively do the joins
-			if(!empty($rights)) {
+			if(!empty($dependencies)) {
 				
 				$joins = $this->recursiveJoin(
-					$left, 
-					$rights,
+					$model_name, 
+					$dependencies,
 					'INNER JOIN'
 				);
 				
-				$sql .= "({$name} {$left} {$joins})";
+				$sql .= "({$table_name} {$model_name} {$joins})";
 			
 			// no more recursion necessary, start popping off the call stack
 			} else
-				$sql .= "{$name} {$left}";
+				$sql .= "{$table_name} {$model_name}";
 			
 			// if we have something to join on, do it
-			if(!empty($right)) {
+			if(!empty($dependent_model_name)) {
 				
 				// this will return direct relations each time. The ordering
 				// is arbitrary.				
 				$relation = ModelRelation::findPath(
-					$aliases[$right],
-					$aliases[$left],
+					$aliases[$dependent_model_name],
+					$aliases[$model_name],
 					$models
 				);
 								
@@ -165,7 +161,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				$right_column = $relation[0][1];
 				$left_column = $relation[1][1];
 				
-				$sql .= " ON {$right}.{$right_column}={$left}.{$left_column}";
+				$sql .= " ON {$dependent_model_name}.{$right_column}=".
+				        "{$model_name}.{$left_column}";
 			}
 			
 			// if we are dealing with the top-level froms then they need to
@@ -179,18 +176,30 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Compile a reference to a column in a database table.
 	 */
-	protected function compileReference($field, $model = NULL) {
-					
-		if($model === NULL)
-			$model = key($this->query->_sources);
-				
-		if(!isset($this->query->_aliases[$model]))
-			$model = $this->resolveReference($model);
+	protected function compileReference($field, $model_alias = NULL) {
 		
-		if(!empty($this->query->_fields[$model]))
-			return "{$model}_{$field}";
-		else
-			return "{$model}.{$field}";
+		// this is somewhat of a wild guess that assumes there is only one
+		// model being selected from
+		if($model_alias === NULL)
+			$model_alias = key($this->query->_contexts);
+		
+		$model_name = $this->query->_aliases[$model_alias];
+		
+		// we need to distinguish between models that are being selected from,
+		// and therefore their columns will be prefixed, or models that are
+		// being used as endpoints in linkin, thus using their model names as
+		// aliases.
+		//
+		// TODO: If the same table is being explicitly joined in the same
+		//       query then this could fail. Really it's dependent on $model
+		//       being set.
+		$contexts = $this->query->_contexts;
+		if(isset($contexts[$model_alias]))
+			if(!empty($contexts[$model_alias]['select_fields']))
+				return "{$model_name}_{$field}";
+		
+		// note: tables are aliased with their model names, hence the use here
+		return "{$model_name}.{$field}";
 	}
 	
 	/**
@@ -302,6 +311,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// add in the pivots
 		foreach($query->_pivots as $left_alias => $rights) {
+			
 			foreach($rights as $right_alias => $pivot_type) {
 				
 				// find a path between the two models
@@ -319,17 +329,19 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				if($join_with_and)
 					$predicates->and;
 				
-				// figure out which side of the path to pivot on
-				if($pivot_type & Query::PIVOT_LEFT)
-					$path_part = current($path);
-				else
-					$path_part = end($path);
+				// figure out which side of the path to pivot on. $model_alias
+				// is set because we need to make sure we're pivoting on the
+				// model *alais* and not the model name.
+				if($pivot_type & Query::PIVOT_LEFT) {
+					$path = current($path);
+					$model_alias = $left_alias;
+				} else {
+					$path = end($path);
+					$model_alias = $right_alias;
+				}
 				
-				// get hte model and field				
-				list($model, $field) = $path_part;
-				
-				// add in the pivot using a substitute with an id
-				$predicates->$model($field)->eq->_($field);
+				// add in the pivot using a keyed substitute
+				$predicates->$model_alias($path[1])->eq->_($path[1]);
 				
 				// every other pivot after this needs to be joined with an AND
 				$join_with_and = TRUE;
@@ -342,33 +354,12 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	}
 	
 	/**
-	 * Figure out if we can take an SQL table name.
-	 * @internal
-	 */
-	protected function resolveReference($ref) {
-				
-		$aliases = $this->query->_aliases;
-		$models = $this->models;
-		$else = $ref;
-		
-		// we have been given a model alias which is not the model name		
-		if(isset($aliases[$ref]) && ($a = $aliases[$ref]) != $ref) {
-			$name = $models[$a]->getName();
-			$else = $a;
-		
-		// we've been given a model name, try to gets its table name
-		} else if(isset($models[$ref])) {
-			$name = $models[$ref]->getName();
-		}
-		
-		return empty($name) ? $else : $name;
-	}
-	
-	/**
 	 * Compile a PQL query into a SQL SELECT statement.
 	 * @internal
 	 */
 	protected function compileSelect() {
+		
+		$time_start = list($sm, $ss) = explode(' ', microtime());
 		
 		// add in what we want to select
 		$sql = 'SELECT '. $this->compileFields();
@@ -391,7 +382,11 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		if(!empty($group)) $sql .= " GROUP BY ". implode(' ', $group);
 		if(!empty($order)) $sql .= " ORDER BY ". implode(' ', $order);
 		if(!empty($limit)) $sql .= " LIMIT ". implode(' ', $limit);
-				
+		
+		out('<pre>', $sql, '</pre>');
+		$time_end = list($em, $es) = explode(' ', microtime());
+		out('<pre>', 'Query compile time:', ($em + $es) - ($sm + $ss), '</pre>');
+		
 		// add in the predicates and return
 		return $sql;
 	}
@@ -408,12 +403,12 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$sql = "{$prefix} ";
 		$comma = '';
 		
-		foreach($query->_sources as $alias => $name) {
+		foreach($query->_contexts as $model_alias => $context) {
 			
-			if($alias === $name)
+			if($model_alias === $context['name'])
 				$alias = '';
-				
-			$sql .= "{$comma}{$name} {$alias}";
+			
+			$sql .= "{$comma}{$context[name]} {$model_alias}";
 			$comma = ',';
 		}
 		
@@ -458,7 +453,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		//$this->isolatePredicates();
 		
 		// add in the relationships as predicates
-		foreach($query->_relations as $left => $rights) {
+		foreach($query->_links as $left => $rights) {
 			foreach($rights as $right) {
 				
 				// find a path
@@ -523,13 +518,18 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// query isn't cached, build up the query
 		$queries = array();
-		$values = &$this->query->_values;
 		$models = &$this->models;
 		
 		// unlike with UPDATE, we can't INSERT into multiple tables at the
 		// same time, but it doesn't mean that we can't chain several insert
 		// queries together.
-		foreach($this->query->_sources as $alias => $name) {
+		foreach($this->query->_contexts as $model_alias => $context) {
+			
+			$model = $this->models[$context['name']];
+			
+			// make sure to get the proper name
+			if(NULL === ($name = $model->getName()))
+				$name = $context['name'];
 			
 			$sql = "INSERT INTO {$name}";
 			$comma = '';
@@ -539,15 +539,29 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// concatenate two compiled queries to get the same effect. To
 			// allow for this, we make sure that we only insert SET if we
 			// need to.
-			if(!empty($values[$alias]))
+			if(!empty($context['modfiy_values']))
 				$sql .= ' SET';
 			
 			// go over the insert values
-			foreach($values[$alias] as $column => $value) {
-				$sql .= "{$comma} {$column}=". $models[$alias]->castValue(
-					$column, 
-					$value
-				);
+			foreach($context['modfiy_values'] as $column => $value) {
+				
+				// this is special for databases
+				if($value === _)
+					$val = '?';
+				
+				// cast to a specific data type
+				else {
+					$val = $models[$alias]->coerceValue(
+						$column, 
+						$value
+					);
+					
+					// make sure to quote it for insertion as a string
+					if(is_string($val))
+						$val = "'". $this->db->quote($val) ."'";
+				}
+				
+				$sql .= "{$comma} {$column}={$val}";
 				$comma = ',';
 			}
 			

@@ -31,7 +31,6 @@ class IndexController extends PinqController {
             // substitute into the query for the tag name
             array($tag_name)
         );
-
 		
         // iterate over the jobs and output html for them. this would
         // eventually be moved to some sort of view
@@ -57,14 +56,14 @@ class IndexController extends PinqController {
 			// the way this query works is it says: get tags using the data
 			// from $job->job_postings by satisying any relationships between
 			// the two tables.
-			foreach($db->tags->findAll($job->job_postings) as $tag)
+			foreach($db->tags->findAll($job->content) as $tag)
 				out('<li>', $tag['Name'], '</li>');
 			
 			out('</ul>');
         }
 
 		$time_end = list($em, $es) = explode(' ', microtime());
-		out('<pre>', 'Compile & query time:', ($em + $es) - ($sm + $ss), '</pre>');
+		out('<pre>', 'Total time:', ($em + $es) - ($sm + $ss), '</pre>');
         
         // all done :D
     }

@@ -33,6 +33,29 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
+	 * Models are all aliased. We allow for the models to also have internal
+	 * names but they aren't required. Thus, this function, given an query
+	 * model alias will try to find the model name (alias), and if the
+	 * associated model has an internal name it will return that otherwise it
+	 * will return the model alias.
+	 * @internal
+	 */
+	protected function getModelStructName($model_alias) {
+		
+		$model_name = $model_alias;
+		if(isset($this->query->_aliases[$model_alias]))
+			$model_name = $this->query->_aliases[$model_alias];
+		
+		// figure out if the model is named
+		if(isset($this->models[$model_name])) {
+			if(NULL !== ($name = $this->models[$model_name]->getName()))
+				return $name;
+		}
+		
+		return $model_name;
+	}
+	
+	/**
 	 * See if a compiled query is already in the cache.
 	 * @internal
 	 */
@@ -63,7 +86,7 @@ abstract class QueryCompiler implements Compiler {
 		// the table of relations established through the query. we actually
 		// use a copy of the relations because later on it will be modified
 		// and added to (for through relations).
-		$relations = $this->query->_relations;
+		$relations = $this->query->_links;
 		$aliases = &$this->query->_aliases;
 		
 		// to quickly access deeper areas in the graph, we will store
