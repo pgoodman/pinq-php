@@ -16,59 +16,47 @@
 if(!function_exists("from")) {
 	
 	// return a new pinq object
-	function &from($ds, $alias = NULL) {
-		$pinq = new QueryLanguage;
-		$pinq->setDataSource($ds, $alias);
-		return $pinq;
+	function from($model_name, $model_alias = NULL) {
+		$query = new Query;
+		return $query->from($model_name, $model_alias);
 	}
 	
 	// alias to from, makes more semantic sense for other functions.
-	function &to($ds, $alias = NULL) {
-		$from = &from($ds, $alias);
-		return $from;
-	}
-	
-	// alias to from, makes more semantic sense for other functions.
-	function &in($ds, $alias = NULL) {
-		$from = &from($ds, $alias);
-		return $from;
+	function in($model_name, $model_alias = NULL) {
+		$query = new Query;
+		return $query->from($model_name, $model_alias);
 	}
 }
 
 /**
- * A language to query a hypothetical data structure. This is a stack because
- * as we are adding and selecting data from sources we need to know which
- * source to add the select fields to. It doesn't need to be a full-on stack
- * but it was simple :P 
+ * A PQL query to query a hypothetical data structure.
  * @author Peter Goodman
  */
-abstract class Query extends Stack {
+class Query {
 	
-	// relation options
+	// relation options, more might be added to take advantage of SQL join
+	// types
 	const PIVOT_LEFT = 1,
 	      PIVOT_RIGHT = 2;
 	
+	// query id
 	static protected $query_id = 0;
 	
-	public $_aliases = array(), // maps aliases to source names
-		   $_sources = array(), // the data sources being used
-		   $_fields = array(), // what do we want to find from each 
-									// data source?
-		   $_counts = array(), // things in the datasources to count
-		   $_values = array(), // values for a create / delete / update
-		   $_relations = array(),
-		   $_pivots = array(),
-		   $_predicates = NULL, // conditions to be met on the data 
-		   $_id;						// returned
+	// stuff needed
+	public $_contexts = array(),
+	       $_context,
+	       $_links = array(),
+	       $_pivots = array(),
+	       $_predicates,
+	       $_aliases = array();
 	
 	/** 
 	 * Constructor, very little to set up.
 	 */
 	public function __construct() {
-		
-		// give this abstract query a unique id. this is used for query
-		// caching purposes
-		$this->_id = self::$query_id++;		
+		// give this abstract query a unique id. this is used for transient 
+		// query caching
+		$this->_id = self::$query_id++;
 	}
 	
 	/**
@@ -76,13 +64,11 @@ abstract class Query extends Stack {
 	 */
 	public function __destruct() {
 		unset(
-			$this->_sources,
-			$this->_fields, 
-			$this->_counts, 
-			$this->_values, 
-			$this->_predicates,
-			$this->_relations,
-			$this->_pivots
+			$this->_context,
+			$this->_contexts,
+			$this->_links,
+			$this->_pivots,
+			$this->_predicates
 		);
 	}
 	
@@ -94,271 +80,179 @@ abstract class Query extends Stack {
 	}
 	
 	/**
-	 * Even if we don't supply an alias, we want a one-to-one relationship
-	 * between the keys in all of the various arrays.
-	 * @internal
-	 */
-	protected function addDataSource($ds, $alias) {
-		
-		// map the alias back to the source name for later use (in the
-		// concrete query)		
-		$this->_aliases[$alias] = $ds;
-		$this->_aliases[$ds] = $ds;
-		
-		// are we dealing with heriarchical data?
-		if(FALSE !== strpos($ds, '.')) {
-			$ds = explode('.', $ds);
-		}
-
-		// references can only be made through aliasing. why? well, if we are
-		// linking a source to itself, the only way to reliably do this is to
-		// use aliasing.
-		$this->_sources[$alias] = $ds;
-		
-		// set up the default values for this alias
-		$this->_fields[$alias] = array();
-		$this->_counts[$alias] = array();
-		$this->_values[$alias] = array();
-		$this->_relations[$alias] = array();
-		$this->push($alias);
-	}
-	
-	/**
-	 * If the supplied datasource isn't available, create it. If it is, switch
-	 * to it.
-	 */
-	public function setDataSource($ds, $alias = NULL) {
-		
-		// pop whatever is on the stack off
-		$this->silentPop();
-		
-		// no alias, default to casting the datasource to a string
-		if(NULL === $alias)
-			$alias = (string)$ds;
-		
-		// this data source doesn't yet exist in the query, add it
-		if(!isset($this->_sources[$alias]))
-			$this->addDataSource($ds, $alias);
-		
-		// this data source exists, push its alias the stack
-		else
-			$this->push($alias);
-	}
-	
-	/**
-	 * Add to one of the arrays {count, find} and store things in the items
-	 * array as well.
-	 * @internal
-	 */
-	protected function addTo(array &$array, $ds_alias, array $items) {
-		foreach($items as $alias => $item) {
-			
-			// if an integer-keyed array was passed in then set the default
-			// mapping to be (item name -> item name)
-			if(!is_string($alias))
-				$alias = (string)$item;
-			
-			// add the count/find array
-			$array[$ds_alias][$alias] = $item;
-		}
-	}
-	
-	/**
-	 * Specify that we're getting something from the current datasource
-	 * on the stack. We can only find something after we've told it what
-	 * data source to look in.
-	 */
-	public function addItemsToFind(array $items = array()) {
-		
-		$alias = $this->top();
-		
-		// so that we can pass an associative array of mappings in
-		if(count($items) === 1 && is_array($items[0]))
-			$items = $items[0];
-		
-		$this->addTo($this->_fields, $alias, $items);
-	}
-	
-	/**
-	 * Tell the datasource that we'll be counting something. This is sort of
-	 * a special case as it affects the types of queries that will be built
-	 * from this class.
-	 */
-	public function addCount(array $items = array()) {
-		$alias = $this->top();
-		$this->addTo($this->_counts, $alias, $items);
-	}
-
-	/**
-	 * Add to the values array.
-	 */
-	public function addValues(array $values = array()) {
-		$alias = $this->top();
-		
-		// no values, full stop
-		if(empty($values))
-			return;
-		
-		// 2 values, assume we are supplying a single (key,value) pair
-		else if(count($values) == 2) {
-			$values = array(
-				(string)$values[0] => $values[1],
-			);
-		
-		// an array of key=>value mappings
-		} else
-			$values = array_shift($values);
-		
-		$this->_values[$alias] = array_merge($this->_values[$alias], $values);
-	}
-
-	/**
-	 * State that a relationship should exist between two tables without
-	 * explicitly defining how the datasources are related. The order of the
-	 * relationships is significant.
-	 */
-	public function addRelationship($a1, $a2, $options = FALSE) {
-		
-		$a1 = (string)$a1;
-		$a2 = (string)$a2;
-		
-		if(isset($this->_sources[$a1]) && isset($this->_sources[$a2])) {
-			
-			if(!isset($this->_relations[$a1]))
-				$this->_relations[$a1] = array();
-			
-			$this->_relations[$a1][] = $a2;
-			
-			$pivot = $options & (self::PIVOT_LEFT | self::PIVOT_RIGHT);
-			
-			if($pivot) {
-				if(!isset($this->_pivots[$a1]))
-					$this->_pivots[$a1] = array();
-				
-				$this->_pivots[$a1][$a2] = $pivot;
-			}
-			
-			return TRUE;
-		}
-		return FALSE;
-	}
-	
-	/**
-	 * Get the array of predicates.
-	 */
-	public function getPredicates() {
-		return $this->predicates;
-	}
-	
-	/**
-	 * Set the predicates array. This is usually called by QueryPredicates
-	 * right before the query is compiled.
-	 * @internal
+	 * Set this query's predicates.
 	 */
 	public function setPredicates(QueryPredicates $predicates) {
 		$this->_predicates = $predicates;
 	}
-}
-
-/**
- * This class just builds up query information; however, it's not up to this 
- * class to know what type of query it is. In fact, the class is simply
- * data. Given this, there are no defined 'update' or 'delete' methods.
- * @author Peter Goodman
- */
-class QueryLanguage extends Query {
 	
 	/**
-	 * Constructor, set up the operator table if it hasn't been yet.
+	 * Set the current context. If the context does not exist then create it.
 	 */
-	public function __construct() {
-		parent::__construct();
+	protected function setContext($model_name, $model_alias) {
+		
+		// create a new context
+		if(!isset($this->_contexts[$model_alias])) {
+			$this->_contexts[$model_alias] = array(
+				'alias' => $model_alias,
+				'name' => $model_name,
+				'select_fields' => array(),
+				'select_counts' => array(),
+				'modfiy_values' => array(),
+			);
+			
+			// make sure that we can always find out the model name used for
+			// a given alias
+			$this->_aliases[$model_alias] = $model_name;
+			$this->_aliases[$model_name] = $model_name;
+		}
+		
+		// set the current context
+		$this->_context = &$this->_contexts[$model_alias];
 	}
 	
 	/**
-	 * If we link into predicates using 
+	 * Set the current context.
 	 */
-	public function __get($op) {
-				
-		// return a new predicates object if this is a valid predicate
-		// operator
-		if(in_array(strtolower($op), array('where',	'group', 'order'))) {
-			$this->_predicates = new QueryPredicates($this);
-			return $this->_predicates->$op();
-		}
-
+	public function from($model_name, $model_alias = NULL) {
+		
+		if(NULL === $model_alias)
+			$model_alias = $model_name;
+		
+		// set the current context
+		$this->setContext($model_name, $model_alias);
+		
 		return $this;
 	}
 	
-	public function where() { return $this->__get('where'); }
-	public function group() { return $this->__get('group'); }
-	public function order() { return $this->__get('order'); }
-	
 	/**
-	 * Predicates limit function.
+	 * Alias of from().
 	 */
-	public function limit($start, $offset = NULL) {
-		$this->_predicates = new QueryPredicates($this);
-		return $this->_predicates->limit($start, $offset);
+	public function in($model_name, $model_alias = NULL) {
+		return $this->from($model_name, $model_alias);
 	}
 	
 	/**
-	 * Parse function calls, this pretty much defines the API to PINQ.
+	 * Select some fields from the current context.
 	 */
-	public function __call($fn, array $args = array()) {
+	public function select() {
+		$args = func_get_args();
 		
-		// ignore this call completely if there are no arguments passed in
-		if(!isset($args[0]))
+		
+		
+		// we're dealing with some 
+		if(count($args) == 1) {
+			if(is_array($args[0]))
+				$args = $args[0];
+		}
+		
+		if(empty($args))
 			return $this;
 		
-		$fn_lower = strtolower($fn);
+		// TODO: in_array very oddly didn't work
+		if(ALL === $args[0])
+			$args = array((string)ALL => ALL);
 		
-		// handle the function
-		switch($fn_lower) {
-			
-			case 'from':
-			case 'in':
-				$val = isset($args[1]) ? $args[1] : NULL;
-				$this->setDataSource($args[0], $val);
-				break;
-			
-			// find things
-			case 'select':
-				$this->addItemsToFind($args);
-				break;
-			
-			// set key-value pairs
-			case 'set':
-				$this->addValues($args);
-				break;
-			
-			// count some items
-			case 'count':
-				$this->addCount($args);
-				break;
-
-			// where clause
-			case 'where';
-				return $this->getQueryPredicates();
-		}
+		// merge in the new select fields
+		$this->_context['select_fields'] = array_merge(
+			$this->_context['select_fields'],
+			$args
+		);
 		
 		return $this;
 	}
 	
 	/**
-	 * Define a relationship between two or more datasources. it's up to
-	 * whatever is taking in the abstract query to decide how to actually
-	 * establish that relationship.
+	 * Create some select count fields.
 	 */
-	function link($left_alias, $right_alias, $options = 0) {
-				
-		if(!$this->addRelationship($left_alias, $right_alias, $options)) {
+	public function count($field, $alias = NULL) {
+		if(NULL === $alias)
+			$alias = $field;
+		
+		$this->_context['select_counts'] = array_merge(
+			$this->_context['select_counts'],
+			array($alias => $field)
+		);
+		
+		return $this;
+	}
+	
+	/**
+	 * Link two models together by their aliases.
+	 */
+	public function link($left_alias, $right_alias, $flags = 0) {
+		
+		// read the error: you can't link a model to itself using the same two
+		// aliases.
+		if($left_alias === $right_alias) {
 			throw new UnexpectedValueException(
-				"Could not relate data models [{$left_aliase}] and ".
-				"[{$right_alias}]."
+				"PQL Query Error: Cannot link a model to itself using the ".
+				"same model aliases. To link a model to itself, make sure ".
+				"that the uses of the model in the query have different ".
+				"aliases."
 			);
 		}
 		
+		// common error
+		$error = "The model [%s] has does not exist (yet?) in the PQL query ".
+		         "and thus cannot be used for linking.";
+		
+		// make sure that the two linked aliases exist.
+		if(!isset($this->_contexts[$left_alias]))
+			throw new UnexpectedValueException(sptrintf($error, $left_alias));
+		
+		else if(!isset($this->_contexts[$right_alias]))
+			throw new UnexpectedValueException(sptrintf($error, $right_alias));
+		
+		// create the relationships array and add in the link
+		if(!isset($this->_links[$left_alias]))
+			$this->_links[$left_alias] = array();
+		
+		if(!in_array($right_alias, $this->_links[$left_alias]))
+			$this->_links[$left_alias][] = $right_alias;
+		
+		// are we doing any pivoting?
+		if($pivot = $flags & (self::PIVOT_LEFT | self::PIVOT_RIGHT)) {
+			if(!isset($this->_pivots[$left_alias]))
+				$this->_pivots[$left_alias] = array();
+			
+			$this->_pivots[$left_alias][$right_alias] = $pivot;
+		}
+		
 		return $this;
+	}
+	
+	/**
+	 * Set (key,value) pairs, or a single (key,value) pair.
+	 */
+	public function set($key, $value = NULL) {
+		$keys = is_array($key) ? $key : array((string)$key => $value);
+		
+		$this->_context['modify_values'] = array_merge(
+			$this->_context['modify_values'],
+			$keys
+		);
+		
+		return $this;
+	}
+	
+	/**
+	 * Predicate functions.
+	 */
+	public function where() {
+		$this->_predicates = new QueryPredicates($this);
+		return $this->_predicates->where();
+	}
+	public function group() {
+		$this->_predicates = new QueryPredicates($this);
+		return $this->_predicates->group();
+	}
+	public function order() {
+		$this->_predicates = new QueryPredicates($this);
+		return $this->_predicates->order();
+	}
+	public function limit($start, $offset = NULL) {
+		$this->_predicates = new QueryPredicates($this);
+		return $this->_predicates->limit($start, $offset);
 	}
 }

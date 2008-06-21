@@ -123,27 +123,25 @@ class Model extends Stack {
 	}
 	
 	/**
-	 * Cast a value to a property.
+	 * Coerce a value to the type specified for a given property in the model.
 	 */
-	public function castValue($property, $value) {
+	public function coerceValue($property, $value) {
 		if(!isset($this->_properties[$property]))
 			return;
-		
-		if($value === _)
-			return '?';
 		
 		$property = $this->_properties[$property];
 		
 		switch($property['type']) {
+			
 			case self::TYPE_MIXED:
 			case self::TYPE_STRING:
 				$value = (string)$value;
 				
+				// this doesn't limit to a certain number of bytes but a 
+				// certain number of characters, of which a few might be
+				// multi-byte characters
 				if($property['bytelen'])
-					$result = substr($value, 0, $property['bytelen']);
-				
-				$valeu = htmlentities($value, ENT_QUOTES);
-				$value = "'{$value}'";
+					$value = mb_substr($value, 0, $property['bytelen']);				
 				
 				break;
 			
