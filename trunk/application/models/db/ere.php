@@ -7,6 +7,9 @@ $model->store('job_postings', struct('jobs_JobPostings')->
     Id                      ->int(11)->primary_key()->auto_increment(1)->
     ContentId               ->int(11)
                             ->mapTo('content', 'Id')->
+    Instructions            ->string()->
+    EmployerName            ->string(100)->
+    ClickThroughUrl         ->string(150)->
     relatesTo('content')->
     relatesTo('users', through('user_content_roles'))->
     relatesTo('tags', through('content'))
@@ -16,7 +19,7 @@ $model->store('job_postings', struct('jobs_JobPostings')->
 $model->store('content', struct('www_Content')->
     Id                      ->int(11)->primary_key()->auto_increment(1)
                             ->mapTo('job_postings', 'ContentId')
-                            ->mapTp('content_tags', 'ContentId')->
+                            ->mapTo('content_tags', 'ContentId')->
     Title                   ->string(75)->
     ContentHtml             ->string()->
     

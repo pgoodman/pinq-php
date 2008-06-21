@@ -28,217 +28,182 @@ if(!function_exists('struct')) {
 }
 
 /**
- * A description of a hypothetical data structure. This is similar to a php
- * struct() and in fact we will use the struct() function as a quick way to
- * instantiate and use this class.
+ * A model: an description of a hypothetical data structure.
  * @author Peter Goodman
  */
-class Model extends Stack {
+class Model {
 	
-	const TYPE_STRING = 1,
-		  TYPE_INT = 2,
-		  TYPE_DECIMAL = 4,
-		  TYPE_BOOL = 8,
-		  TYPE_MIXED = 15, // string | int | float | bool
-		  TYPE_BINARY = 32,
-		  TYPE_MODEL = 64; // for heirarchical structures
+	// field types
+	const TYPE_UNKNOWN = 0,
+	      TYPE_INT = 1,
+	      TYPE_FLOAT = 2,
+	      TYPE_DOUBLE = 2,
+	      TYPE_STRING = 4,
+	      TYPE_ENUM = 8,
+	      TYPE_BINARY = 16,
+	      TYPE_BOOLEAN = 32,
+	      TYPE_MODEL = 64; // for inner models
 	
-	// how does this model relate to another? an indirect relationship is one
-	// where we will need to traverse one or more other models to get at the
-	// disired model
-	const RELATE_DIRECT = 1,
-		  RELATE_INDIRECT = 2;
+	// internal model stuff
+	protected $_contexts = array(),
+	          $_context,
+	          $_name;
 	
-	// why the underscores in front of the names? even though this is php5,
-	// these variables are public and we want to make it less likely for there
-	// to be conflicts while using the api provided through this class
-	public $_name, // name of this model, not required (for everything)
-		   $_properties = array(),
-	       $_relations = array(),
-		   $_mappings = array(),
-		   $_cached_paths = array(); // cached relationship paths built up later
+	// for relating one model to another
+	public $_relations = array(),
+	       $_mappings = array(),
+	       $_cached_paths = array();
 	
 	/**
-	 * Constructor, bring in the name, if any.
+	 * Constructor, bring in an option "absolute" name.
 	 */
 	public function __construct($name = NULL) {
 		$this->_name = $name;
 	}
 	
-	/**
-	 * Destructor, clean things up.
-	 */
-	public function __destruct() {
-		unset(
-			$this->_properties, 
-			$this->_relations, 
-			$this->_mappings,
-			$this->_cached_paths
-		);
+	public function setName($name) {
+		$this->_name = $name;
 	}
 	
-	/**
-	 * Get the name associated with this model.
-	 */
 	public function getName() {
 		return $this->_name;
 	}
 	
+	public function hasField($field) {
+		return isset($this->_contexts[$field]);
+	}
+	
+	public function getFields() {
+		return $this->_contexts;
+	}
+	
 	/**
-	 * Create a property and pop any previous ones off the stack.
+	 * Given a field name and a value, coerce the value to the specific tyoe
+	 * as defined in the model.
 	 */
-	public function __get($property) {
+	public function coerceValueForField($field, $value) {
+		
+		// this model doesn't contain the supplied field
+		if(!$this->hasField($field))
+			return NULL;
+		
+		$context = $this->_contexts[$field];
+		
+		switch($context['type']) {
+			
+			case self::TYPE_INT:
+				return (int)$value;
+			
+			case self::TYPE_BOOLEAN:
+				return (int)(bool)$value;
+			
+			case self::TYPE_FLOAT:
+				return (float)$value;
+			
+			case self::TYPE_STRING:
+				$ret = (string)$value;
+				if($context['length'] > 0)
+					$ret = substr($ret, 0, $context['length']);
 				
-		// take everything off the stack
-		$this->clear();
-		$this->push($property);
-		$this->_properties[$property] = array(
-			'type' => self::TYPE_MIXED,
-			'bytelen' => 0,
-			'multibyte' => FALSE, // for multibyte formats, bytelen will be
-			'signed' => TRUE,
-			'model' => NULL,
-			'extra' => array(),   // interpreted differently
-		);
+				return $ret;
+			
+			case self::TYPE_ENUM:
+				return in_array($value, $context['value']) ? $value : NULL;
+			
+			case self::TYPE_BINARY:
+				return base64_encode($value);
+			
+			default:
+				throw new InvalidArgumentException(
+					"Model::coerceValueForField() cannot cast a value of an ".
+					"unknown or complex type."
+				);
+		}
+		
+		return NULL;
+	}
+	
+	/**
+	 * Define a field that this model has. Note: fields can be defined
+	 * multiple times, where every subsequent definition simply modifies the
+	 * original definition.
+	 */
+	public function __get($field) {
+		
+		if(!$this->hasField($field)) {
+			$this->_contexts[$field] = array(
+				'name' => $field,
+				'type' => self::TYPE_UNKNOWN,
+				'value' => NULL,
+				'length' => 0,
+				'extra' => array(),
+			);
+		}
+		$this->_context = &$this->_contexts[$field];
 		
 		return $this;
 	}
 	
 	/**
-	 * Set the property byte length if it can to be.
+	 * Require that a context be set.
+	 * @internal
 	 */
-	protected function setPropertyByteLength(array &$property, array $args) {		
-		if(isset($args[0])) {
-			
-			// add a centinel to the end to make sure the list() works
-			$args[] = FALSE;
-			
-			// if, for some reason, an integer or float is seen as multibyte
-			// the multibyte flag will be ignored.
-			list($byte_length, $is_multibyte) = $args;
-			
-			$property['bytelen'] = $byte_length;
-			$property['multibyte'] = $is_multibyte;
+	protected function requireContext() {
+		if(NULL === $this->_context) {
+			throw new BadMethodCallException(
+				"Cannot call method in Model without first specifying the ".
+				"field it applies to."
+			);
 		}
 	}
 	
 	/**
-	 * Coerce a value to the type specified for a given property in the model.
+	 * Function for setting a generic type.
+	 * @internal
 	 */
-	public function coerceValue($property, $value) {
-		if(!isset($this->_properties[$property]))
-			return;
+	protected function setType($type, $length = 0, $value = NULL) {
+		$this->requireContext();		
+		$this->_context['type'] = $type;
+		$this->_context['length'] = $length;
+		$this->_context['value'] = $value;
 		
-		$property = $this->_properties[$property];
-		
-		switch($property['type']) {
-			
-			case self::TYPE_MIXED:
-			case self::TYPE_STRING:
-				$value = (string)$value;
-				
-				// this doesn't limit to a certain number of bytes but a 
-				// certain number of characters, of which a few might be
-				// multi-byte characters
-				if($property['bytelen'])
-					$value = mb_substr($value, 0, $property['bytelen']);				
-				
-				break;
-			
-			case self::TYPE_INT:
-				$value = (int)$value;
-				break;
-			
-			case self::TYPE_DECIMAL:
-				$value = (float)$value;
-				break;
-			
-			case self::TYPE_BOOL:
-				$value = (int)(bool)$value;
-				break;
-			
-			case self::TYPE_BINARY:
-				break;
-			
-			case self::TYPE_MODEL:
-				throw new UnexpectedValueException(
-					"Cannot cast type [model] to a scalar value."
-				);
-				break;
-		}
-		
-		return $value;
+		return $this;
 	}
 	
 	/**
-	 * Add information to this property.
+	 * Types.
+	 */
+	public function int($length) {
+		return $this->setType(self::TYPE_INT, $length);
+	}
+	
+	public function string($length = 0) {
+		return $this->setType(self::TYPE_STRING, $length);
+	}
+	
+	public function bool() {
+		return $this->setType(self::TYPE_BOOLEAN);
+	}
+	
+	public function float($length) {
+		return $this->setType(self::TYPE_FLOAT, $length);
+	}
+	
+	public function enum() {
+		$args = func_get_args();
+		return $this->setType(self::TYPE_ENUM, 0, $args);
+	}
+	
+	public function nested(Model $inner) {
+		return $this->setType(self::TYPE_MODEL, 0, $inner);
+	}
+	
+	/**
+	 * Extras
 	 */
 	public function __call($key, array $args = array()) {
-
-		$property = &$this->_properties[$this->top()];
-		$lower_key = strtolower($key);
-		
-		switch($lower_key) {
-			
-			// integers
-			case 'int':
-			case 'integer':
-				$property['type'] = self::TYPE_INT;
-				$this->setPropertyByteLength($property, $args);
-				break;
-			
-			// un/signed, signed is somewhat redundant as that is the default
-			// case.
-			case 'signed':
-				$property['signed'] = TRUE;
-				break;
-			
-			case 'unsigned':
-				$property['signed'] = FALSE;
-				break;
-			
-			// in the case of a database, string represents both TEXT and
-			// VARCHAR. It chooses the appropriate value based on the
-			// bytelength. If the bytelength is not supplied the assumption
-			// is a TEXT field.
-			case 'string':
-				$property['type'] = self::TYPE_STRING;
-				$this->setPropertyByteLength($property, $args);
-				break;
-			
-			// floating-point numbers with a bytelength are a bit trickier.
-			// the bytelength determines the precision of the number.
-			case 'float':
-			case 'double':
-			case 'real':
-				$property['type'] = self::TYPE_DECIMAL;
-				$this->setPropertyByteLength($property, $args);
-				break;
-			
-			// mixed data type
-			case 'mixed':
-				$property['type'] = self::TYPE_MIXED;
-				$this->setPropertyByteLength($property, $args);
-				break;
-			
-			// binary data
-			case 'binary':
-				$property['type'] = self::TYPE_BINARY;
-				$this->setPropertyByteLength($property, $args);
-				break;
-			
-			// model, this is for heirarchical structures that need nested
-			// models
-			case 'model':
-				$property['type'] = self::TYPE_MODEL;
-				$property['model'] = &$args[0];
-				break;
-			
-			// default, assume this is an extra unsupported flag.
-			default:
-				$property['extra'][$key] = !empty($args) ? $args[0] : TRUE;
-				break;
-		}
+		$this->requireContext();
+		$this->_context['extra'][$key] = $args;
 		
 		return $this;
 	}
@@ -249,28 +214,30 @@ class Model extends Stack {
 	 * not defined because the structure of the model and how queries being
 	 * made on it should reflect this.
 	 */
-	public function relateTo($alias, array $through = NULL) {
-		return $this->relatesTo($alias, $through);
+	public function relateTo($model_alias, array $through = NULL) {
+		return $this->relatesTo($model_alias, $through);
 	}
-	public function relatesTo($alias, array $through = NULL) {
+	
+	public function relatesTo($model_alias, array $through = NULL) {
 		
 		// add the relationship
 		$how = !empty($through) ? ModelRelation::INDIRECT
 		                        : ModelRelation::DIRECT;
 		
-		$this->_relations[$alias] = array($how, $through);
+		$this->_relations[$model_alias] = array($how, $through);
 		
 		// if we're going through other models, then this table is
 		// directly related to the first model in the $through array.
 		// we assume the same type of relationship.
-		if($how & self::RELATE_INDIRECT) {
-			$alias = strtolower($through[0]);
+		if($how === ModelRelation::INDIRECT) {
+			$model_alias = strtolower($through[0]);
 			
 			// the first item in the $through might actually be indirect. if
 			// it's already in the relations then we just won't set it. if it
 			// isn't then we'll assume direct
-			if(!isset($this->_relations[$alias])) {
-				$this->_relations[$alias] = array(
+			if(!isset($this->_relations[$model_alias])) {
+				
+				$this->_relations[$model_alias] = array(
 					ModelRelation::DIRECT, 
 					NULL
 				);
@@ -288,25 +255,30 @@ class Model extends Stack {
 	 * the foreign model, we will search this model for the appropriate
 	 * mapping.
 	 */
-	public function mapsTo($alias, $foreign_property) {
-		return $this->mapTo($alias, $foreign_property);
+	public function mapsTo($model_alias, $foreign_field) {
+		return $this->mapTo($model_alias, $foreign_field);
 	}
-	public function mapTo($alias, $foreign_property) {
-		
-		// get the current property on the stack
-		$property_name = $this->top();
+	
+	public function mapTo($model_alias, $foreign_field) {
+		$this->requireContext();
 		
 		// model aliases are case insensitive
-		$alias = strtolower($alias);
+		$model_alias = strtolower($model_alias);
 		
 		// add this mapping array if it doesn't yet exist
-		if(!isset($this->_mappings[$alias]))
-			$this->_mappings[$alias] = array();
+		if(!isset($this->_mappings[$model_alias]))
+			$this->_mappings[$model_alias] = array();
 		
 		// create the mapping between the property of a foreign model to a
 		// property of this model. assumption: only one mapping from one
 		// table to another.
-		$this->_mappings[$alias] = array($foreign_property, $property_name);
+		$this->_mappings[$model_alias] = array(
+			$foreign_field, 
+			$this->_context['name']
+		);
+		
+		// add in a direct relationship
+		$this->relatesTo($model_alias, NULL);
 				
 		return $this;
 	}

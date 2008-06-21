@@ -8,51 +8,17 @@
  * Interface for a record.
  */
 interface Record extends ArrayAccess, Object {
-	public function isSaved();
-	public function isDeleted();
-	public function save();
-	public function delete();
+	
 }
 
 /**
  * A data record, this implements the generic things every record needs.
  */
-abstract class AbstractRecord extends Dictionary implements Record {
+abstract class DataRecord extends Dictionary implements Record {
 	
-	protected $_is_saved = FALSE,
-	          $_is_deleted = FALSE,
-	          $_name,
-	          $_sub_records;
-	
-	/**
-	 * Is this record saved to a data source?
-	 */
-	public function isSaved() {
-		return $this->_is_saved;
-	}
-	
-	/**
-	 * Is this record deleted? (but just lingering until it is garbage-
-	 * collected).
-	 */
-	public function isDeleted() {
-		return $this->_is_deleted;
-	}
-	
-	/**
-	 * Save this record to the data source.
-	 */
-	public function save() {
-		$this->_is_saved = TRUE;
-	}
-	
-	/**
-	 * Delete this record from a data source.
-	 */
-	public function delete() {
-		if($this->isSaved())
-			$this->_is_deleted = TRUE;
-	}
+	protected $_name,
+	          $_sub_records,
+	          $_dirty = array();
 	
 	/**
 	 * Set the model name of this record.
@@ -77,19 +43,6 @@ abstract class AbstractRecord extends Dictionary implements Record {
 	}
 	
 	/**
-	 * Set the sub-records for this record, thus making this record
-	 * ambiguous.
-	 */
-	protected function setSubRecords(array &$records) {
-		
-		if(count($records) < 2)
-			return;
-		
-		$this->_name = NULL;
-		$this->_sub_records = &$records;
-	}
-	
-	/**
 	 * Dig into the result tables selected.
 	 */
 	public function __get($model_name) {
@@ -103,6 +56,60 @@ abstract class AbstractRecord extends Dictionary implements Record {
 		// return the sub-database record
 		return $this->_sub_records[$model_name];
 	}
+	
+	/**
+	 * Overwrite some of the dictionary methods so that we can isolate new
+	 * information from old information.
+	 */
+	public function offsetSet($key, $val) {
+		$this->_dirty[$key] = $val;
+		parent::offsetUnset($key);
+	}
+	
+	/**
+	 * Get some stored data.
+	 */
+	public function offsetGet($key) {
+		if(isset($this->_dirty[$key]))
+			return $this->_dirty[$key];
+		
+		return parent::offsetGet($key);
+	}
+	
+	/**
+	 * Does an offset exist?
+	 */
+	public function offsetExists($key) {
+		return isset($this->_dirty[$key]) || parent::offsetExists($key);
+	}
+	
+	/**
+	 * Unset some data.
+	 */
+	public function offsetUnset($key) {
+		unset($this->_dirty[$key]);
+		parent::offsetUnset($key);
+	}
+	
+	/**
+	 * Merge the dirty into the clean, so to speak :P
+	 */
+	public function toArray() {
+		return array_merge(parent::toArray(), $this->_dirty);
+	}
+	
+	/**
+	 * Set the sub-records for this record, thus making this record
+	 * ambiguous.
+	 */
+	protected function setSubRecords(array &$records) {
+		
+		if(count($records) < 2)
+			return;
+		
+		$this->_name = NULL;
+		$this->_sub_records = &$records;
+	}
 }
 
 /**
@@ -111,35 +118,35 @@ abstract class AbstractRecord extends Dictionary implements Record {
 abstract class OuterRecord implements Record {
 	
 	// and instance of a Record class
-	protected $record;
+	protected $_inner_record;
 	
 	/**
 	 * Bring in the record to hold.
 	 */
 	public function __construct(Record $record) {
-		$this->record = $record;
+		$this->_inner_record = $record;
 	}
 	
 	/**
 	 * Get the record that this outer record holds.
 	 */
-	public function getInnerRecord() {
-		return $this->record;
+	final public function getInnerRecord() {
+		return $this->_inner_record;
 	}
 	
 	/**
 	 * Record methods.
 	 */
 	public function offsetGet($key) { 
-		return $this->record->offsetGet($key); 
+		return $this->_inner_record->offsetGet($key); 
 	}
 	public function offsetSet($key, $val) { 
-		return $this->record->offsetSet($key, $val); 
+		return $this->_inner_record->offsetSet($key, $val); 
 	}
 	public function offsetExists($key) { 
-		return $this->record->offsetExists($key); 
+		return $this->_inner_record->offsetExists($key); 
 	}
 	public function offsetUnset($key) {
-		return $this->record->offsetUnset($key);
+		return $this->_inner_record->offsetUnset($key);
 	}
 }

@@ -38,7 +38,7 @@ class OutputBuffer {
  * @author Peter Goodman
  */
 function out() {
-	$args = func_get_args();
+	$args = func_get_args();	
 	OutputBuffer::$buffer .= implode('', $args);
 }
 

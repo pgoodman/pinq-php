@@ -22,7 +22,7 @@ $model->store('category_links', struct('wp_link2cat')->
 
     rel_id              ->int(10)->primary_key()->auto_increment(1)->
     link_id             ->int(10)->mapTo('links', 'link_id')->
-    category_id         ->int(10)->mapTp('categories', 'cat_ID')->
+    category_id         ->int(10)->mapTo('categories', 'cat_ID')->
     
     relatesTo('categories')->
     relatesTo('links')

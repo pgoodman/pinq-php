@@ -8,16 +8,11 @@
  * Represents a single database record.
  * @author Peter Goodman
  */
-class DatabaseRecord extends AbstractRecord implements Object {
-	
-	// database records always exist insofar as they are only instantiated
-	// through a query method
-	protected $_is_saved = TRUE,
-	          $_is_deleted = FALSE;
+class DatabaseRecord extends DataRecord implements Object {
 	
 	// if the PQL was used, some things might be prefixed. Make sure that we
 	// un-prefix them and set things up nicely.
-	public function __construct(array &$data = array()) {
+	final public function __construct(array &$data = array()) {
 		
 		// PQL was used in the query
 		if(isset($data['__pql__'])) {
@@ -86,18 +81,8 @@ class DatabaseRecord extends AbstractRecord implements Object {
 			$this->setSubRecords($records);
 		}
 		
+		// store the data to the actual dictionary
 		parent::__construct($data);
-	}
-	
-	// the database record doesn't actually know anything about itself other
-	// than that it's a record. these functions are mainly for other types of
-	// records.
-	public function save() { assert(FALSE); }
-	
-	// delete this row (the database record can't actually do that, though)
-	public function delete() {
-		$this->is_deleted = TRUE;
-		$this->is_saved = FALSE;
 	}
 	
 	public function __set($key, $val) { }

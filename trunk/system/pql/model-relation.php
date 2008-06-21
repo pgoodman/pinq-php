@@ -74,7 +74,7 @@ class ModelRelation {
 								
 				// a relationship could not be satisfied
 				else {
-					
+					echo 'oh frak!';
 					// cache the failed attempt
 					return $start->_cached_paths[$to_alias] = array();
 				}
