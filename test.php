@@ -12,7 +12,6 @@ $query = where()->imm(1)->add->in->imm(2)->mul->imm(3)->add->imm(4)->out->sub->i
          order()->left->ASC->
          limit(0, 5);
 
-exit;
 
 /*
 define('DIR_WORKING', dirname(__FILE__));
@@ -33,15 +32,15 @@ $model = new ModelDictionary();
 /*
 $model->create('xml', struct()->
 
-    rss->model(struct()->
+    rss->nested(struct()->
 
-        channel->model(struct()->
+        channel->nested(struct()->
 
             title      ->string()->
             description->string()->
             pubDate    ->string()->
             
-            item->model(struct()->
+            item->nested(struct()->
                 title      ->string()->
                 description->string()->
                 pubDate    ->string()

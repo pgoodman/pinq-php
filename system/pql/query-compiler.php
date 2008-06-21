@@ -40,20 +40,35 @@ abstract class QueryCompiler implements Compiler {
 	 * will return the model alias.
 	 * @internal
 	 */
-	protected function getModelStructName($model_alias) {
-		
-		$model_name = $model_alias;
-		
-		if(NULL !== ($name = $this->query->getModelName($model_alias)))
-			$model_name = $name;
-		
-		// figure out if the model is named
-		if(isset($this->models[$model_name])) {
-			if(NULL !== ($name = $this->models[$model_name]->getName()))
-				return $name;
-		}
+	protected function getAbsoluteModelName($model_alias) {
 				
-		return $model_name;
+		// try to get the absolute model name
+		$model = $this->getModel($model_alias);
+		if(NULL !== ($abs_name = $model->getName()))
+			return $abs_name;
+		
+		// try to get the model name
+		if(NULL !== ($model_name = $this->query->getUnaliasedModelName($model_alias)))
+			return $model_name;
+		
+		// oh well, nothing was accomplished :(
+		return $model_alias;
+	}
+	
+	/**
+	 * Get a model given a model alias.
+	 */
+	protected function getModel($model_alias) {
+		$model_name = $this->query->getUnaliasedModelName($model_alias);
+		
+		// bad model name
+		if(NULL === ($model = $this->models[(string)$model_name])) {
+			throw new UnexpectedValueException(
+				"Model [{$model_name}] in PQL query does not exist."
+			);
+		}
+		
+		return $model;
 	}
 	
 	/**
@@ -319,17 +334,19 @@ abstract class QueryCompiler implements Compiler {
 	/**
 	 * Abstract methods.
 	 */
+	
+	// operands
 	abstract protected function compileReference($field, $model = NULL);
 	abstract protected function compileSubstitute($key);
 	abstract protected function compileLiteral($value);
 	abstract protected function compileImmediate($value);
 	
+	// operators
 	abstract protected function compilePrefixOperator($operator, $operand);
 	abstract protected function compileInfixOperator($operator, $op1, $op2);
 	abstract protected function compileSearchOperator(array $search);
 	
-	abstract protected function compileFields();
-	
+	// query types
 	abstract protected function compileSelect();
 	abstract protected function compileUpdate();        
 	abstract protected function compileInsert();   

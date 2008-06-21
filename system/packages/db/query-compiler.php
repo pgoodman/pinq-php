@@ -47,9 +47,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// we assume that this exists. if we are being passed the model
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
-			$model_name = $query->getModelName($model_alias);
+			$model_name = $query->getUnaliasedModelName($model_alias);
 			$table_alias = $model_alias;
-			//$table_name = $this->getModelStructName($model_name);
+			//$table_name = $this->getAbsoluteModelName($model_name);
 			
 			// if we're selecting all of the columns from this table then we
 			// will remove the ALL flag an merge the expanded column names
@@ -62,7 +62,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				
 				// get the expanded model fields and merge them into the
 				// select column, preserving any other custom select columns.
-				$temp = array_keys($this->models[$model_name]->_properties);
+				$temp = array_keys($this->getModel($model_name)->getFields());
 				$columns = array_merge(array_combine($temp, $temp), $columns);
 			}
 			
@@ -122,7 +122,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
-			if($model_name == ($table_name = $this->getModelStructName($model_name)))
+			if($model_name == ($table_name = $this->getAbsoluteModelName($model_name)))
 				$table_name = '';
 			
 			// add in a leading comma for top-level froms and a join prefix
@@ -149,8 +149,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				// this will return direct relations each time. The ordering
 				// is arbitrary.				
 				$relation = ModelRelation::findPath(
-					$query->getModelName($dependent_model_name),
-					$query->getModelName($model_name),
+					$query->getUnaliasedModelName($dependent_model_name),
+					$query->getUnaliasedModelName($model_name),
 					$models
 				);
 								
@@ -183,7 +183,13 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		if($model_alias === NULL)
 			$model_alias = key($this->query->getContexts());
 		
-		$model_name = $this->query->getModelName($model_alias);
+		// model name
+		$model_name = $this->query->getUnaliasedModelName($model_alias);
+		
+		// if we're dealing with a query-defined alias that's different than
+		// the model name
+		if($model_alias !== $model_name)
+			return "{$model_alias}.{$field}";
 		
 		// we need to distinguish between models that are being selected from,
 		// and therefore their columns will be prefixed, or models that are
@@ -297,7 +303,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$query = $this->query;
 		$predicates = $query->getPredicates();
 		$pivots = $query->getPivots();
-				
+		
 		// no pivoting needed
 		if(empty($pivots))
 			return;
@@ -317,8 +323,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				
 				// find a path between the two models
 				$path = ModelRelation::findPath(
-					$query->getModelName($left_alias), 
-					$query->getModelName($right_alias),
+					$query->getUnaliasedModelName($left_alias), 
+					$query->getUnaliasedModelName($right_alias),
 					$this->models
 				);
 				
@@ -374,6 +380,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// get parts of the query
 		$this->createPivots();
+		
 		$where = $this->compilePredicates('where');
 		$order = $this->compilePredicates('order');
 		$limit = $this->compilePredicates('limit');
@@ -384,10 +391,6 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		if(!empty($order)) $sql .= " ORDER BY ". implode(' ', $order);
 		if(!empty($limit)) $sql .= " LIMIT ". implode(' ', $limit);
 		
-		out('<pre>', $sql, '</pre>');
-		$time_end = list($em, $es) = explode(' ', microtime());
-		out('<pre>', 'Query compile time:', ($em + $es) - ($sm + $ss), '</pre>');
-		
 		// add in the predicates and return
 		return $sql;
 	}
@@ -397,22 +400,43 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 */
 	protected function compileModify($prefix, $set = TRUE) {
 		
-		$query = &$this->query;
-		$models = &$this->models;
+		$query = $this->query;
 		
 		// query isn't cached, build up the sql then cache it.
+		$fields = array();
 		$sql = "{$prefix} ";
-		$set = '';
 		$comma = '';
 		
+		// go over the tables being modified and construct the beginning of
+		// the SQL statement along with the fields to be set
 		foreach($query->getContexts() as $model_alias => $context) {
 			
-			if($model_alias === $context['name'])
-				$model_alias = '';
+			$table_name = $this->getAbsoluteModelName($model_alias);
+			$model = $this->getModel($model_alias);
 			
-			$sql .= "{$comma}{$context[name]} {$model_alias}";
+			if($table_name === $model_alias)
+				$table_name = '';
+			
+			$sql .= "{$comma}{$table_name} {$model_alias}";
 			$comma = ',';
+			
+			// build up the field listing
+			$fields = array_merge(
+				$fields,
+				$this->buildFieldsList($context, $model, "{$model_alias}.")
+			);
 		}
+		
+		// concatenate the fields into the query
+		if(!empty($fields))
+			$sql .= ' SET '. implode(', ', $fields);
+		
+		// compile the conditions
+		$where = $this->compilePredicates('where');
+		if(!empty($where)) $sql .= ' WHERE '. implode(' ', $where);
+		
+		return $sql;
+		
 		/*
 		if($set) {
 			$sql .= ' SET';
@@ -512,6 +536,29 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	}
 	
 	/**
+	 * Build up a fields list.
+	 */
+	protected function buildFieldsList(array $context, Model $model, $prefix) {
+		$fields = array();
+		foreach($context['modify_values'] as $column => $value) {
+			
+			// ignore non-existant properties
+			if(!$model->hasField($column))
+				continue;
+			
+			$value = $model->coerceValueForField($column, $value);
+			
+			// make sure to quote it for insertion as a string
+			if(is_string($value))
+				$value = "'". $this->db->quote($value) ."'";
+			
+			$fields[] = "{$prefix}{$column}={$value}";
+		}
+		
+		return $fields;
+	}
+	
+	/**
 	 * Compile an INSERT query. This ignores predicates entirely. Also, this
 	 * ignores any relations made in the query and so it will not satisfy
 	 * those in any way.
@@ -520,60 +567,26 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// query isn't cached, build up the query
 		$queries = array();
-		$models = &$this->models;
 		
 		// unlike with UPDATE, we can't INSERT into multiple tables at the
 		// same time, but it doesn't mean that we can't chain several insert
 		// queries together.
 		foreach($this->query->getContexts() as $model_alias => $context) {
 			
-			$model = $this->models[$context['name']];
+			$model = $this->getModel($model_alias);
+			$table_name = $this->getAbsoluteModelName($model_alias);
 			
-			// make sure to get the proper name
-			if(NULL === ($name = $model->getName()))
-				$name = $context['name'];
-			
-			$sql = "INSERT INTO {$name}";
+			$sql = "INSERT INTO {$table_name}";
 			$comma = '';
 			
-			// one way to do an insert is to follow it with a select. this
-			// system doesn't directly support that, but someone could
-			// concatenate two compiled queries to get the same effect. To
-			// allow for this, we make sure that we only insert SET if we
-			// need to.
-			if(!empty($context['modfiy_values']))
-				$sql .= ' SET';
+			$fields = $this->buildFieldsList($context, $model, '');
 			
-			// go over the insert values
-			foreach($context['modfiy_values'] as $column => $value) {
-				
-				// this is special for databases
-				if($value === _)
-					$val = '?';
-				
-				// cast to a specific data type
-				else {
-					$val = $models[$alias]->coerceValue(
-						$column, 
-						$value
-					);
-					
-					// make sure to quote it for insertion as a string
-					if(is_string($val))
-						$val = "'". $this->db->quote($val) ."'";
-				}
-				
-				$sql .= "{$comma} {$column}={$val}";
-				$comma = ',';
-			}
+			if(!empty($fields))
+				$sql .= ' SET '. implode(', ', $fields);
 			
 			// add this insert query to the queries
 			$queries[] = $sql;
 		}
-		
-		// we only have one query so return it instead of the array
-		if(count($queries) == 1)
-			$queries = $queries[0];
 		
 		return $queries;
 	}

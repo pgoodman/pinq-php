@@ -7,34 +7,36 @@ class IndexController extends PinqController {
      * route.
      */
     public function index($tag_name = '') {
-	
-		$time_start = list($sm, $ss) = explode(' ', microtime());
-        
+	        
         // import the ere database and its associated models
         $db = $this->import('db.ere');
+		/*
+		$results = $db->create(
+			in('job_postings')->set(array(
+				'ContentId' => 1,
+				'EmployerName' => 'ERE.net',
+				'Instructions' => 'Go west!',
+				'ClickThroughUrl' => 'http://ere.net',
+			))->
+			
+			in('content')->set(array(
+				'Title' => 'The title of this content',
+				'ContentHtml' => 'The html of this job posting',
+			))
+		);
 		
-        // find all jobs including with their content information by a
-        // specific tag name passed in through the route
-        $jobs = $db->findAll(
-        
-            // get all columns from the job posting table
-            from('job_postings', 'jp')->select(ALL)->
-
-            // get all columns from 4the content table and link it to the job
-            // postings table automatically
-            from('content')->select(ALL)->link('jp', 'content')->
-
-            // link tags to job postings with an implicit through join
-            from('tags')->link('jp', 'tags')->where()->tags('Name')->eq(_)->
-			limit(3),
-
-            // substitute into the query for the tag name
-            array($tag_name)
-        );
+		*/
+		
+		// find all job postings with their content by a given tag name
+		$jobs = from('job_postings', 'jp')->select(ALL)->
+		        from('content', 'c')->select(ALL)->
+		        link('jp', 'c')->
+		        from('tags', 't')->link('jp', 't')->
+		        where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
 		
         // iterate over the jobs and output html for them. this would
         // eventually be moved to some sort of view
-        foreach($jobs as $job) {
+        foreach($db->findAll($jobs, array($tag_name)) as $job) {
 						
 			// output the job posting content. The fields being accessed in
 			// here are actually ambiguous and are resolved to one of the
@@ -62,9 +64,6 @@ class IndexController extends PinqController {
 			out('</ul>');
         }
 
-		$time_end = list($em, $es) = explode(' ', microtime());
-		out('<pre>', 'Total time:', ($em + $es) - ($sm + $ss), '</pre>');
-        
         // all done :D
     }
 }

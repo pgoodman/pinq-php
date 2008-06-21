@@ -107,7 +107,6 @@ abstract class RecordGateway {
 		if($query instanceof Query) {
 			
 			// the query has already been compiled and cached, use it
-			//if(NULL !== ($cached = QueryCompiler::getCachedQuery($query)))
 			if(isset($this->cached_queries[$query->_id]))
 				return $this->cached_queries[$query->_id];
 			
@@ -116,13 +115,9 @@ abstract class RecordGateway {
 				$query, 
 				$type
 			);
-			
-			//QueryCompiler::cacheQuery($query, $stmt);
-			
-			//$query = $stmt;
 		}
 						
-		return (string)$query;
+		return $query;
 	}
 	
 	/**
@@ -132,9 +127,10 @@ abstract class RecordGateway {
 	 */
 	public function find($query, array $args = array()) {
 		
-		// add in a limit to the query
-		//if($query instanceof QueryPredicates)
-		$query->limit(1);
+		// add in a limit to the query to speed up the query given that we
+		// are actually going through findAll
+		if($query instanceof QueryPredicates)
+			$query->limit(1);
 		
 		// find all results
 		$result = $this->findAll($query, $args);
@@ -180,10 +176,30 @@ abstract class RecordGateway {
 	 */
 	public function findAll($query, array $args = array()) {
 		
-		if(!is_string($query))
+		// if we've sneakily been given predicates then we'll try to derive
+		// a query from them.
+		if($query instanceof QueryPredicates) {
+			$query = $query->getQuery();
+			
+			if(NULL === $query) {
+				throw new UnexpectedValueException(
+					"RecordGateway::find[All]() expected PQL or SQL query, ".
+					"query predicate list given insteas."
+				);
+			}
+		}
+		
+		// compile the query
+		if($query instanceof Query)
 			$query = $this->getQuery($query, QueryCompiler::SELECT);
 		
-		return $this->ds->select($query, $args);
+		if(!is_string($query)) {
+			throw new UnexpectedValueException(
+				"RecordGateway::find[All]() expected either PQL or SQL query."
+			);
+		}
+		
+		return $this->ds->select($query, $args);		
 	}
 	
 	/**
@@ -217,5 +233,31 @@ abstract class RecordGateway {
 		}
 		
 		return FALSE;
+	}
+	
+	/**
+	 * Create a new record and return the created record. This accepts a
+	 * named record, a PQL query, or a SQL query.
+	 */
+	public function create($query, array $args = array(), $return = TRUE) {
+		$query = $this->getQuery($query, QueryCompiler::INSERT);
+		
+		if(!is_array($query))
+			$query = array($query);
+		
+		$results = array();
+		
+		foreach($query as $stmt)
+			$results[] = $this->ds->update($stmt);
+		
+		return count($results) == 1 ? array_pop($results) : $results;
+	}
+	
+	/**
+	 * Update a record and return the updated record. This accepts a named
+	 * record, a PQL query, or a SQL query.
+	 */
+	public function save($query, array $args = array()) {
+		
 	}
 }

@@ -111,7 +111,7 @@ class Query {
 	/**
 	 * Get the model name given an alias.
 	 */
-	public function getModelName($model_alias) {
+	public function getUnaliasedModelName($model_alias) {
 		if(isset($this->_aliases[$model_alias]))
 			return $this->_aliases[$model_alias];
 		
@@ -154,7 +154,7 @@ class Query {
 				'name' => $model_name,
 				'select_fields' => array(),
 				'select_counts' => array(),
-				'modfiy_values' => array(),
+				'modify_values' => array(),
 			);
 			
 			// make sure that we can always find out the model name used for
@@ -283,7 +283,7 @@ class Query {
 	 */
 	public function set($key, $value = NULL) {
 		$keys = is_array($key) ? $key : array((string)$key => $value);
-		
+				
 		$this->_context['modify_values'] = array_merge(
 			$this->_context['modify_values'],
 			$keys
