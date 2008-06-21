@@ -17,9 +17,9 @@ class MysqlDatabaseRecordIterator extends DatabaseRecordIterator {
 	 * Constructor, bring in the result.
 	 */
 	public function __construct($result) {
-		
-		// cache it
-		$this->count = mysql_num_rows($result);
+				
+		$this->count = mysql_num_rows($result)
+		 or $this->count = 0;
 		
 		// this is after because RecordIterator calls $this->count
 		parent::__construct($result);

@@ -35,7 +35,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$select[] = "1 AS __pql__";
 
 		// build up the SELECT columns, including any columns being COUNTed.
-		foreach($query->_contexts as $model_alias => $context) {
+		foreach($query->getContexts() as $model_alias => $context) {
 			
 			$counts = $context['select_counts'];
 			$columns = $context['select_fields'];
@@ -47,7 +47,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// we assume that this exists. if we are being passed the model
 			// name then we have to adapt it for SQL as model names are not
 			// necessarily the sql table names.
-			$model_name = $query->_aliases[$model_alias];
+			$model_name = $query->getModelName($model_alias);
 			$table_alias = $model_alias;
 			//$table_name = $this->getModelStructName($model_name);
 			
@@ -115,8 +115,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$sql = "";
 		$comma = "";
 		
-		$models = &$this->models;
-		$aliases = &$this->query->_aliases;
+		$models = $this->models;
+		$query = $this->query;
 		
 		foreach($graph as $model_name => $dependencies) {
 			
@@ -149,8 +149,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				// this will return direct relations each time. The ordering
 				// is arbitrary.				
 				$relation = ModelRelation::findPath(
-					$aliases[$dependent_model_name],
-					$aliases[$model_name],
+					$query->getModelName($dependent_model_name),
+					$query->getModelName($model_name),
 					$models
 				);
 								
@@ -181,9 +181,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		// this is somewhat of a wild guess that assumes there is only one
 		// model being selected from
 		if($model_alias === NULL)
-			$model_alias = key($this->query->_contexts);
+			$model_alias = key($this->query->getContexts());
 		
-		$model_name = $this->query->_aliases[$model_alias];
+		$model_name = $this->query->getModelName($model_alias);
 		
 		// we need to distinguish between models that are being selected from,
 		// and therefore their columns will be prefixed, or models that are
@@ -193,7 +193,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		// TODO: If the same table is being explicitly joined in the same
 		//       query then this could fail. Really it's dependent on $model
 		//       being set.
-		$contexts = $this->query->_contexts;
+		$contexts = $this->query->getContexts();
 		if(isset($contexts[$model_alias]))
 			if(!empty($contexts[$model_alias]['select_fields']))
 				return "{$model_name}_{$field}";
@@ -295,10 +295,11 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	protected function createPivots() {
 		
 		$query = $this->query;
-		$predicates = &$query->_predicates;
+		$predicates = $query->getPredicates();
+		$pivots = $query->getPivots();
 				
 		// no pivoting needed
-		if(empty($query->_pivots))
+		if(empty($pivots))
 			return;
 		
 		// set the predicates context and figure out if we need to begin by
@@ -310,14 +311,14 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$join_with_and = !$predicates->contextIsEmpty();
 		
 		// add in the pivots
-		foreach($query->_pivots as $left_alias => $rights) {
+		foreach($pivots as $left_alias => $rights) {
 			
 			foreach($rights as $right_alias => $pivot_type) {
 				
 				// find a path between the two models
 				$path = ModelRelation::findPath(
-					$query->_aliases[$left_alias], 
-					$query->_aliases[$right_alias],
+					$query->getModelName($left_alias), 
+					$query->getModelName($right_alias),
 					$this->models
 				);
 				
@@ -401,17 +402,18 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// query isn't cached, build up the sql then cache it.
 		$sql = "{$prefix} ";
+		$set = '';
 		$comma = '';
 		
-		foreach($query->_contexts as $model_alias => $context) {
+		foreach($query->getContexts() as $model_alias => $context) {
 			
 			if($model_alias === $context['name'])
-				$alias = '';
+				$model_alias = '';
 			
 			$sql .= "{$comma}{$context[name]} {$model_alias}";
 			$comma = ',';
 		}
-		
+		/*
 		if($set) {
 			$sql .= ' SET';
 		
@@ -425,12 +427,12 @@ class DatabaseQueryCompiler extends QueryCompiler {
 					$comma = ',';
 				}
 			}
-		}
+		}*/
 		/*
 		// note it's not by reference!! why? well if we use the same query
 		// for multiple things (inser/update/delete) and pass it around, then
 		// each time it will grow the predicates and a useless way.
-		$predicates = $query->_predicates;
+		$predicates = $query->getPredicates();
 				
 		// find what value we're pivoting on. unfortunately this doesn't do
 		// extensive checks on the predicates to make sure such things ought
@@ -444,7 +446,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				$pivots[$value[0]] = $value[1];
 		}
 		
-		$aliases = &$query->_aliases;
+		$aliases = &$query->getAliases();
 		
 		$predicates->where();
 		$join_with_and = !$predicates->contextIsEmpty();
@@ -453,7 +455,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		//$this->isolatePredicates();
 		
 		// add in the relationships as predicates
-		foreach($query->_links as $left => $rights) {
+		foreach($query->getRelations() as $left => $rights) {
 			foreach($rights as $right) {
 				
 				// find a path
@@ -523,7 +525,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		// unlike with UPDATE, we can't INSERT into multiple tables at the
 		// same time, but it doesn't mean that we can't chain several insert
 		// queries together.
-		foreach($this->query->_contexts as $model_alias => $context) {
+		foreach($this->query->getContexts() as $model_alias => $context) {
 			
 			$model = $this->models[$context['name']];
 			

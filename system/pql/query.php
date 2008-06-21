@@ -43,12 +43,12 @@ class Query {
 	static protected $query_id = 0;
 	
 	// stuff needed
-	public $_contexts = array(), // an array of the different sources
-	       $_context, // a reference to one of the sources in $_contexts
-	       $_links = array(), // query relationships to be satisfied
-	       $_pivots = array(), // query pivots following the relationships
-	       $_predicates, // query-predicates instance or null
-	       $_aliases = array(); // maps query aliases to the model names
+	protected $_contexts = array(), // an array of the different sources
+	          $_context, // a reference to one of the sources in $_contexts
+	          $_links = array(), // query relationships to be satisfied
+	          $_pivots = array(), // query pivots following the relationships
+	          $_predicates, // query-predicates instance or null
+	          $_aliases = array(); // maps query aliases to the model names
 	
 	/** 
 	 * Constructor, very little to set up.
@@ -85,6 +85,61 @@ class Query {
 	 */
 	public function setPredicates(QueryPredicates $predicates) {
 		$this->_predicates = $predicates;
+	}
+	
+	/**
+	 * Get the predicates.
+	 */
+	public function getPredicates() {
+		return $this->_predicates;
+	}
+	
+	/**
+	 * Get the relations defined in the query.
+	 */
+	public function getRelations() {
+		return $this->_links;
+	}
+	
+	/**
+	 * Get the pivots defined in the query.
+	 */
+	public function getPivots() {
+		return $this->_pivots;
+	}
+	
+	/**
+	 * Get the model name given an alias.
+	 */
+	public function getModelName($model_alias) {
+		if(isset($this->_aliases[$model_alias]))
+			return $this->_aliases[$model_alias];
+		
+		return NULL;
+	}
+	
+	/**
+	 * Get the aliases.
+	 */
+	public function &getAliases() {
+		return $this->_aliases;
+	}
+	
+	/**
+	 * Return a contet from the query.
+	 */
+	public function getContext($model_alias) {
+		if(isset($this->_contexts[$model_alias]))
+			return $this->_contexts[$model_alias];
+		
+		return NULL;
+	}
+	
+	/**
+	 * Return all contexts.
+	 */
+	public function getContexts() {
+		return $this->_contexts;
 	}
 	
 	/**

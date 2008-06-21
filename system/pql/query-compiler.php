@@ -43,37 +43,18 @@ abstract class QueryCompiler implements Compiler {
 	protected function getModelStructName($model_alias) {
 		
 		$model_name = $model_alias;
-		if(isset($this->query->_aliases[$model_alias]))
-			$model_name = $this->query->_aliases[$model_alias];
+		
+		if(NULL !== ($name = $this->query->getModelName($model_alias)))
+			$model_name = $name;
 		
 		// figure out if the model is named
 		if(isset($this->models[$model_name])) {
 			if(NULL !== ($name = $this->models[$model_name]->getName()))
 				return $name;
 		}
-		
+				
 		return $model_name;
 	}
-	
-	/**
-	 * See if a compiled query is already in the cache.
-	 * @internal
-	 */
-	/*static public function getCachedQuery(Query $query) {
-		if(isset(self::$cache[$query->_id]))
-			return self::$cache[$query->_id];
-		
-		return NULL;
-	}*/
-	
-	/**
-	 * Cache a compiled query. $stmt is expected to be a string statement or
-	 * an array of string statements.
-	 * @internal
-	 */
-	/*static public function cacheQuery(Query $query, $stmt) {
-		self::$cache[$query->_id] = $stmt;
-	}*/
 	
 	/**
 	 * Return a graph of the dependencies for this query, that is, lay out the
@@ -86,8 +67,8 @@ abstract class QueryCompiler implements Compiler {
 		// the table of relations established through the query. we actually
 		// use a copy of the relations because later on it will be modified
 		// and added to (for through relations).
-		$relations = $this->query->_links;
-		$aliases = &$this->query->_aliases;
+		$aliases = &$this->query->getAliases();
+		$relations = $this->query->getRelations();
 		
 		// to quickly access deeper areas in the graph, we will store
 		// references to each place where these nodes show up in the graph
@@ -237,47 +218,47 @@ abstract class QueryCompiler implements Compiler {
 	 */
 	public function compilePredicates($context) {
 		
-		if(!$this->query->_predicates)
+		if(NULL === ($predicates = $this->query->getPredicates()))
 			return NULL;
 		
-		$predicates = $this->query->_predicates->getPredicates($context);
+		$predicate_context = $predicates->getContext($context);
 		
-		if(empty($predicates))
+		if(empty($predicate_context))
 			return;
 		
 		$stack = new Stack;
 		
 		// go over the predicates from left to right
-		foreach($predicates as $predicate) {
+		foreach($predicate_context as $operation) {
 			
-			if(!is_array($predicate))
+			if(!is_array($operation))
 				continue;
 			
 			// operators
-			if($predicate[0] & QueryPredicates::OPERATOR) {
+			if($operation[0] & QueryPredicates::OPERATOR) {
 					
-				$op = $predicate[1];
+				$operator = $operation[1];
 				
 				// prefix, special cases
-				if($op == 'like' || $op == 'not') {
+				if($operator == 'like' || $operator == 'not') {
 					
 					$stack->push($this->compilePrefixOperator(
-						$op,
+						$operator,
 						$stack->pop()
 					));
 					
 				// special search operator
-				} else if($op == 'search') {
+				} else if($operator == 'search') {
 				
 					$stack->push($this->compileSearchOperator(
-						$predicate
+						$operation
 					));
 				
 				// infix
 				} else {
 					$right = $stack->pop();					
 					$stack->push($this->compileInfixOperator(
-						$op,
+						$operator,
 						$stack->pop(),
 						$right
 					));
@@ -285,7 +266,7 @@ abstract class QueryCompiler implements Compiler {
 					
 			// operands	
 			} else {
-				$stack->push($this->compileOperand($predicate));
+				$stack->push($this->compileOperand($operation));
 			}
 		}
 				

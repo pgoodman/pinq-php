@@ -34,7 +34,7 @@ if(!function_exists('where')) {
 class QueryPredicates extends StackOfStacks {
 	
 	// an array of sets of predicates
-	protected $_predicates, // the predicates are stored in reverse-polish
+	protected $_contexts, // the predicates are stored in reverse-polish
 	          $_operands,
 	          $_query,
 	          $_context,
@@ -73,7 +73,7 @@ class QueryPredicates extends StackOfStacks {
 	public function __construct(Query $query = NULL) {
 		
 		// the predicates table
-		$this->_predicates = array(
+		$this->_contexts = array(
 			'where' => array(),
 			'order' => array(),
 			'group' => array(),
@@ -103,9 +103,9 @@ class QueryPredicates extends StackOfStacks {
 	 * Get the predicates, and make sure to finish off anything still left
 	 * on the stack.
 	 */
-	public function getPredicates($context) {
+	public function getContext($context) {
 		$this->addTrailingOperators();
-		return $this->_predicates[$context];
+		return $this->_contexts[$context];
 	}
 	
 	/**
@@ -121,7 +121,7 @@ class QueryPredicates extends StackOfStacks {
 	 */
 	public function setContext($context) {
 		$this->addTrailingOperators();
-		$this->_context = &$this->_predicates[$context];
+		$this->_context = &$this->_contexts[$context];
 		return $this;
 	}
 	
@@ -165,7 +165,7 @@ class QueryPredicates extends StackOfStacks {
 	public function limit($start, $offset = NULL) {
 		//$array = NULL === $offset ? array($start) : array($start, $offset);
 		
-		$this->_predicates['limit'] = array();
+		$this->_contexts['limit'] = array();
 		$this->setContext('limit');
 		
 		// clear any previous stuff
@@ -205,12 +205,12 @@ class QueryPredicates extends StackOfStacks {
 		
 		// add in the special search predicate
 		$this->_context[] = array(self::OPERATOR, 'search', array(
-			'fields' => $this->_predicates['search'],
+			'fields' => $this->_contexts['search'],
 			'value' => $val,
 		));
 		
 		// reset the search context
-		$this->_predicates['search'] = array();
+		$this->_contexts['search'] = array();
 		
 		return $this;
 	}

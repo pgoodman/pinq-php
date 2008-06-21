@@ -31,8 +31,13 @@ abstract class Database implements DataSource {
 				
 		$result = $this->query($query, $args);
 		
-		if(!is_resource($result))
-			return NULL;
+		// usually the result of a malformed query
+		if(!is_resource($result)) {
+			throw new DatabaseException(
+				"Database query failed. The following error was returned: ".
+				$this->error()
+			);
+		}
 		
 		return $this->getRecordIterator($result);
 	}
