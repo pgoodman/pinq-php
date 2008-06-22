@@ -115,7 +115,7 @@ class Query {
 		if(isset($this->_aliases[$model_alias]))
 			return $this->_aliases[$model_alias];
 		
-		return NULL;
+		return $model_alias;
 	}
 	
 	/**
