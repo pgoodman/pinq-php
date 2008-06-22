@@ -23,6 +23,14 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	}
 	
 	/**
+	 * Destructor, obvious.
+	 */
+	public function __destruct() {
+		parent::__destruct();
+		unset($this->db);
+	}
+	
+	/**
 	 * Build up the select fields.
 	 * @internal
 	 */

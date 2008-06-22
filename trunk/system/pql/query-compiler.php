@@ -16,13 +16,10 @@ abstract class QueryCompiler implements Compiler {
 	      CREATE = 2,
 	      MODIFY = 4,
 	      DELETE = 8;
-	
-	//static protected $cache = array();
-	
+		
 	// the query and models
 	protected $query,
-	          $models,
-	          $operands;
+	          $models;
 	
 	/**
 	 * Constructor, bring in the query and models.
@@ -30,6 +27,16 @@ abstract class QueryCompiler implements Compiler {
 	public function __construct(Query $query, Dictionary $models) {
 		$this->query = $query;
 		$this->models = $models;
+	}
+	
+	/**
+	 * Destructor, break references.
+	 */
+	public function __destruct() {
+		unset(
+			$this->query,
+			$this->models
+		);
 	}
 	
 	/**
