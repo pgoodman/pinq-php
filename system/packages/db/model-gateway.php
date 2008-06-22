@@ -18,7 +18,10 @@ class DatabaseModelGateway extends ModelGateway {
 	/**
 	 * Get a new instance of this class.
 	 */
-	public function getModelGateway() {
-		return new self($this->ds, $this->models);
+	public function getModelGateway($model_name) {
+		$gateway = new self($this->ds, $this->models);
+		$gateway->setName($model_name);
+		
+		return $gateway;
 	}
 }

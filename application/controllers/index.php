@@ -35,6 +35,7 @@ class IndexController extends PinqController {
 		        link('jp', 'c')->
 		        from('tags', 't')->link('jp', 't')->
 		        where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
+		
 				
         // iterate over the jobs and output html for them. this would
         // eventually be moved to some sort of view
@@ -62,10 +63,10 @@ class IndexController extends PinqController {
 			// the two tables.
 			foreach($db->tags->findAll($job->content) as $tag)
 				out('<li>', $tag['Name'], '</li>');
+
 			
 			out('</ul>');
         }
-
         // all done :D
     }
 }

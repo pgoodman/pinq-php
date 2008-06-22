@@ -17,7 +17,7 @@ class ConfigLoader extends Loader {
 	 * variables for the configuration file to use. This is not available for
 	 * INI configuration files.
 	 */
-	public function &load($key, array $context = array()) {
+	public function load($key, array $context = array()) {
 		
 		// get cached
 		if(NULL !== ($parsed = $this[$key]))

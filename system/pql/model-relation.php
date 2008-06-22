@@ -44,8 +44,7 @@ class ModelRelation {
 			$next = $next_models->shift();
 			
 			// relationship cannot be satisfied
-			if(!isset($model->_relations[$next]) || !isset($models[$next])) {
-				
+			if(!isset($model->_relations[$next]) || NULL === $models[$next]) {				
 				// cache the failed attempt
 				return $start->_cached_paths[$to_alias] = array();
 			}
@@ -74,7 +73,6 @@ class ModelRelation {
 								
 				// a relationship could not be satisfied
 				else {
-					echo 'oh frak!';
 					// cache the failed attempt
 					return $start->_cached_paths[$to_alias] = array();
 				}
@@ -90,7 +88,18 @@ class ModelRelation {
 				
 			// life is slightly more complex, but not annoyingly so. Take off
 			// what *should* be the $next model to look at and continue
-			// without changing $current.
+			// without changing $current. This section is made slightly more
+			// complex because it allows arbitrary jumps in through relations.
+			// for example, this will solve the following through 
+			// relationships incrementally:
+			//
+			// "a" relates to "d" indirectly through "c"
+			// "b" relates to "c"
+			// "c" relates directly to "d"
+			//
+			// because of these jumps we need to keep track of what we know
+			// to happen later on in the path, and then fill in the gaps as
+			// we go.
 			} else {
 				
 				$old_nexts = $next_models->getArray();

@@ -40,8 +40,8 @@ abstract class RecordGateway {
 	 * Given a model name, return a model gateway instance. Using this
 	 * function selects all fields from the model.
 	 */
-	public function __get($model) {
-		return $this->__call($model, array(ALL));
+	public function __get($model_name) {
+		return $this->__call($model_name, array(ALL));
 	}
 	
 	/**
@@ -49,44 +49,44 @@ abstract class RecordGateway {
 	 * query that selects all fields in the $args array. This makes it
 	 * possible to do $ds->model_name('fields', 'to', 'select').
 	 */
-	public function __call($model, array $select = array()) {
+	public function __call($model_name, array $select = array()) {
+		
 		
 		// return the model gateway
-		if(isset($this->models[$model])) {
-			
-			// this isn't exactly dependable. todo: make this dependable
-			$gateway_id = $model . count($select);
-			
-			// return the cached gateway
-			if(isset($this->cached_gateways[$gateway_id]))
-				return $this->cached_gateways[$gateway_id];
-			
-			$gateway = $this->getModelGateway();
-			$gateway->setName($model);
-			
-			// build a query for the model
-			$query = from($model)->select($select);
-			
-			// set the unfinished query to the gateway. note: the gateway
-			// doesn't know anything about the model it's holding. it's only
-			// job is to store a query.
-			$gateway->setPartialQuery($query);
-			
-			// return and cache the gateway
-			return $this->cached_gateways[$gateway_id] = $gateway;
+		if(NULL === ($model = $this->models[$model_name])) {
+			throw new UnexpectedValueException(
+				"RecordGateway::__call/__get expected valid model name, ".
+				"model [{$model_name}] does not appear to exist."
+			);
 		}
 		
-		// model that was passed in didn't exist
-		throw new UnexpectedValueException(
-			"A model gateway could not be established to the non-existant ".
-			"model [{$model}]."
-		);
+		// this isn't exactly dependable. todo: make this dependable
+		$gateway_id = $model_name . count($select);
+		
+		// return the cached gateway
+		if(isset($this->cached_gateways[$gateway_id]))
+			return $this->cached_gateways[$gateway_id];
+		
+		$gateway = $this->getModelGateway($model_name);
+				
+		//$gateway->setName($model_name);
+		
+		// build a query for the model
+		$query = from($model_name)->select($select);
+		
+		// set the unfinished query to the gateway. note: the gateway
+		// doesn't know anything about the model it's holding. it's only
+		// job is to store a query.
+		$gateway->setPartialQuery($query);
+		
+		// return and cache the gateway
+		return $this->cached_gateways[$gateway_id] = $gateway;
 	}
 	
 	/**
 	 * Return a new instance of a model gateway.
 	 */
-	abstract protected function getModelGateway();
+	abstract protected function getModelGateway($model_name);
 	
 	/**
 	 * Compile a query for a specific data source.

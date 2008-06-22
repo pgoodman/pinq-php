@@ -50,11 +50,12 @@ class LinearStateMachine extends Stack {
 		try {
 			$state = parent::pop(NULL);
 			
-			if($expected && $state->state != $expected)
+			if($expected && $state->state != $expected) {
 				throw new InvalidStateException(
 					"Invalid state was popped off stack. Found ".
 					"[{$state->state}] but expected [{$expected}]."
 				);
+			}
 			
 			$where = (0 == count($this)) ? $this->transitions : $this->top();
 			$where->push($state);

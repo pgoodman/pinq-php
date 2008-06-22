@@ -10,7 +10,7 @@
  */
 abstract class Loader extends Dictionary {
 	
-	abstract public function &load($key, array $context = array());
+	abstract public function load($key, array $context = array());
 	
 	abstract public function store($key, $value = NULL);
 }
