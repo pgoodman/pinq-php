@@ -175,14 +175,14 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$route = $this->cleanPath($route);
 		$maps_to = $this->cleanPath($maps_to);
 		
-		// get the prefix of the route that is the sum of terminals
-		$prefix = $this->calculateLongestPrefix($route);
-		
 		// replace macros. Even though the normal macro can't be matched as
 		// a terminal, it's possible that the macro is in fact a terminal,
 		// even though this scenario seems redundant, we will replace macros
 		// right now.
 		$route = str_replace($this->macro_keys, $this->macro_vals, $route);
+		
+		// get the prefix of the route that is the sum of terminals
+		$prefix = $this->calculateLongestPrefix($route);
 		
 		// make sure we group all routes with the same prefix together, that
 		// way when we encounter a route, we only search given its prefix
