@@ -11,6 +11,7 @@ class IndexController extends PinqController {
         // import the ere database and its associated models
         $db = $this->import('db.ere');
 		
+		/*
 		$result = $db->modify(
 			in('job_postings', 'jp')->set(array(
 				'EmployerName' => 'ERE.net',
@@ -26,8 +27,7 @@ class IndexController extends PinqController {
 			link('jp', 'content')->
 			where()->jp('Id')->eq(1134)
 		);
-		
-		var_dump($result);
+		var_dump($result);*/
 		
 		// find all job postings with their content by a given tag name
 		$jobs = from('job_postings', 'jp')->select(ALL)->

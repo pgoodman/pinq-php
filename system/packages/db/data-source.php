@@ -35,7 +35,7 @@ abstract class Database implements DataSource {
 		if(!is_resource($result)) {
 			throw new DatabaseException(
 				"Database query failed. The following error was returned: ".
-				$this->error()
+				"<pre>". $this->error() ."</pre>"
 			);
 		}
 		
@@ -53,6 +53,9 @@ abstract class Database implements DataSource {
 	 * Given a SQL query statement, replace all question marks (?) in it with 
 	 * their respecitve values in the $args array. At the same time, make all 
 	 * values in the $args array safe for insertion to the query.
+	 *
+	 * TODO: currently this function does not support multiple instances of
+	 *       the same keyed substitution in the query.
 	 */
 	final protected function substituteArgs($stmt = '', array $args = array()) {
 		

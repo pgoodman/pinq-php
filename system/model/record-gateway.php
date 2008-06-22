@@ -207,26 +207,32 @@ abstract class RecordGateway {
 	public function delete($what, array $args = array()) {
 		
 		// deleting based on a query
-		if(is_string($what) || $what instanceof Query) {
-			
+		if($what instanceof Query)
 			$query = $this->getQuery($query, QueryCompiler::DELETE);
-			return $this->ds->update($query, $args);
 			
-		// deleting based on a record
-		} else if($what instanceof Record) {
+		// deleting based on a record. this is a bit sketchy as we're going to
+		// need to pivot on something. usually, for example with a database,
+		// the primary key would be used, but we don't know what primary keys
+		// are, but we can make a decent guess of it by using all integer
+		// fields
+		else if($what instanceof Record) {
 			
-			// the record is not saved
-			if(!$what->isSaved()) {
+			// the record is not named, ie: we cannot identify which model
+			// is having row(s) deleted from it.
+			if(!$what->isNamed()) {
 				throw new UnexpectedValueException(
 					"RecordGateway::delete() expected first argument to be ".
-					"an existing record. The record passed does not exist ".
-					"in its corresponding data source."
+					"an unambiguous record."
 				);
 			}
 			
 			// have the record delete itself
-			$what->delete();
-		}
+			die('TODO');
+			
+		} else
+			$query = (string)$what;
+		
+		return $this->ds->update($query, $args);
 		
 		return FALSE;
 	}
@@ -236,15 +242,22 @@ abstract class RecordGateway {
 	 * named record, a PQL query, or a SQL query.
 	 */
 	public function create($query, array $args = array(), $return = TRUE) {
-		$query = $this->getQuery($query, QueryCompiler::CREATE);
 		
-		if(!is_array($query))
-			$query = array($query);
+		// compile the query
+		if($query instanceof Query || $query instanceof QueryPredicates)
+			$query = $this->getQuery($query, QueryCompiler::CREATE);
 		
 		$results = array();
 		
+		// compiling the query might return multiple queries if we are working
+		// with multiple tabls in a pql query
+		if(!is_array($query))
+			$query = array($query);
+		
+		// TODO: the $args passed in might be ambiguous, ie: the query would
+		//       yield unwanted results if more than one query are compiled.
 		foreach($query as $stmt)
-			$results[] = $this->ds->update($stmt);
+			$results[] = $this->ds->update($stmt, $args);
 		
 		return count($results) == 1 ? array_pop($results) : $results;
 	}
