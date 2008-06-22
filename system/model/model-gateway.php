@@ -13,10 +13,13 @@ abstract class ModelGateway extends RecordGateway {
 	
 	/**
 	 * Destructor, clear things up.
-	 */
+	 */	
 	public function __destruct() {
-		unset($this->partial_query);
 		parent::__destruct();
+		unset(
+			$this->partial_query,
+			$this->cached_relations
+		);
 	}
 	
 	/**

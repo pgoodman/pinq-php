@@ -61,6 +61,19 @@ class Model {
 		$this->_name = $name;
 	}
 	
+	/**
+	 * Destructor
+	 */
+	public function __destruct() {
+		unset(
+			$this->_context,
+			$this->_contexts,
+			$this->_relations,
+			$this->_mappings,
+			$this->_cached_paths
+		);
+	}
+	
 	public function setName($name) {
 		$this->_name = $name;
 	}
