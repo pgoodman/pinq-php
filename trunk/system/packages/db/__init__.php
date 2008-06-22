@@ -14,6 +14,7 @@ require_once DIR_PACKAGE_DATABASE .'/record.php';
 require_once DIR_PACKAGE_DATABASE .'/query-compiler.php';
 require_once DIR_PACKAGE_DATABASE .'/record-gateway.php';
 require_once DIR_PACKAGE_DATABASE .'/model-gateway.php';
+require_once DIR_PACKAGE_DATABASE .'/model-definition.php';
 
 /**
  * Class for the database package to configure itself.
@@ -94,10 +95,9 @@ class PinqDb implements ConfigurablePackage {
 		// get the model loader package and have it load any models for this
 		// database. note: the argv[0] on here isn't necessary, but it means
 		// that each database connection will have its own model loader
-		$model = $loader->load("model-loader.{$argv[0]}");
-		$model->load($key);
-				
+		$model_loader = $loader->load("model-loader.db.{$argv[0]}");
+		
 		// return the database record gateway to the package
-		return new DatabaseRecordGateway($database, $model);
+		return new DatabaseRecordGateway($database, $model_loader);
 	}
 }

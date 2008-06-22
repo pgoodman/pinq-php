@@ -74,9 +74,10 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				$columns = array_merge(array_combine($temp, $temp), $columns);
 			}
 			
-			// this might be evil
-			// Why am I doing this? Assume we are selecting data from two
-			// tables at once, both of which have an 'id' column. In a normal
+			// this might be evil...
+			//
+			// Assume we are selecting data from two or more database
+			// tables at once, some of which have an 'id' column. In a normal
 			// select, the value for one would overwrite the value for another
 			// and so we would actually LOSE some possibly useful data. The
 			// solution is three-fold. We need to
@@ -88,8 +89,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			//
 			// The solution is simple: the table delimiters (as follows in
 			// code) have the model name in them, prefixed by '__' to make
-			// them somewhat unique. Conflicting columns are then prefixed
-			// by the model names which we know from the delimiters. Thus,
+			// them somewhat unique. All columns are then prefixed 
+			// by the model names which we know from the delimiters to avoid
+			// having to find the conflicting items in the first place. Thus,
 			// we get EXTRA info from the delimiters: the model name, which
 			// we can then use in DatabaseRecord to allow the programmer to
 			// access the information from the joined tables separately.
@@ -112,7 +114,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	
 	/**
 	 * Build the SQL required to build up the FROM section of the query. Given
-	 * a graph (or sub-graph) of table dependencies. This function builds uo
+	 * a graph (or sub-graph) of table dependencies. This function builds up
 	 * the joins recursively.
 	 * @internal
 	 */
@@ -156,13 +158,15 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			if(!empty($dependent_model_name)) {
 				
 				// this will return direct relations each time. The ordering
-				// is arbitrary.				
+				// is arbitrary. Note that most of this has already been
+				// cached when we generated the graph so this function is
+				// essentially free	
 				$relation = ModelRelation::findPath(
 					$query->getUnaliasedModelName($dependent_model_name),
 					$query->getUnaliasedModelName($model_name),
 					$models
 				);
-								
+				
 				if(empty($relation))
 					continue;
 				
@@ -208,6 +212,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		// TODO: If the same table is being explicitly joined in the same
 		//       query then this could fail. Really it's dependent on $model
 		//       being set.
+		//
 		$contexts = $this->query->getContexts();
 		if(isset($contexts[$model_alias]))
 			if(!empty($contexts[$model_alias]['select_fields']))
@@ -285,11 +290,19 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			'and' => 'AND', 'or' => 'OR', 'xor' => 'XOR',
 		);
 		
+		// crap
+		if(!isset($infixes[$operator])) {
+			throw new UnexpectedValueException(
+				"PQL infix operator [{$operator}] is not supported."
+			);
+		}
+		
 		return "({$op1} ". $infixes[$operator] ." {$op2})";
 	}
 	
 	/**
 	 * Compile the special search operator.
+	 * TODO: make this.
 	 */
 	protected function compileSearchOperator(array $search) {
 		
@@ -299,8 +312,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Rebuild pivots. Pivots are when we link two tables together in a query
 	 * and then want to add an extra predicate so that we can specify a value
-	 * to "pivot" the join tables on. Pivots always go with columns from the
-	 * left alias.
+	 * to "pivot" the join tables on.
 	 *
 	 * Note: this function is called within rebuildPredicates() as it usually
 	 *       modifies the predicates array significantly.
@@ -337,7 +349,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 					$query->getUnaliasedModelName($right_alias),
 					$this->models
 				);
-				
+								
 				// no path, ignore this pivot
 				if(empty($path))
 					continue;
@@ -400,7 +412,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		if(!empty($group)) $sql .= " GROUP BY ". implode(' ', $group);
 		if(!empty($order)) $sql .= " ORDER BY ". implode(' ', $order);
 		if(!empty($limit)) $sql .= " LIMIT ". implode(' ', $limit);
-		
+				
 		// add in the predicates and return
 		return $sql;
 	}

@@ -5,8 +5,8 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * And interface for something to build a "concrete" thing, such as an SQL
- * statement, out of an abstract query. Amusingly, this class is abstract.
+ * And abstract class for something to build a "concrete" thing, such as an SQL
+ * statement, out of an abstract query.
  * @author Peter Goodman
  */
 abstract class QueryCompiler implements Compiler {
@@ -67,7 +67,7 @@ abstract class QueryCompiler implements Compiler {
 	 */
 	protected function getModel($model_alias) {
 		$model_name = $this->query->getUnaliasedModelName($model_alias);
-		
+				
 		// bad model name
 		if(NULL === ($model = $this->models[(string)$model_name])) {
 			throw new UnexpectedValueException(
@@ -98,15 +98,16 @@ abstract class QueryCompiler implements Compiler {
 		// all models uniquely through aliasing
 		$entry_points = array();
 		
-		// we want to keep track of the trunks
+		// we want to keep track of the trunks in the graph (think of the 
+		// graph as a forest, where each tree is the dependencies for a model)
 		$trunks = array();
 		
 		// temporary indexes for through queries
 		$t = 1;
 		
 		// populate the entry nodes array. this is actually *more* complicated
-		// than solving datasource dependencies because we need to sneak
-		// through relationships in.
+		// than solving datasource dependencies because we need to sneak the
+		// indirect relationships in.
 		foreach($relations as $left => $rights) {
 			
 			$entry_points[$left] = NULL;
@@ -364,7 +365,7 @@ abstract class QueryCompiler implements Compiler {
 		
 		$predicates->out;
 		
-		// set the predicates to the query if they were empty
+		// set the predicates to the query if they were empty/changed
 		$query->setPredicates($predicates);
 	}
 	

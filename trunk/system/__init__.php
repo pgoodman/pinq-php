@@ -11,7 +11,7 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid', 0);
 
 // hide php
-header("Server: Xerxes", TRUE);
+header("Server: Leonidas", TRUE);
 header("X-Powered-By: Spartans", TRUE); // mwahahahahaha
 ini_set('expose_php', 0); // sometimes this does nothing
 

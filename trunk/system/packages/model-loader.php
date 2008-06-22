@@ -11,63 +11,98 @@
  */
 class PinqModelLoader extends Loader implements ConfigurablePackage {
 	
+	protected $dir,
+	          $models;
+	
 	/**
 	 * Configure the model loader by having it store an instance of itself in
 	 * the package loader.
 	 */
 	static public function configure(Loader $loader, Loader $config, array $args) {
-		DEBUG_MODE && expect_array_keys($args, array('class'));
+		
+		// make sure the arguments passed into this package from the loader
+		// has the information that we expect
+		DEBUG_MODE && expect_array_keys($args, array(
+			'argv',
+			'argc',
+			'class',
+		));
+		
+		extract($args);
+				
+		// the model loader expexts $argv[0] to be a data source type and
+		// $argv[1] to be the data source's name
+		DEBUG_MODE && assert('$argc >= 2');
+				
 		$class = $args['class'];
-		return new $class;
+		
+		return new $class($argv[0], $argv[1]);
 	}
 	
 	/**
-	 * Load a model file and store its models. Models are location in the
-	 * application directory under /models/package/$key, where package would
-	 * be, for example: db or xml, or whatever.
+	 * Constructor.
 	 */
-	public function &load($key, array $context = array()) {
+	final public function __construct($type, $name) {
+		$this->dir = "models/{$type}/{$name}";
+	}
+	
+	/**
+	 * Lazy-load a model definition.
+	 */
+	public function load($key, array $context = array()) {
+		
+		// get the cached version
+		if(isset($this->models[$key]))
+			return $this->models[$key];
+		
 		$ret = NULL;
 		$file = str_replace('.', '/', $key);
-		
-		// the possible file names for this configuration file
-		$files = array(
-			DIR_APPLICATION ."/models/{$file}". EXT,
-			DIR_SYSTEM ."/models/{$file}.php",
-		);
+		$file_name = DIR_APPLICATION ."/{$this->dir}/{$file}". EXT;
 				
-		// figure out which file it is
-		do {
-			if(file_exists($file_name = array_shift($files)))
-				break;
-			
-			$file_name = NULL;
-		} while(!empty($files));
-		
 		// no models defined for this key, ignore it (models aren't required)
-		if(NULL === $file_name)
-			return $ret;
+		if(!file_exists($file_name)) {
+			throw new UnexpectedValueException(
+				"ModelLoader::load() expects valid model name, model ".
+				"[{$key}] does not exist."
+			);
+		}
 		
-		// bring in the file and have it store the models
-		$model = $this;
-		include_once $file_name;
+		require_once $file_name;
 		
+		// look for the definition file
+		$class = class_name($key) .'Definition';
+		$model = new $class;
 		
-		$ret = $this->offsetGet($key);
-		return $ret;
+		if(!($model instanceof ModelDefinition)) {
+			throw new DomainException(
+				"Class [{$class}] must be a sub-class of ModelDefinition."
+			);
+		}
+				
+		// store the description of the model in the dict
+		parent::offsetSet($key, $model->describe());
+		
+		// store the actual model elsewhere
+		$this->store($key, $model);
+		
+		return $model;
 	}
 	
 	/**
 	 * Store a model.
 	 */
 	public function store($key, $val = NULL) {
-		$this->offsetSet($key, $val);
+		$this->models[$key] = $val;
 	}
 	
 	/**
-	 * This is more for semantic meaning than actual practical use.
+	 * Overwrite the dictionary function for getting a model so that we lazy
+	 * load as much as possible.
 	 */
-	public function create($key, Model $model) {		
-		parent::offsetSet($key, $model);
+	public function offsetGet($model_name) {		
+		if(!isset($this->models[$model_name]))
+			$this->load($model_name);
+		
+		return parent::offsetGet($model_name);
 	}
 }

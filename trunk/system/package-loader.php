@@ -31,14 +31,14 @@ class PackageLoader extends Loader {
 	 * Load and configure a package. Context becomes arguments to pass to the
 	 * class controller if it exists.
 	 */
-	public function &load($key, array $context = array()) {
+	public function load($key, array $context = array()) {
 		
 		// packages are given as dir.subdir.subdir. etc
 		$key = strtolower($key);
 		
 		// have we already loaded this package?
-		if(NULL !== ($cached = $this[$key]))
-			return $cached;
+		if(isset($this[$key]))
+			return $this[$key];
 		
 		// search in both the system and application directories. this will
 		// look first in the applications directory
@@ -83,6 +83,10 @@ class PackageLoader extends Loader {
 			} else if(!empty($path) && file_exists($abs_dir ."/{$path[0]}.php")) {
 				$package_file = $base_dir ."/{$path[0]}.php";
 				$class .= "_{$path[0]}";
+				
+				// we don't want the package id to be left in $argv
+				
+				array_shift($path);
 				break;
 			}
 		
@@ -142,9 +146,8 @@ class PackageLoader extends Loader {
 				array_merge($package_info, $context)
 			);
 		}
-		
-		// store the package
-		$this->store($key, $package);
+		 
+		$this->offsetSet($key, $package);
 		
 		return $package;
 	}

@@ -18,7 +18,10 @@ class DatabaseRecordGateway extends RecordGateway {
 	/**
 	 * Get a specific model gateway.
 	 */
-	protected function getModelGateway() {
-		return new DatabaseModelGateway($this->ds, $this->models);
+	protected function getModelGateway($model_name) {
+		$gateway = new DatabaseModelGateway($this->ds, $this->models);
+		$gateway->setName($model_name);
+		
+		return $gateway;
 	}
 }
