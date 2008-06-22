@@ -67,8 +67,8 @@ abstract class ModelGateway extends RecordGateway {
 		$query = $this->compileQuery($query, $type);
 				
 		// a string was passed instead of a predicates object
-		//if(is_string($predicates))
-		//	$query .= " {$predicates}";
+		if(is_string($predicates))
+			$query .= " {$predicates}";
 		
 		return $query;
 	}
