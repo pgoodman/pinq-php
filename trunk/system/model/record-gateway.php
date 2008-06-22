@@ -25,10 +25,15 @@ abstract class RecordGateway {
 	}
 	
 	/**
-	 * Destructor.
+	 * Destructor, clear out any references/cached stuff.
 	 */
 	public function __destruct() {
-		unset($this->ds, $this->models);
+		unset(
+			$this->ds, 
+			$this->models,
+			$this->cached_gateways,
+			$this->cached_queries
+		);
 	}
 	
 	/**

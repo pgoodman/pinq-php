@@ -86,6 +86,19 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
+	 * Destructor.
+	 */
+	public function __destruct() {
+		unset(
+			$this->_context,
+			$this->_contexts,
+			$this->_operands,
+			$this->_query,
+			$this->_values
+		);
+	}
+	
+	/**
 	 * Set/change the current query these predicates work for.
 	 */
 	public function setQuery(Query $query) {
