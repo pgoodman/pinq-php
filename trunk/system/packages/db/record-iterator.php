@@ -8,22 +8,18 @@
  * A set of records from the database.
  * @author Peter Goodman
  */
-class DatabaseRecordIterator extends RecordIterator {
+final class DatabaseRecordIterator extends InnerRecordIterator {
 	
 	private $result,
-	        $db,
-	        $count,
-	        $models;
+	        $ds,
+	        $count;
 	
 	/**
 	 * Constructor, bring in the database result resource.
 	 */
-	public function __construct($resource, Database $db, Dictionary $models) {
+	public function __construct($resource, Database $ds) {
 		$this->result = $resource;
-		$this->db = $db;
-		$this->count = $db->numRows($this->result);
-		$this->models = $models;
-		
+		$this->count = $ds->numRows($resource);
 		parent::__construct();
 	}
 	
@@ -31,10 +27,7 @@ class DatabaseRecordIterator extends RecordIterator {
 	 * Get the current record.
 	 */
 	public function current() {
-		return QueryDecompiler::getRecord(
-			$this->db->fetchRow($this->result), 
-			$this->models
-		);
+		return $this->ds->fetchRow($this->result);
 	}
 	
 	/**
@@ -43,7 +36,7 @@ class DatabaseRecordIterator extends RecordIterator {
 	 */
 	public function seek($offset) {
 		parent::seek($offset);
-		$this->db->resultSeek($offset);
+		$this->ds->resultSeek($offset);
 	}
 	
 	/**

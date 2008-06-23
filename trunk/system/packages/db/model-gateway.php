@@ -11,12 +11,8 @@
  */
 class DatabaseModelGateway extends ModelGateway {
 	
-	protected function getRecord(array $data) {
-		return QueryDecompiler::getRecord($data, $this->models);
-	}
-	
 	protected function getRecordIterator($result) {
-		return new DatabaseRecordIterator($result, $this->ds, $this->models);
+		return new DatabaseRecordIterator($result, $this->ds);
 	}
 	
 	/**

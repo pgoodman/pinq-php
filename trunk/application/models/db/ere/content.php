@@ -4,7 +4,7 @@
 
 class ContentDefinition extends DatabaseModelDefinition {
 	
-	public function describe() {
+	protected function describe() {
 		return (struct('www_Content')->
 		    Id           ->int(11)->primary_key()->auto_increment(1)
 		                 ->mapTo('job_postings', 'ContentId')

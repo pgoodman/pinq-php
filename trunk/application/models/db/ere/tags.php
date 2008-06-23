@@ -4,7 +4,7 @@
 
 class TagsDefinition extends DatabaseModelDefinition {
 	
-	public function describe() {
+	protected function describe() {
 		
 		return (struct('www_Tags')->
 		    Id          ->int(11)->primary_key()->auto_increment(1)

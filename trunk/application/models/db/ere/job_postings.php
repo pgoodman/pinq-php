@@ -4,7 +4,7 @@
 
 class JobPostingsDefinition extends DatabaseModelDefinition {
 	
-	public function describe() {
+	protected function describe() {
 		
 		return (struct('jobs_JobPostings')->
 		    Id                ->int(11)->primary_key()->auto_increment(1)->
