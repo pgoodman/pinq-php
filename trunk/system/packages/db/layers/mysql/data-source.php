@@ -68,16 +68,30 @@ class MysqlDatabase extends Database {
 	}
 	
 	/**
-	 * Get the record set class.
-	 */
-	protected function getRecordIterator($result) {
-		return new MysqlDatabaseRecordIterator($result);
-	}
-	
-	/**
 	 * Get the number of rows affected by the last insert/update/delete
 	 */
 	protected function affectedRows() {
 		return mysql_affected_rows($this->conn);
+	}
+	
+	/**
+	 * Get the number of rows in a result set.
+	 */
+	public function numRows($result) {
+		return mysql_num_rows($result);
+	}
+	
+	/**
+	 * Seek somewhere in a result.
+	 */
+	public function seekResult($result, $offset) {
+		mysql_data_seek($result, $offset);
+	}
+	
+	/**
+	 * Fetch a row from the database.
+	 */
+	public function fetchRow($result) {
+		return mysql_fetch_assoc($result);
 	}
 }

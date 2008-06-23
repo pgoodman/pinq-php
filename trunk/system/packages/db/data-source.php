@@ -15,7 +15,9 @@ abstract class Database implements DataSource {
 	abstract protected function insertId();
 	abstract public function quote($str);
 	abstract protected function affectedRows();
-	abstract protected function getRecordIterator($result);
+	abstract public function numRows($result);
+	abstract public function seekResult($result, $offset);
+	abstract public function fetchRow($result);
 	
 	/**
 	 * Close the database connection.
@@ -39,7 +41,7 @@ abstract class Database implements DataSource {
 			);
 		}
 		
-		return $this->getRecordIterator($result);
+		return $result;
 	}
 	
 	/**

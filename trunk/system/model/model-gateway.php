@@ -80,11 +80,11 @@ abstract class ModelGateway extends RecordGateway {
 	 * Find by query or by record.
 	 */
 	public function findAll($query, array $args = array()) {
-		
+				
 		if(NULL === $query) {
 			throw new UnexpectedValueException(
 				"ModelGateway::find[All]() expects a PQL predicates query, ".
-				"SQL predicates list, or Record instance. NULL given."
+				"SQL predicates list, or InnerRecord instance. NULL given."
 			);
 		}
 		
@@ -139,8 +139,8 @@ abstract class ModelGateway extends RecordGateway {
 			$args = $record->toArray();
 			$query = $this->cached_relations[$record_name];
 		}
-				
-		return parent::findAll($query, $args);
+						
+		return parent::findAll((string)$query, $args);
 	}
 	
 	/**
