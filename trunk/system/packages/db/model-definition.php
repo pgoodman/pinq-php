@@ -7,11 +7,7 @@
 /**
  * A base model definition.
  */
-abstract class DatabaseModelDefinition implements ModelDefinition {
-		
-	public function getRecordIterator($resource) {
-		return new DatabaseRecordIterator($resource);
-	}
+abstract class DatabaseModelDefinition extends ModelDefinition {
 	
 	public function getRecord(array &$data = array()) {
 		return new InnerRecord($data);
@@ -19,5 +15,9 @@ abstract class DatabaseModelDefinition implements ModelDefinition {
 	
 	public function getValidator() {
 		return NULL;
+	}
+	
+	public function getModelGateway(DataSource $ds, Dictionary $models) {
+		return new DatabaseModelGateway($ds, $models);
 	}
 }

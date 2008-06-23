@@ -22,14 +22,4 @@ class DatabaseRecordGateway extends RecordGateway {
 		$compiler = new DatabaseQueryCompiler($query, $this->models, $this->ds);
 		return $compiler->compile($type);
 	}
-	
-	/**
-	 * Get a specific model gateway.
-	 */
-	protected function getModelGateway($model_name) {
-		$gateway = new DatabaseModelGateway($this->ds, $this->models);
-		$gateway->setName($model_name);
-		
-		return $gateway;
-	}
 }

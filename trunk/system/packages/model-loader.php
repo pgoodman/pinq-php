@@ -69,9 +69,10 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 		
 		require_once $file_name;
 		
-		// look for the definition file
+		// look for the definition file, get the class name and instantiate
+		// it with its model name as the only parameter
 		$class = class_name($key) .'Definition';
-		$model = new $class;
+		$model = new $class($key);
 		
 		if(!($model instanceof ModelDefinition)) {
 			throw new DomainException(
