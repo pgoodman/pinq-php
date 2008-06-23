@@ -174,7 +174,7 @@ function pinq($script_file, $app_dir) {
 	// catch ALL exceptions that have bubbled up this far. We hope there are 
 	// none but there's no guarantee	
 	} catch(Exception $e) {
-		echo $e->getMessage();
+		print_r($e);
 		echo '<br>top-level exception';
 		
 	}

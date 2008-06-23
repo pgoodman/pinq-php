@@ -7,14 +7,14 @@
 /**
  * Interface for a record.
  */
-interface Record extends ArrayAccess, Object {
+interface Record extends ArrayAccess {
 	
 }
 
 /**
  * A data record, this implements the generic things every record needs.
  */
-abstract class DataRecord extends Dictionary implements Record {
+class InnerRecord extends Dictionary implements Record {
 	
 	protected $_name,
 	          $_sub_records,
@@ -102,7 +102,7 @@ abstract class DataRecord extends Dictionary implements Record {
 	 * Set the sub-records for this record, thus making this record
 	 * ambiguous.
 	 */
-	protected function setSubRecords(array &$records) {
+	public function setSubRecords(array &$records) {
 		
 		if(count($records) < 2)
 			return;
@@ -117,7 +117,7 @@ abstract class DataRecord extends Dictionary implements Record {
  */
 abstract class OuterRecord implements Record {
 	
-	// and instance of a Record class
+	// and instance of a InnerRecord class
 	protected $_inner_record;
 	
 	/**
@@ -135,7 +135,7 @@ abstract class OuterRecord implements Record {
 	}
 	
 	/**
-	 * Record methods.
+	 * InnerRecord methods.
 	 */
 	public function offsetGet($key) { 
 		return $this->_inner_record->offsetGet($key); 

@@ -14,7 +14,7 @@ abstract class DatabaseModelDefinition implements ModelDefinition {
 	}
 	
 	public function getRecord(array &$data = array()) {
-		return new DatabaseRecord($data);
+		return new InnerRecord($data);
 	}
 	
 	public function getValidator() {

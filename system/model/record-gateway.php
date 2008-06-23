@@ -51,9 +51,8 @@ abstract class RecordGateway {
 	 */
 	public function __call($model_name, array $select = array()) {
 		
-		
 		// return the model gateway
-		if(NULL === ($model = $this->models[$model_name])) {
+		if(!isset($this->models[$model_name])) {
 			throw new UnexpectedValueException(
 				"RecordGateway::__call/__get expected valid model name, ".
 				"model [{$model_name}] does not appear to exist."
@@ -92,6 +91,9 @@ abstract class RecordGateway {
 	 * Compile a query for a specific data source.
 	 */
 	abstract protected function compileQuery(Query $query, $type);
+	
+	abstract protected function getRecord(array $data);
+	abstract protected function getRecordIterator($result);
 	
 	/**
 	 * Get a string representation for a datasource-specic query. Even if
@@ -134,6 +136,24 @@ abstract class RecordGateway {
 	}
 	
 	/**
+	 * Query the datasource.
+	 */
+	protected function selectResult($query, array $args = array()) {
+		// compile the query
+		if($query instanceof Query || $query instanceof QueryPredicates)
+			$query = $this->getQuery($query, QueryCompiler::SELECT);
+		
+		if(!is_string($query)) {
+			throw new UnexpectedValueException(
+				"RecordGateway::find[All]() expected either PQL or string ".
+				"query."
+			);
+		}
+		
+		return $this->ds->select($query, $args);
+	}
+	
+	/**
 	 * Find a single record from a data source. This function accepts a string
 	 * query or an abstract query object. It also takes arguments to substitute
 	 * into the query.
@@ -146,12 +166,12 @@ abstract class RecordGateway {
 			$query->limit(1);
 		
 		// find all results
-		$result = $this->findAll($query, $args);
+		$result = $this->selectResult($query, $args);
 		
-		if(count($result) === 0)
+		if(!$result)
 			return NULL;
 		
-		return $result->current();
+		return $this->getRecord($result);
 	}
 	
 	/**
@@ -169,7 +189,7 @@ abstract class RecordGateway {
 		while($row instanceof OuterRecord)
 			$row = $row->getInnerRecord();
 		
-		// we are now likely dealing with a Record that is also a dictionary
+		// we are now likely dealing with a InnerRecord that is also a dictionary
 		if($row instanceof Dictionary)
 			$row = array_values($row->toArray());
 		else
@@ -188,19 +208,12 @@ abstract class RecordGateway {
 	 * substitute into the query.
 	 */
 	public function findAll($query, array $args = array()) {
+		$result = $this->selectResult($query, $args);
 		
-		// compile the query
-		if($query instanceof Query || $query instanceof QueryPredicates)
-			$query = $this->getQuery($query, QueryCompiler::SELECT);
+		if(!$result)
+			return NULL;
 		
-		if(!is_string($query)) {
-			throw new UnexpectedValueException(
-				"RecordGateway::find[All]() expected either PQL or string ".
-				"query."
-			);
-		}
-		
-		return $this->ds->select($query, $args);		
+		return $this->getRecordIterator($result);
 	}
 	
 	/**
@@ -238,8 +251,6 @@ abstract class RecordGateway {
 			$query = (string)$what;
 		
 		return $this->ds->update($query, $args);
-		
-		return FALSE;
 	}
 	
 	/**
