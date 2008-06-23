@@ -27,14 +27,4 @@ class DatabaseModelGateway extends ModelGateway {
 		$compiler = new DatabaseQueryCompiler($query, $this->models, $this->ds);
 		return $compiler->compile($type);
 	}
-	
-	/**
-	 * Get a new instance of this class.
-	 */
-	public function getModelGateway($model_name) {
-		$gateway = new self($this->ds, $this->models);
-		$gateway->setName($model_name);
-		
-		return $gateway;
-	}
 }

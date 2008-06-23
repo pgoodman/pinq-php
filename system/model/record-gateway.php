@@ -66,7 +66,10 @@ abstract class RecordGateway {
 		if(isset($this->cached_gateways[$gateway_id]))
 			return $this->cached_gateways[$gateway_id];
 		
-		$gateway = $this->getModelGateway($model_name);
+		//$gateway = $this->getModelGateway($model_name);
+		$model = $this->models->load($model_name);
+		$gateway = $model->getModelGateway($this->ds, $this->models);
+		$gateway->setName($model_name);
 				
 		//$gateway->setName($model_name);
 		
@@ -83,15 +86,9 @@ abstract class RecordGateway {
 	}
 	
 	/**
-	 * Return a new instance of a model gateway.
-	 */
-	abstract protected function getModelGateway($model_name);
-	
-	/**
 	 * Compile a query for a specific data source.
 	 */
 	abstract protected function compileQuery(Query $query, $type);
-	
 	abstract protected function getRecord(array $data);
 	abstract protected function getRecordIterator($result);
 	

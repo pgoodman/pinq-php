@@ -5,6 +5,7 @@
 class JobPostingsDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
+		
 		return (struct('jobs_JobPostings')->
 		    Id                ->int(11)->primary_key()->auto_increment(1)->
 		    ContentId         ->int(11)
@@ -16,5 +17,15 @@ class JobPostingsDefinition extends DatabaseModelDefinition {
 		    relatesTo('users', through('user_content_roles'))->
 		    relatesTo('tags', through('content'))
 		);
+	}
+	
+	public function getRecord(array &$data = array()) {
+		return new JobPostingsRecord($data);
+	}
+}
+
+class JobPostingsRecord extends InnerRecord {
+	public function sayHi() {
+		out('hi');
 	}
 }

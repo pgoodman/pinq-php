@@ -1,15 +1,15 @@
 <?php
 
 class IndexController extends PinqController {
-    
-    /**
-     * Main function for the index controller. Accepts a tag name from the
-     * route.
-     */
-    public function index($tag_name = '') {
-	        
-        // import the ere database and its associated models
-        $db = $this->import('db.ere');
+	
+	/**
+	 * Main function for the index controller. Accepts a tag name from the
+	 * route.
+	 */
+	public function index($tag_name = '') {
+			
+		// import the ere database and its associated models
+		$db = $this->import('db.ere');
 		
 		/*
 		$result = $db->modify(
@@ -31,28 +31,30 @@ class IndexController extends PinqController {
 		
 		// find all job postings with their content by a given tag name
 		$jobs = from('job_postings', 'jp')->select(ALL)->
-		        from('content', 'c')->select(ALL)->
-		        link('jp', 'c')->
-		        from('tags', 't')->link('jp', 't')->
-		        where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
+				from('content', 'c')->select(ALL)->
+				link('jp', 'c')->
+				from('tags', 't')->link('jp', 't')->
+				where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
 		
 				
-        // iterate over the jobs and output html for them. this would
-        // eventually be moved to some sort of view
-        foreach($db->findAll($jobs, array($tag_name)) as $job) {
-						
+		// iterate over the jobs and output html for them. this would
+		// eventually be moved to some sort of view
+		foreach($db->findAll($jobs, array($tag_name)) as $job) {
+			
+			$job->job_postings->sayHi();
+			
 			// output the job posting content. The fields being accessed in
 			// here are actually ambiguous and are resolved to one of the
 			// interior records of $job
-            outln(
-                '<h3>'. $job['Title'] .'</h3>',
-                '<hr />',
-                '<div>',
-                strip_tags($job['ContentHtml']),
-                '</div>',
+			outln(
+				'<h3>'. $job['Title'] .'</h3>',
+				'<hr />',
+				'<div>',
+				strip_tags($job['ContentHtml']),
+				'</div>',
 				'<strong>Tags:</strong>',
 				'<ul>'
-            );
+			);
 			
 			// output the tags. the tags need to be found using
 			// $job->job_postings because $job is an ambiguous record, meaning
@@ -66,7 +68,7 @@ class IndexController extends PinqController {
 
 			
 			out('</ul>');
-        }
-        // all done :D
-    }
+		}
+		// all done :D
+	}
 }
