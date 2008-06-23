@@ -49,21 +49,21 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 	/**
 	 * Lazy-load a model definition.
 	 */
-	public function load($key, array $context = array()) {
+	public function load($model_name, array $context = array()) {
 		
 		// get the cached version
-		if(isset($this->models[$key]))
-			return $this->models[$key];
+		if(isset($this->models[$model_name]))
+			return $this->models[$model_name];
 		
 		$ret = NULL;
-		$file = str_replace('.', '/', $key);
+		$file = str_replace('.', '/', $model_name);
 		$file_name = DIR_APPLICATION ."/{$this->dir}/{$file}". EXT;
 				
 		// no models defined for this key, ignore it (models aren't required)
 		if(!file_exists($file_name)) {
 			throw new UnexpectedValueException(
 				"ModelLoader::load() expects valid model name, model ".
-				"[{$key}] does not exist."
+				"[{$model_name}] does not exist."
 			);
 		}
 		
@@ -71,8 +71,8 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 		
 		// look for the definition file, get the class name and instantiate
 		// it with its model name as the only parameter
-		$class = class_name($key) .'Definition';
-		$model = new $class($key);
+		$class = class_name($model_name) .'Definition';
+		$model = new $class($model_name, $this);
 		
 		if(!($model instanceof ModelDefinition)) {
 			throw new DomainException(
@@ -81,10 +81,10 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 		}
 				
 		// store the description of the model in the dict
-		parent::offsetSet($key, $model->describe());
+		parent::offsetSet($model_name, $model->getDescription());
 		
 		// store the actual model elsewhere
-		$this->store($key, $model);
+		$this->models[$model_name] = $model;
 		
 		return $model;
 	}

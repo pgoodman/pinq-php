@@ -4,11 +4,15 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+interface RecordIterator extends Countable, SeekableIterator {
+	
+}
+
 /**
  * A set of data records.
  * @author Peter Goodman
  */
-abstract class RecordIterator implements Countable, SeekableIterator {
+abstract class InnerRecordIterator implements RecordIterator {
 	
 	protected $offset = 0,
 	          $limit,
@@ -90,39 +94,39 @@ abstract class RecordIterator implements Countable, SeekableIterator {
 }
 
 /**
- * An iterator to handle an inner record iterator. This has the same functionality
- * as an IteratorIterator, although unfortunately PHP doesn't support multiple
- * inheritance.
+ * An iterator to handle an inner record iterator.
  * @author Peter Goodman
  */
-abstract class OuterRecordIterator extends RecordIterator implements OuterIterator {
+abstract class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 	
 	protected $it;
 	
 	/**
-	 * Constructor, bring in the record iterator.
+	 * Constructor, bring in the record iterator, the constructor is overridden
+	 * to force a RecordIterator to be accepted.
 	 */
-	public function __construct(RecordIterator $record_set) {
-		parent::__construct();
-		$this->it = $record_set;
+	public function __construct(RecordIterator $it) {
+		parent::__construct($it);
 	}
 	
 	/**
 	 * Get the inner record iterator.
 	 */
-	public function getInnerIterator() {
-		return $this->it;
+	public function getInnerRecordIterator() {
+		return $this->getInnerIterator();
 	}
 	
 	/**
 	 * RecordIterator methods...
 	 */
-	public function current() { return $this->it->current(); }
-	public function key() { return $this->it->key(); }
-	public function next() { return $this->it->next(); }
-	public function valid() { return $this->it->valid(); }
-	public function seek($key) { return $this->it->seek($key); }
 	public function limit($offset, $limit = NULL) { 
-		return $this->it->limit($offset, $limit);
+		return $this->getInnerIterator()->limit($offset, $limit);
+	}
+	
+	/**
+	 * Seek to an offset.
+	 */
+	public function seek($offset) {
+		return $this->getInnerIterator()->seek($offset);
 	}
 }

@@ -7,9 +7,16 @@
 abstract class ModelGateway extends RecordGateway {
 	
 	// an instance of Query
-	protected $partial_query,
-	          $model_name,
+	protected $definition,
 	          $cached_relations = array();
+	
+	/**
+	 * Constructor.
+	 */
+	public function __construct(DataSource $ds, Loader $models, ModelDefinition $def) {
+		parent::__construct($ds, $models);
+		$this->definition = $def;
+	}
 	
 	/**
 	 * Destructor, clear things up.
@@ -25,30 +32,15 @@ abstract class ModelGateway extends RecordGateway {
 	/**
 	 * TODO
 	 */
-	public function __get($key) {
-		assert(FALSE);
-	}
-	
-	/**
-	 * Set the name of this gateway.
-	 */
-	public function setName($name) {
-		$this->model_name = $name;
-	}
-	
-	/**
-	 * Set this gateway's partial query. This is really only an query on a
-	 * specific model that selects all of its fields.
-	 */
-	public function setPartialQuery(Query $query) {
-		$this->partial_query = $query;
-	}
+	public function __get($key) { return NULL; }
+	public function __call($key, array $args = array()) { return NULL; }
+
 	
 	/**
 	 * Get a cloned version of the partial query.
 	 */
 	protected function getPartialQuery() {
-		return clone $this->partial_query;
+		return from($this->definition->getName())->select(ALL);
 	}
 	
 	/**
@@ -123,7 +115,7 @@ abstract class ModelGateway extends RecordGateway {
 				// add in the predicates to make linking and pivoting to the
 				// record possible
 				$query->from($record_name)->link(
-					$this->model_name, 
+					$this->definition->getName(), 
 					$record_name, 
 					Query::PIVOT_RIGHT
 				);
@@ -158,7 +150,7 @@ abstract class ModelGateway extends RecordGateway {
 			);
 		}
 		
-		$model = $this->models[$this->model_name];
+		$model = $this->definition->getDescription();
 		
 		// make sure the field actually exists
 		if(!$model->hasField($field)) {

@@ -59,38 +59,26 @@ abstract class RecordGateway {
 			);
 		}
 		
-		// this isn't exactly dependable. todo: make this dependable
-		$gateway_id = $model_name . count($select);
-		
 		// return the cached gateway
 		if(isset($this->cached_gateways[$gateway_id]))
 			return $this->cached_gateways[$gateway_id];
 		
-		//$gateway = $this->getModelGateway($model_name);
+		// load in the model definition
 		$model = $this->models->load($model_name);
-		$gateway = $model->getModelGateway($this->ds, $this->models);
-		$gateway->setName($model_name);
-				
-		//$gateway->setName($model_name);
 		
-		// build a query for the model
-		$query = from($model_name)->select($select);
-		
-		// set the unfinished query to the gateway. note: the gateway
-		// doesn't know anything about the model it's holding. it's only
-		// job is to store a query.
-		$gateway->setPartialQuery($query);
+		// get the definition's gateway
+		$gateway = $model->getModelGateway($this->ds);
 		
 		// return and cache the gateway
-		return $this->cached_gateways[$gateway_id] = $gateway;
+		return $this->cached_gateways[$model_name] = $gateway;
 	}
 	
 	/**
 	 * Compile a query for a specific data source.
 	 */
 	abstract protected function compileQuery(Query $query, $type);
-	abstract protected function getRecord(array $data);
-	abstract protected function getRecordIterator($result);
+	//abstract protected function getRecord(array $data);
+	//abstract protected function getRecordIterator($result);
 	
 	/**
 	 * Get a string representation for a datasource-specic query. Even if
