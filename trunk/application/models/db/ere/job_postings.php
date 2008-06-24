@@ -4,23 +4,20 @@
 
 class JobPostingsDefinition extends DatabaseModelDefinition {
 	
-	protected function describe() {
+	public function describe() {
 		
-		return (struct('jobs_JobPostings')->
-		    Id                ->int(11)->primary_key()->auto_increment(1)->
-		    ContentId         ->int(11)
-		                      ->mapTo('content', 'Id')->
-		    Instructions      ->string()->
-		    EmployerName      ->string(100)->
-		    ClickThroughUrl   ->string(150)->
-
-		    relatesTo('users', through('user_content_roles'))->
-		    relatesTo('tags', through('content'))
-		);
-	}
-	
-	public function getRecord(array &$data = array()) {
-		return new JobPostingsRecord($data);
+		$this->setInternalName('jobs_JobPostings');
+		
+		$this->Id = int(11);
+		$this->ContentId = int(11);
+		$this->Instructions = text();
+		$this->EmployerName = string(100);
+		$this->ClickThroughUrl = string(150);
+		
+		$this->ContentId->mapsTo('content', 'Id');
+		
+		$this->relatesTo('users', through('user_content_roles'))
+	         ->relatesTo('tags', through('content'));
 	}
 }
 

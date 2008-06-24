@@ -3,17 +3,22 @@
 !defined('DIR_APPLICATION') && exit();
 
 class ContentDefinition extends DatabaseModelDefinition {
-	
-	protected function describe() {
-		return (struct('www_Content')->
-		    Id           ->int(11)->primary_key()->auto_increment(1)
-		                 ->mapTo('job_postings', 'ContentId')
-		                 ->mapTo('content_tags', 'ContentId')->
-		    Title        ->string(75)->
-		    ContentHtml  ->string()->
-
-		    relatesTo('tags', through('content_tags'))->
-		    relatesTo('users', through('user_content_roles'))
-		);
+		
+	public function describe() {
+		
+		$this->setInternalName('www_Content');
+		
+		// define the fields
+		$this->Id = int(11);
+		$this->Title = string(75);
+		$this->ContentHtml = text();
+		
+		// add some mappings, these automatically add in direct relationships
+		$this->Id->mapsTo('job_postings', 'ContentId')
+		         ->mapsTo('content_tags', 'ContentId');
+		
+		// add in some indirect relationships
+		$this->relatesTo('tags', through('content_tags'))
+		     ->relatesTo('users', through('user_content_roles'));
 	}
 }
