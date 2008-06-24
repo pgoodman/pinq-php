@@ -16,6 +16,7 @@ abstract class Database implements DataSource {
 	abstract public function quote($str);
 	abstract protected function affectedRows();
 	abstract public function numRows($result);
+	abstract public function getRecordIterator($result);
 	
 	/**
 	 * Close the database connection.

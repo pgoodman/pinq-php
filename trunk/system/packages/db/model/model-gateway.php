@@ -14,8 +14,25 @@ class DatabaseModelGateway extends ModelGateway {
 	
 	public function __destruct() {
 		parent::__destruct();
-		
 		unset($this->_compiler);
+	}
+	
+	/**
+	 * Get a single record from the database. This somewhat circuitous of a
+	 * route--oh well.
+	 */
+	protected function getRecord($result_resource) {
+		return $this->getRecordIterator($result_resource)->current();
+	}
+	
+	/**
+	 * Get a record iterator.
+	 */
+	protected function getRecordIterator($result_resource) {
+		return new DatabaseRecordIterator(
+			$this->_ds->getRecordIterator(), 
+			$this->_models
+		);
 	}
 	
 	/**

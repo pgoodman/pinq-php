@@ -43,7 +43,10 @@ class MysqlDatabase extends Database {
 	 * Query a MySQL database and return a result.
 	 */
 	protected function query($query, array $args) {
-		return mysql_query($this->substituteArgs($query, $args), $this->conn);
+		return mysql_query(
+			$this->substituteArgs($query, $args), 
+			$this->conn
+		);
 	}
 	
 	/**
@@ -93,5 +96,12 @@ class MysqlDatabase extends Database {
 	 */
 	public function fetchRow($result) {
 		return mysql_fetch_assoc($result);
+	}
+	
+	/**
+	 * Return a record iterator.
+	 */
+	public function getRecordIterator($result) {
+		return new MysqlRecordIterator($result);
 	}
 }

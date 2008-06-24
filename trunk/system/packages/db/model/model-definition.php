@@ -8,10 +8,5 @@ class DatabaseModelDefinition extends ModelDefinition {
 
 	protected function getDefaultRecordClass() {
 		return 'DatabaseRecord';
-	}
-
-	protected function getDefaultRecordIteratorClass() {
-		return 'DatabaseRecordIterator';
-	}
-	
+	}	
 }

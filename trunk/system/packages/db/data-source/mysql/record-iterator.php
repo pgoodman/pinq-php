@@ -46,6 +46,6 @@ class MysqlRecordIterator extends InnerRecordIterator {
 	 * Return a record for the current mysql row.
 	 */
 	public function current() {
-		return new MysqlRecord(mysql_fetch_assoc($this->result));
+		return mysql_fetch_assoc($this->result);
 	}
 }
