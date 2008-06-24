@@ -14,6 +14,6 @@ class TagsDefinition extends DatabaseModelDefinition {
 		$this->Id->mapsTo('content_tags', 'TagId');
 		
 		$this->relatesTo('content', through('content_tags'))
-	         ->relatesTo('job_postings', through('content'))
+	         ->relatesTo('job_postings', through('content'));
 	}
 }

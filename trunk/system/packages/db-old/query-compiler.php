@@ -161,7 +161,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				// is arbitrary. Note that most of this has already been
 				// cached when we generated the graph so this function is
 				// essentially free	
-				$relation = ModelRelation::findPath(
+				$relation = ModelRelations::findPath(
 					$query->getUnaliasedModelName($dependent_model_name),
 					$query->getUnaliasedModelName($model_name),
 					$models
@@ -344,7 +344,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			foreach($rights as $right_alias => $pivot_type) {
 				
 				// find a path between the two models
-				$path = ModelRelation::findPath(
+				$path = ModelRelations::findPath(
 					$left_name, 
 					$query->getUnaliasedModelName($right_alias),
 					$this->models

@@ -25,7 +25,7 @@ abstract class QueryCompiler implements Compiler {
 	/**
 	 * Constructor, bring in the query and models.
 	 */
-	public function __construct(Dictionary $models, ModelRelation $relations) {
+	public function __construct(Dictionary $models, ModelRelations $relations) {
 		$this->models = $models;
 		$this->relations = $relations;
 	}
@@ -64,7 +64,7 @@ abstract class QueryCompiler implements Compiler {
 	/**
 	 * Get a model given a model alias.
 	 */
-	protected function getDefinitionByModelAlias($model_alias) {		
+	protected function getDefinitionByModelAlias($model_alias) {
 		return $this->models[
 			$this->query->getUnaliasedModelName($model_alias)
 		];

@@ -1,6 +1,6 @@
 <?php
 
-class DatabaseModelDefinition extends ModelDefinition {
+abstract class DatabaseModelDefinition extends ModelDefinition {
 	
 	protected function getDefaultGatewayClass() {
 		return 'DatabaseModelGateway';
