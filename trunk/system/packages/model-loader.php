@@ -55,7 +55,6 @@ class PinqModelLoader extends Loader implements ConfigurablePackage {
 		if(isset($this->models[$model_name]))
 			return $this->models[$model_name];
 		
-		$ret = NULL;
 		$file = str_replace('.', '/', $model_name);
 		$file_name = DIR_APPLICATION ."/{$this->dir}/{$file}". EXT;
 				
