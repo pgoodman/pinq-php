@@ -52,10 +52,10 @@ require_once DIR_SYSTEM .'/loader.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 require_once DIR_SYSTEM .'/exceptions.php';
 
-// bring in the model stuff (NOT a "model layer" as they are understood in
-// MVC terms)
+// bring in the model stuff
 require_once DIR_SYSTEM .'/pql/__init__.php';
 require_once DIR_SYSTEM .'/model/__init__.php';
+require_once DIR_SYSTEM .'/data-source/__init__.php';
 
 // stuff needed to get up and running
 require_once DIR_SYSTEM .'/output-buffer.php';

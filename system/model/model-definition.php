@@ -241,13 +241,12 @@ abstract class ModelDefinition implements Object {
 	 */
 	abstract protected function getDefaultGatewayClass();
 	abstract protected function getDefaultRecordClass();
-	abstract protected function getDefaultRecordIteratorClass();
 	
 	/**
 	 * Get the class name for a record.
 	 * @internal
 	 */
-	public function getGatewayClass() {
+	final public function getGatewayClass() {
 		$class = $this->_extenal_name_as_class .'Gateway';
 		return class_exists($class, FALSE) 
 		       ? $class 
@@ -258,21 +257,10 @@ abstract class ModelDefinition implements Object {
 	 * Get the class name for a record.
 	 * @internal
 	 */
-	public function getRecordClass() {
+	final public function getRecordClass() {
 		$class = $this->_extenal_name_as_class .'Record';
 		return class_exists($class, FALSE) 
 		       ? $class 
 		       : $this->getDefaultRecordClass();
-	}
-	
-	/**
-	 * Get the class name for a record iterator.
-	 * @internal
-	 */
-	public function getRecordClass() {
-		$class = $this->_extenal_name_as_class .'RecordIterator';
-		return class_exists($class, FALSE) 
-		       ? $class 
-		       : $this->getDefaultRecordIteratorClass();
 	}
 }

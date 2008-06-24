@@ -8,8 +8,6 @@ $dir = dirname(__FILE__);
 
 // bring in the Pinq Query Language, a.k.a. PINQ: PHP Integrated Query. Yes, I
 // know that it is also the name of the framework, I just really liked it!
-require_once $dir .'/model-relation.php';
-require_once $dir .'/model.php';
 require_once $dir .'/query.php';
 require_once $dir .'/query-predicates.php';
 require_once $dir .'/query-compiler.php';

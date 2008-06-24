@@ -13,6 +13,7 @@
 abstract class ModelGateway {
 	
 	protected $_models,
+	          $_relations,
 	          $_ds,
 	          $_partial_query,
 	          $_model_name,
@@ -23,17 +24,20 @@ abstract class ModelGateway {
 	 * Constructor, bring in the models and the data source.
 	 */
 	public function __construct(ModelDictionary $models, 
+		                        ModelRelation $relations,
 		                        DataSource $ds, 
 		                        $name = NULL) {
 		
 		$this->_models = $models;
 		$this->_ds = $ds;
 		$this->_model_name = $name;
+		$this->_relations = $relations;
 	}
 	
 	public function __destruct() {
 		unset(
 			$this->_models,
+			$this->_relations,
 			$this->_ds,
 			$this->_partial_query,
 			$this->_cache_queries,
@@ -199,6 +203,8 @@ abstract class ModelGateway {
 	}
 	
 	abstract protected function compileQuery(Query $query, $type);
+	abstract protected function getRecord($result_resource);
+	abstract protected function getRecordIterator($result_resource);
 	
 	/**
 	 * Query the datasource.
