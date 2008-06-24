@@ -3,12 +3,14 @@
 !defined('DIR_APPLICATION') && exit();
 
 class UserContentRolesDefinition extends DatabaseModelDefinition {
-	protected function describe() {
+	public function describe() {
 		
-		return (struct('www_UserContentRoles')->
-		    Id             ->int(11)->primary_key()->auto_increment(1)->
-		    UserId         ->int(11)->mapTo('users', 'Id')->
-		    ContentId      ->int(11)->mapTo('content', 'Id')
-		);
+		$this->setInternalName('www_UserContentRoles');
+		
+		$this->UserId = int(11);
+		$this->ContentId = int(11);
+		
+		$this->UserId->mapsTo('users', 'Id');
+		$this->ContentId->mapsTo('content', 'Id');
 	}
 }

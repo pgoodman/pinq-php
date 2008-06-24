@@ -4,11 +4,13 @@
 
 class ContentTagsDefinition extends DatabaseModelDefinition {
 	
-	protected function describe() {
-		return (struct('www_ContentTags')->
-		    Id           ->int(11)->primary_key()->auto_increment(1)->
-		    ContentId    ->int(11)->mapTo('content', 'Id')->
-		    TagId        ->int(11)->mapTo('tags', 'Id')
-		);
+	public function describe() {
+		
+		$this->setInternalName('www_ContentTags');
+		$this->ContentId = int(11);
+		$this->TagId = int(11);
+		
+		$this->ContentId->mapsTo('content', 'Id');
+		$this->TagId->mapsTo('tags', 'Id');
 	}
 }
