@@ -12,12 +12,12 @@
  */
 abstract class ModelGateway {
 	
-	private $_models,
-	        $_ds,
-	        $_partial_query,
-	        $_model_name,
-	        $_cached_queries = array(),
-	        $_cached_relations = array();
+	protected $_models,
+	          $_ds,
+	          $_partial_query,
+	          $_model_name,
+	          $_cached_queries = array(),
+	          $_cached_relations = array();
 	
 	/**
 	 * Constructor, bring in the models and the data source.
@@ -29,6 +29,16 @@ abstract class ModelGateway {
 		$this->_models = $models;
 		$this->_ds = $ds;
 		$this->_model_name = $name;
+	}
+	
+	public function __destruct() {
+		unset(
+			$this->_models,
+			$this->_ds,
+			$this->_partial_query,
+			$this->_cache_queries,
+			$this->_cached_relations
+		);
 	}
 	
 	/**
@@ -80,6 +90,8 @@ abstract class ModelGateway {
 	 * Get a string representation of a query.
 	 */
 	protected function getQuery($query, $type) {
+		
+		$record_name = NULL;
 		
 		if($query instanceof Record) {
 			
@@ -139,37 +151,48 @@ abstract class ModelGateway {
 		// check if the query is a string, if so, return it
 		if(is_string($query))
 			return $query;
-		
-		// the query object actually returns a predicates object at once point
-		// so we need to get it out of the predicates object
-		if($query instanceof QueryPredicates) {
 			
-			// set the partial query to this query predicates object
-			if(NULL !== $this->_partial_query)
-				$query->setQuery($this->getPartialQuery());
+		// the query is an object
+		else if(is_object($query)) {
 			
-			// try to get a query object out of this oredicates object
-			if(NULL === ($query = $query->getQuery())) {
-				throw new InvalidArgumentException(
-					"Argument passed to RecordGateway method is not string ".
-					"PQL query."
-				);
+			// the query object actually returns a predicates object at once
+			// point so we need to get it out of the predicates object
+			if($query instanceof QueryPredicates) {
+			
+				// set the partial query to this query predicates object
+				if(NULL !== $this->_partial_query)
+					$query->setQuery($this->getPartialQuery());
+			
+				// try to get a query object out of this oredicates object
+				if(NULL === ($query = $query->getQuery())) {
+					throw new InvalidArgumentException(
+						"Argument passed to RecordGateway method is not ".
+						"string PQL query."
+					);
+				}
 			}
-		}
 				
-		// if we were given or derived an abstract query object then we need
-		// to compile it.
-		if($query instanceof Query) {
+			// if we were given or derived an abstract query object then we
+			// need to compile it.
+			if($query instanceof Query) {
 			
-			// the query has already been compiled and cached, use it
-			if(isset($this->_cached_queries[$query->_id]))
-				return $this->_cached_queries[$query->_id];
+				// the query has already been compiled and cached, use it
+				if(isset($this->_cached_queries[$query->_id]))
+					return $this->_cached_queries[$query->_id];
 			
-			// nope, we need to compile the query
-			$query = $this->_cached_queries[$query->_id] = $this->compileQuery(
-				$query, 
-				$type
-			);
+				// nope, we need to compile the query
+				$query = $this->compileQuery(
+					$query, 
+					$type
+				);
+				
+				$this->_cached_queries[$query->_id] = $query;
+			}
+			
+			// cache this relation, this is when we're in a sub-model gateway
+			// and a Record object is passed to one of the query functions.
+			if(NULL !== $record_name)
+				$this->_cached_relations[$record_name] = $query;
 		}
 						
 		return $query;
@@ -295,6 +318,62 @@ abstract class ModelGateway {
 			$query = (string)$what;
 		
 		return $this->_ds->update($query, $args);
+	}
+	
+	/**
+	 * Create the query needed to find one or more rows from the data source 
+	 * a field in the model.
+	 * @internal
+	 */
+	protected function createFindByQuery($field, $value) {
+		
+		// make sure a substitute value isn't being passed in
+		if(_ === $value) {
+			throw new UnexpectedValueException(
+				"ModelGateway::find[All]By() does not accept a substitute ".
+				"value for the value of a field."
+			);
+		}
+		
+		$definition = $this->_models[$this->_model_name];
+		
+		// make sure the field actually exists
+		if(!$definition->hasField($field)) {
+			throw new UnexpectedValueException(
+				"ModelGateway::find[All]By() expects first argument to be an ".
+				"existing field in model definition [{$this->_model_name}]."
+			);
+		}
+		
+		// create the PQL query and coerce the value that's going into the
+		// query
+		return where()->$field->eq(
+			$definition->coerceValueForField($field, $value)
+		);
+	}
+	
+	/**
+	 * Find a row by a (field, value) pair.
+	 */
+	public function findBy($field, $value) {
+		if(NULL === $this->_partial_query)
+			return NULL;
+		
+		return $this->find(
+			$this->createFindByQuery($field, $value)
+		);
+	}
+	
+	/**
+	 * Find many rows with a (field,value) pair.
+	 */
+	public function findAllBy($field, $value) {
+		if(NULL === $this->_partial_query)
+			return NULL;
+		
+		return $this->findAll(
+			$this->createFindByQuery($field, $value)
+		);
 	}
 	
 	/**

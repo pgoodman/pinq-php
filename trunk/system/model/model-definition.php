@@ -74,7 +74,7 @@ abstract class ModelDefinition implements Object {
 	 * will pass validation. Note that validation is a distinct step from
 	 * coercing values to a specific type.
 	 */
-	public function validate(array $fields) {
+	public function validateFields(array $fields) {
 		return $fields;
 	}
 	
@@ -104,6 +104,13 @@ abstract class ModelDefinition implements Object {
 	 */
 	final public function getInternalName() {
 		return $this->_internal_name;
+	}
+	
+	/**
+	 * Return an array of the fields in this model.
+	 */
+	final public function getFields() {
+		return array_keys($this->_fields);
 	}
 	
 	/**
