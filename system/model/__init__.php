@@ -10,4 +10,4 @@ require_once $dir .'/model-gateway.php';
 require_once $dir .'/model-definition.php';
 require_once $dir .'/model-dictionary.php';
 require_once $dir .'/model-relation.php';
-require_once $dir .'/model-types.php';
+require_once $dir .'/types.php';

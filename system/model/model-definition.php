@@ -40,7 +40,7 @@ abstract class ModelDefinition implements Object {
 	 * object.
 	 * @internal
 	 */
-	final public function __construct($name, ModelRelation $relations) {
+	final public function __construct($name, ModelRelations $relations) {
 		
 		// naming things
 		$this->_extenal_name_as_class = class_name($name);
@@ -116,20 +116,13 @@ abstract class ModelDefinition implements Object {
 	/**
 	 * Set a field to the model.
 	 */
-	public function __set($key, array $args = array()) {
-		
-		if(!isset($args[0]) || count($args[0]) !== 3) {
-			throw new InvalidArgumentException(
-				"ModelDefinition::__set expected a type to be given. Unknown ".
-				"given instead."
-			);
-		}
+	public function __set($key, $type) {
 		
 		$this->_fields[$key] = array(
 			'name' => $key,
-			'type' => $args[0],
-			'length' => $args[1],
-			'value' => $args[2],
+			'type' => $type[0],
+			'length' => $type[1],
+			'value' => $type[2],
 		);
 	}
 	
@@ -147,6 +140,9 @@ abstract class ModelDefinition implements Object {
 		$this->_context = $key;
 		return $this;
 	}
+	
+	public function __isset($key) { }
+	public function __unset($key) { }
 	
 	/**
 	 * Map a context (field) to a field in another model definition.

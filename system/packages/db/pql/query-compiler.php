@@ -18,7 +18,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * Constructor, redefined to bring in the database.
 	 */
 	public function __construct(Dictionary $models, 
-		                        ModelRelation $relations,
+		                        ModelRelations $relations,
 		                        DataSource $db) {
 		
 		parent::__construct($models, $relations);
@@ -39,7 +39,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 */
 	protected function compileFields() {
 		
-		$query = &$this->query;
+		$query = $this->query;
 		$select = array();
 		
 		// a signal that the PQL is being used as opposed to traditional SQL
@@ -397,9 +397,12 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// add in the tables to get data from and build up the join statements
 		// (if any)
+		$aliases = &$this->query->getAliases();
+		$relations = $this->query->getRelations();
+		
 		$graph = $this->relations->getRelationDependencies(
-			$this->query->getAliases(),
-			$this->query->getRelations()
+			$aliases,
+			$relations
 		);
 		
 		if(!empty($graph))

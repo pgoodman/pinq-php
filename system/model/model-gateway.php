@@ -24,7 +24,7 @@ abstract class ModelGateway {
 	 * Constructor, bring in the models and the data source.
 	 */
 	public function __construct(ModelDictionary $models, 
-		                        ModelRelation $relations,
+		                        ModelRelations $relations,
 		                        DataSource $ds, 
 		                        $name = NULL) {
 		
@@ -82,11 +82,17 @@ abstract class ModelGateway {
 		$class = $definition->getGatewayClass();
 		
 		// load up the definition-specific gateway class, or the default one
-		$gateway = new $class($this->_models, $this->_ds, $model_name);
+		$gateway = new $class(
+			$this->_models, 
+			$this->_relations, 
+			$this->_ds, 
+			$model_name
+		);
+		
 		$gateway->setPartialQuery(
 			$this->getPartialQuery()->from($model_name)->select(ALL)
 		);
-		$gateway->setName($model_name);
+		
 		return $gateway;
 	}
 	
@@ -98,6 +104,8 @@ abstract class ModelGateway {
 		$record_name = NULL;
 		
 		if($query instanceof Record) {
+			
+			$record = $query;
 			
 			// the problem is that we need a partial query to do a query pivot
 			// a partial query comes from when use use __call or __get on the
@@ -179,10 +187,12 @@ abstract class ModelGateway {
 			// if we were given or derived an abstract query object then we
 			// need to compile it.
 			if($query instanceof Query) {
-			
+				
+				$query_id = $query->getId();
+				
 				// the query has already been compiled and cached, use it
-				if(isset($this->_cached_queries[$query->_id]))
-					return $this->_cached_queries[$query->_id];
+				if(isset($this->_cached_queries[$query_id]))
+					return $this->_cached_queries[$query_id ];
 			
 				// nope, we need to compile the query
 				$query = $this->compileQuery(
@@ -190,7 +200,7 @@ abstract class ModelGateway {
 					$type
 				);
 				
-				$this->_cached_queries[$query->_id] = $query;
+				$this->_cached_queries[$query_id] = $query;
 			}
 			
 			// cache this relation, this is when we're in a sub-model gateway

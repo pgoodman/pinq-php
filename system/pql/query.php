@@ -48,7 +48,8 @@ class Query {
 	          $_links = array(), // query relationships to be satisfied
 	          $_pivots = array(), // query pivots following the relationships
 	          $_predicates, // query-predicates instance or null
-	          $_aliases = array(); // maps query aliases to the model names
+	          $_aliases = array(), // maps query aliases to the model names
+	          $_id;
 	
 	/** 
 	 * Constructor, very little to set up.
@@ -81,6 +82,13 @@ class Query {
 	}
 	
 	/**
+	 * Get this query's ID.
+	 */
+	public function getId() {
+		return $this->_id;
+	}
+	
+	/**
 	 * Set this query's predicates.
 	 */
 	public function setPredicates(QueryPredicates $predicates) {
@@ -90,14 +98,14 @@ class Query {
 	/**
 	 * Get the predicates.
 	 */
-	public function getPredicates() {
+	public function &getPredicates() {
 		return $this->_predicates;
 	}
 	
 	/**
 	 * Get the relations defined in the query.
 	 */
-	public function getRelations() {
+	public function &getRelations() {
 		return $this->_links;
 	}
 	
@@ -113,8 +121,7 @@ class Query {
 	 */
 	public function getUnaliasedModelName($model_alias) {
 		if(isset($this->_aliases[$model_alias]))
-			return $this->_aliases[$model_alias];
-		
+			return $this->_aliases[$model_alias];		
 		return $model_alias;
 	}
 	

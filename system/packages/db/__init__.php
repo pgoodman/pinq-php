@@ -71,7 +71,7 @@ class PinqDb implements ConfigurablePackage {
 
 		// figure out the driver name and the file its located in
 		$driver = strtolower($driver);
-		$file = DIR_PACKAGE_DATABASE ."/data-source/layers/{$driver}/__init__.php";
+		$file = DIR_PACKAGE_DATABASE ."/data-source/{$driver}/__init__.php";
 
 		// uh oh, the driver file doesn't exist, error
 		if(!file_exists($file)) {
@@ -91,16 +91,14 @@ class PinqDb implements ConfigurablePackage {
 		$database = new $class($host, $user, $pass);
 		$database->open($name);
 		
-		// get the model loader package and have it load any models for this
-		// database. note: the argv[0] on here isn't necessary, but it means
-		// that each database connection will have its own model loader
-		//$model_loader = $loader->load("model-loader.db.{$argv[0]}");
-		
-		// return the database record gateway to the package
+		// get a new relations dictionary and figure out which directory that
+		// models will be in
 		$relations = new ModelRelations;
+		$models_dir = DIR_APPLICATION ."/models/db/{$argv[0]}";
 		
+		// return the database model gateway to the package
 		return new DatabaseModelGateway(
-			new ModelDictionary($relations),
+			new ModelDictionary($relations, $models_dir),
 			$relations,
 			$database,
 			NULL

@@ -234,15 +234,15 @@ class Model {
 	public function relatesTo($model_alias, array $through = NULL) {
 		
 		// add the relationship
-		$how = !empty($through) ? ModelRelation::INDIRECT
-		                        : ModelRelation::DIRECT;
+		$how = !empty($through) ? ModelRelations::INDIRECT
+		                        : ModelRelations::DIRECT;
 		
 		$this->_relations[$model_alias] = array($how, $through);
 		
 		// if we're going through other models, then this table is
 		// directly related to the first model in the $through array.
 		// we assume the same type of relationship.
-		if($how === ModelRelation::INDIRECT) {
+		if($how === ModelRelations::INDIRECT) {
 			$model_alias = strtolower($through[0]);
 			
 			// the first item in the $through might actually be indirect. if
@@ -251,7 +251,7 @@ class Model {
 			if(!isset($this->_relations[$model_alias])) {
 				
 				$this->_relations[$model_alias] = array(
-					ModelRelation::DIRECT, 
+					ModelRelations::DIRECT, 
 					NULL
 				);
 			}

@@ -30,7 +30,7 @@ class DatabaseModelGateway extends ModelGateway {
 	 */
 	protected function getRecordIterator($result_resource) {
 		return new DatabaseRecordIterator(
-			$this->_ds->getRecordIterator(), 
+			$this->_ds->getRecordIterator($result_resource), 
 			$this->_models
 		);
 	}
@@ -52,6 +52,6 @@ class DatabaseModelGateway extends ModelGateway {
 		// chaneg the query stored in the compiler
 		$this->_compiler->setQuery($query);
 		
-		return $this->_compiler->compile($query, $type);
+		return $this->_compiler->compile($type);
 	}
 }

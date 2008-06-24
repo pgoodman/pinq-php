@@ -17,7 +17,7 @@ function through() {
  * Store up relations between models.
  * @author Peter Goodman
  */
-class ModelRelation {
+class ModelRelations {
 	
 	const DIRECT = 1,
 	      INDIRECT = 2;
@@ -38,19 +38,23 @@ class ModelRelation {
 	/**
 	 * Add a relation between two models.
 	 */
-	public function addRelation($from, $to, array $through = array()) {
+	public function addRelation($from, $to, array $through = NULL) {
 		
 		// add the relationship
 		$how = !empty($through) ? self::INDIRECT : self::DIRECT;
+		$is_indirect = $how === self::INDIRECT;
 		
 		// add in the relationships
 		$this->relations[$from][$to] = array($how, $through);
-		$this->relations[$to][$from] = array($how, array_reverse($through));
+		$this->relations[$to][$from] = array(
+			$how, 
+			$is_indirect ? array_reverse($through) : NULL
+		);
 		
 		// if we're going through other models, then this table is
 		// directly related to the first model in the $through array.
 		// we assume the same type of relationship.
-		if($how & self::INDIRECT) {
+		if($is_indirect) {
 			
 			// the first item in the $through might actually be indirect. if
 			// it's already in the relations then we just won't set it. if it
@@ -248,7 +252,7 @@ class ModelRelation {
 	 * @param array $relations An array of from => (to, ...) relations in a query
 	 * @internal
 	 */
-	protected function getRelationDependencies(array &$aliases, array &$relations) {
+	public function getRelationDependencies(array &$aliases, array &$relations) {
 		
 		// to quickly access deeper areas in the graph, we will store
 		// references to each place where these nodes show up in the graph
@@ -315,7 +319,7 @@ class ModelRelation {
 						$relations[$last][] = $name;
 						$entry_points[$name] = NULL;
 						
-						if(!isset($aliases[$name]))
+						if(!isset($aliases[$name])) {
 							
 							// this is listed in the aliases
 							if(isset($aliases[$path[$i][0]]))
@@ -326,6 +330,7 @@ class ModelRelation {
 							// it as is.
 							else
 								$aliases[$name] = $path[$i][0];
+						}
 						
 						// we need to keep the name (which could be an alias)
 						// for the next iteration

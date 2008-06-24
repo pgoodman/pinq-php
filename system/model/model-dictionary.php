@@ -11,13 +11,15 @@
  */
 class ModelDictionary extends Dictionary {
 	
-	private $relations;
+	private $relations,
+	        $model_dir;
 	
 	/**
 	 * Constructor, bring in the relations.
 	 */
-	public function __construct(ModelRelation $relations) {
+	public function __construct(ModelRelations $relations, $dir) {
 		$this->relations = $relations;
+		$this->model_dir = $dir;
 	}
 	
 	public function __destruct() {
@@ -38,13 +40,13 @@ class ModelDictionary extends Dictionary {
 		
 		// we replace periods because this could be a heirarchical model
 		$file = str_replace('.', '/', $model_name);
-		$file_name = DIR_APPLICATION ."/{$this->dir}/{$file}". EXT;
-				
+		$file_name = "{$this->model_dir}/{$file}". EXT;
+		
 		// no models defined for this key, ignore it (models aren't required)
 		if(!file_exists($file_name)) {
 			throw new UnexpectedValueException(
-				"ModelLoader::load() expects valid model name, model ".
-				"[{$model_name}] does not exist."
+				"ModelDictionary::offsetGet() expects valid model name, ".
+				"model [{$model_name}] does not exist."
 			);
 		}
 		
