@@ -11,7 +11,7 @@
  */
 class ModelDictionary extends Dictionary {
 	
-	protected $relations;
+	private $relations;
 	
 	/**
 	 * Constructor, bring in the relations.
