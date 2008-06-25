@@ -221,6 +221,9 @@ abstract class ModelGateway {
 	 */
 	protected function selectResult($query, array $args = array()) {
 		
+		if($query instanceof Record)
+			$args = $query->toArray();
+		
 		// get the query, and compile it if necessary
 		$query = $this->getQuery($query, QueryCompiler::SELECT);
 		
