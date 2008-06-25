@@ -65,7 +65,6 @@ class IndexController extends PinqController {
 			// the two tables.
 			foreach($db->tags->findAll($job->content) as $tag)
 				out('<li>', $tag['Name'], '</li>');
-
 			
 			out('</ul>');
 		}
