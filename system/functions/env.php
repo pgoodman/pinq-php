@@ -149,5 +149,5 @@ function get_request_method() {
 	if(!in_array($method, $methods))
 		$method = 'GET';
 	
-	return $request_method = $method;
+	return $request_method = strtoupper($method);
 }

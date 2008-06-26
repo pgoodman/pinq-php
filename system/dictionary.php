@@ -50,8 +50,26 @@ class Dictionary implements ArrayAccess {
 	/**
 	 * Set a value to a specific key in the dictionary.
 	 */
-	public function offsetSet($key, $val) {
-		$this->_dict[$key] = $val;
+	public function offsetSet($key, $val) {		
+		if(NULL === $key) {
+			
+			// quick array_merge syntax to dictionaries using array_push
+			// syntax
+			if(is_array($val))
+				$this->_dict = array_merge($this->_dict, $val);
+			
+			// invalid key type
+			else {
+				throw new InvalidArgumentException(
+					"Dictionary::offsetSet expects first parameter to be ".
+					"string or int, or NULL with the second parameter being ".
+					"an array. Neither case was satisfied."
+				);
+			}
+		
+		// normal syntax, set a key into the dictionary
+		} else
+			$this->_dict[$key] = $val;
 	}
 	
 	/**

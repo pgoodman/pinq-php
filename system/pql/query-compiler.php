@@ -171,7 +171,8 @@ abstract class QueryCompiler implements Compiler {
 				// find a path between two models	
 				$path = $this->relations->getPath(
 					$left_name, 
-					$query->getUnaliasedModelName($right_alias)
+					$query->getUnaliasedModelName($right_alias),
+					$this->models
 				);
 				
 				// only allow direct relationships

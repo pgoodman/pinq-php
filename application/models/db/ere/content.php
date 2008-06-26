@@ -3,7 +3,6 @@
 !defined('DIR_APPLICATION') && exit();
 
 class ContentDefinition extends DatabaseModelDefinition {
-		
 	public function describe() {
 		
 		$this->setInternalName('www_Content');

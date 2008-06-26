@@ -124,7 +124,7 @@ class ModelRelations {
 	 * 	Given the alias of where we're starting to where we're trying to get,
 	 * map out a path that can picked up by anything else between them.
 	 */
-	public function getPath($from_alias, $to_alias) {
+	public function getPath($from_alias, $to_alias, ModelDictionary $models) {
 		
 		$path = array();
 		
@@ -152,9 +152,16 @@ class ModelRelations {
 			// shift the next model to look at off the queue
 			$next = $next_models->shift();
 			
+			// sort of a hack to make sure that they're loaded, this is the
+			// only drawback of storing relations separately: when we want
+			// to fill in the missing links between models, there's no guarantee
+			// that any of the models being crossed have been loaded
+			$models[$current];
+			$models[$next];
+			
 			// relationship cannot be satisfied
 			if(!isset($relations[$current][$next]) || 
-			   !isset($relations[$next][$current])) {				
+			   !isset($relations[$next][$current])) {
 				
 				// cache the failed attempt
 				$this->paths[$from_alias][$to_alias] = array();
@@ -191,7 +198,6 @@ class ModelRelations {
 								
 				// a relationship could not be satisfied
 				else {
-					
 					// cache the failed attempt
 					$this->paths[$from_alias][$to_alias] = array();
 					return $this->paths[$to_alias][$from_alias] = array();
@@ -252,7 +258,9 @@ class ModelRelations {
 	 * @param array $relations An array of from => (to, ...) relations in a query
 	 * @internal
 	 */
-	public function getRelationDependencies(array &$aliases, array &$relations) {
+	public function getRelationDependencies(array &$aliases, 
+		                                    array &$relations,
+		                                    ModelDictionary $models) {
 		
 		// to quickly access deeper areas in the graph, we will store
 		// references to each place where these nodes show up in the graph
@@ -285,7 +293,8 @@ class ModelRelations {
 				// into the graph.
 				$path = $this->getPath(
 					$aliases[$left], 
-					$aliases[$right]
+					$aliases[$right],
+					$models
 				);
 				
 				// path will have no less than 2 arrays in it
