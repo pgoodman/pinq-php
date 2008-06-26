@@ -243,7 +243,7 @@ abstract class ModelGateway {
 	 * query or an abstract query object. It also takes arguments to substitute
 	 * into the query.
 	 */
-	public function find($query, array $args = array()) {
+	public function get($query, array $args = array()) {
 		
 		// add in a limit to the query to speed up the query given that we
 		// are actually going through findAll
@@ -263,7 +263,7 @@ abstract class ModelGateway {
 	 * Take only the first value from a record. This makes COUNT queries, for
 	 * example, very simple.
 	 */
-	public function findValue($query, array $args = array()) {
+	public function getValue($query, array $args = array()) {
 		$row = $this->find($query, $args);
 		
 		// oh well, no row to return
@@ -292,7 +292,7 @@ abstract class ModelGateway {
 	 * string query or an abstract query object. It also takes arguments to
 	 * substitute into the query.
 	 */
-	public function findAll($query, array $args = array()) {
+	public function getAll($query, array $args = array()) {
 		$result = $this->selectResult($query, $args);
 		
 		if(!$result)
@@ -374,7 +374,7 @@ abstract class ModelGateway {
 	/**
 	 * Find a row by a (field, value) pair.
 	 */
-	public function findBy($field, $value) {
+	public function getBy($field, $value) {
 		if(NULL === $this->_partial_query)
 			return NULL;
 		
@@ -386,7 +386,7 @@ abstract class ModelGateway {
 	/**
 	 * Find many rows with a (field,value) pair.
 	 */
-	public function findAllBy($field, $value) {
+	public function getAllBy($field, $value) {
 		if(NULL === $this->_partial_query)
 			return NULL;
 		
@@ -399,7 +399,7 @@ abstract class ModelGateway {
 	 * Create a new record and return the created record. This accepts a
 	 * named record, a PQL query, or a SQL query.
 	 */
-	public function create($query, array $args = array(), $return = TRUE) {
+	public function post($query, array $args = array(), $return = TRUE) {
 		
 		// compile the query
 		if($query instanceof Query || $query instanceof QueryPredicates)
@@ -424,7 +424,7 @@ abstract class ModelGateway {
 	 * Update a record and return the updated record. This accepts a named
 	 * record, a PQL query, or a SQL query.
 	 */
-	public function modify($query, array $args = array()) {
+	public function put($query, array $args = array()) {
 		$query = $this->getQuery($query, QueryCompiler::MODIFY);
 		return $this->_ds->update($query);
 	}

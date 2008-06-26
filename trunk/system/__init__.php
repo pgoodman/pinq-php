@@ -5,8 +5,6 @@
 // everyone should code with these settings
 error_reporting(E_ALL | E_STRICT);
 
-list($sm, $ss) = explode(' ', microtime());
-
 // no need for this stuff
 ini_set('register_argc_argv', 0);
 ini_set('session.use_only_cookies', 1);
@@ -190,7 +188,3 @@ function pinq($script_file, $app_dir) {
 	// break references, we're done.
 	unset($event, $config, $packages);
 }
-
-list($em, $es) = explode(' ', microtime());
-
-echo '<pre>everything time: '. (($em + $es) - ($sm + $ss)) .'</pre>';

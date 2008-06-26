@@ -11,24 +11,6 @@ class IndexController extends PinqController {
 		// import the ere database and its associated models
 		$db = $this->import('db.ere');
 		
-		/*
-		$result = $db->modify(
-			in('job_postings', 'jp')->set(array(
-				'EmployerName' => 'ERE.net',
-				'Instructions' => 'Go east!',
-				'ClickThroughUrl' => 'http://ere.net',
-			))->
-	
-			in('content')->set(array(
-				'Title' => 'The title of this content',
-				'ContentHtml' => 'The html of this job posting',
-			))->
-	
-			link('jp', 'content')->
-			where()->jp('Id')->eq(1134)
-		);
-		var_dump($result);*/
-		
 		// find all job postings with their content by a given tag name
 		$jobs = from('job_postings', 'jp')->select(ALL)->
 				from('content', 'c')->select(ALL)->
@@ -38,7 +20,7 @@ class IndexController extends PinqController {
 		
 		// iterate over the jobs and output html for them. this would
 		// eventually be moved to some sort of view
-		foreach($db->findAll($jobs, array($tag_name)) as $job) {
+		foreach($db->getAll($jobs, array($tag_name)) as $job) {
 			
 			$job->job_postings->sayHi();
 			
@@ -66,7 +48,7 @@ class IndexController extends PinqController {
 			// the way this query works is it says: get tags using the data
 			// from $job->job_postings by satisying any relationships between
 			// the two tables.
-			foreach($db->tags->findAll($job->content) as $tag)
+			foreach($db->tags->getAll($job->content) as $tag)
 				out('<li>', $tag['Name'], '</li>');
 			
 			out('</ul>');
