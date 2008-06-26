@@ -167,7 +167,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				// essentially free	
 				$relation = $this->relations->getPath(
 					$query->getUnaliasedModelName($dependent_model_name),
-					$query->getUnaliasedModelName($model_name)
+					$query->getUnaliasedModelName($model_name),
+					$this->models
 				);
 				
 				if(empty($relation))
@@ -349,7 +350,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				// find a path between the two models
 				$path = $this->relations->getPath(
 					$left_name, 
-					$query->getUnaliasedModelName($right_alias)
+					$query->getUnaliasedModelName($right_alias),
+					$this->models
 				);
 								
 				// no path, ignore this pivot
@@ -390,19 +392,18 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 */
 	protected function compileSelect() {
 		
-		$time_start = list($sm, $ss) = explode(' ', microtime());
-		
 		// add in what we want to select
 		$sql = 'SELECT '. $this->compileFields();
 		
 		// add in the tables to get data from and build up the join statements
 		// (if any)
 		$aliases = &$this->query->getAliases();
-		$relations = $this->query->getRelations();
+		$relations = &$this->query->getRelations();
 		
 		$graph = $this->relations->getRelationDependencies(
 			$aliases,
-			$relations
+			$relations,
+			$this->models
 		);
 		
 		if(!empty($graph))
@@ -420,7 +421,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		if(!empty($group)) $sql .= " GROUP BY ". implode(' ', $group);
 		if(!empty($order)) $sql .= " ORDER BY ". implode(' ', $order);
 		if(!empty($limit)) $sql .= " LIMIT ". implode(' ', $limit);
-				
+		
+		out('<pre>', $sql, '</pre>');
+		
 		// add in the predicates and return
 		return $sql;
 	}
@@ -477,6 +480,11 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		                               $prefix) {
 		
 		$fields = array();
+		
+		// validate all of the fields. this is more of a step where the
+		// programmer can deal with any business logic stuff without worrying
+		// about manually typecasting the different fields, as that is already
+		// done in the loop
 		$values = $definition->validateFields($context['modify_values']);
 		
 		foreach($values as $column => $value) {
@@ -485,6 +493,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			if(!$definitiom->hasField($column))
 				continue;
 			
+			// typecast the field's value
 			$value = $definition->coerceValueForField(
 				$column, 
 				$value

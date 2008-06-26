@@ -6,7 +6,7 @@ class IndexController extends PinqController {
 	 * Main function for the index controller. Accepts a tag name from the
 	 * route.
 	 */
-	public function index($tag_name = '') {
+	public function GET_index($tag_name = '') {
 			
 		// import the ere database and its associated models
 		$db = $this->import('db.ere');
@@ -36,7 +36,6 @@ class IndexController extends PinqController {
 				from('tags', 't')->link('jp', 't')->
 				where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
 		
-				
 		// iterate over the jobs and output html for them. this would
 		// eventually be moved to some sort of view
 		foreach($db->findAll($jobs, array($tag_name)) as $job) {
@@ -47,7 +46,11 @@ class IndexController extends PinqController {
 			// here are actually ambiguous and are resolved to one of the
 			// interior records of $job
 			outln(
-				'<h3>'. $job['Title'] .'</h3>',
+				'<h3>', 
+					$job['Title'], 
+					':', $job->job_postings['Id'], 
+					':', $job->content['Id'],
+				'</h3>',
 				'<hr />',
 				'<div>',
 				strip_tags($job['ContentHtml']),

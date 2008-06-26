@@ -28,6 +28,17 @@ interface Package {
 }
 
 /**
+ * A view.
+ */
+abstract class View extends Dictionary implements Printer {
+	abstract public function render();
+	
+	final public function __toString() {
+		return $this->render();
+	}
+}
+
+/**
  * Interface for a configurable package.
  */
 interface ConfigurablePackage extends Package {
@@ -45,29 +56,12 @@ interface Object {
 }
 
 /**
- * An interface for a class that can be stored in one form or another.
- */
-/*interface Storable extends Serializable {
-	static public function __set_state();
-}*/
-
-/**
  * Handle compiling (translating) one form into another.
  * @author Peter Goodman
  */
 interface Compiler {
 	public function compile($flags = 0);
 }
-
-/**
- * Interface specifying the ability to compose the elements of one instance
- * of the same class with itself.
- */
-/*
-interface Composable {
-	public function append(Composable $obj);
-	public function extend(Composable $obj);
-}*/
 
 /**
  * An interface for any type of filtering class, state machine, etc. This is
@@ -80,30 +74,3 @@ interface Stateful {
 	public function next();
 	public function prev();
 }
-
-/**
- * A continuation.
- */
-/*
-interface Continuation {
-	
-}*/
-
-/**
- * Interface signalling that something can be cached.
- */
-/*interface Cacheable {
-	
-}*/
-
-
-/**
- * Interfaces for observers/dispatchers.
- */
-/*
-interface Subject {
-	public function receive(array $arguments = array());
-}
-interface Dispatcher {
-	public function send($message);
-}*/

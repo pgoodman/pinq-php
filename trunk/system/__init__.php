@@ -5,15 +5,17 @@
 // everyone should code with these settings
 error_reporting(E_ALL | E_STRICT);
 
+list($sm, $ss) = explode(' ', microtime());
+
 // no need for this stuff
 ini_set('register_argc_argv', 0);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid', 0);
 
 // hide php
-header("Server: Leonidas", TRUE);
+header("Server: Sparta", TRUE);
 header("X-Powered-By: Spartans", TRUE); // mwahahahahaha
-ini_set('expose_php', 0); // sometimes this does nothing
+ini_set('expose_php', 0); // sometimes this does nothing, hence the above
 
 // get rid of this crap
 ini_set('register_globals', 0);
@@ -36,6 +38,9 @@ define('DIR_PACKAGES', DIR_SYSTEM .'/packages/');
 
 // for when getting the raw POST data
 define('RAW_POST_DATA', 'php://input');
+
+// is php being dumb?
+define('PHP_IS_BEING_DUMB', (bool)get_magic_quotes_gpc());
 
 // start the session and regenerate the id
 session_start();
@@ -133,7 +138,7 @@ function pinq($script_file, $app_dir) {
 
 		// get the class name and clean up the method name
 		$class = class_name($controller) .'Controller';
-		$method = function_name($method);
+		$method = $_SERVER['REQUEST_METHOD'] .'_'. function_name($method);
 
 		// the following two functions will fail if the class doesn't exist,
 		// so we will skip that test. make sure that the class is a Controller
@@ -146,7 +151,10 @@ function pinq($script_file, $app_dir) {
 		// as people might be using php's output functions instead of pinq's.
 		if($config['config']['compress_output'])
 			OutputBuffer::compress();
-
+		
+		// load up the view
+		//$layout = $packages->load('view');
+		
 		try {
 			// insantiate the controller an call its method
 			$event = new $class($packages);
@@ -182,3 +190,7 @@ function pinq($script_file, $app_dir) {
 	// break references, we're done.
 	unset($event, $config, $packages);
 }
+
+list($em, $es) = explode(' ', microtime());
+
+echo '<pre>everything time: '. (($em + $es) - ($sm + $ss)) .'</pre>';
