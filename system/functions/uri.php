@@ -39,7 +39,7 @@ function get_route() {
 	}
 	
 	// clean up the route of any unwanted characters
-	$uri = preg_replace('~[^a-zA-Z0-9_\+@\* -]~', '', $uri);
+	$uri = preg_replace('~[^a-zA-Z0-9_\+@\* -/]~', '', $uri);
 	$uri = '/'. ltrim($uri, '/');
 	
 	return $uri;

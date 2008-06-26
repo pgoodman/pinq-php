@@ -12,4 +12,8 @@ class PinqView extends View implements Package {
 	public function __construct(Scope $scope) {
 		
 	}
+	
+	public function render() {
+		
+	}
 }

@@ -7,7 +7,7 @@ class IndexController extends PinqController {
 	 * route.
 	 */
 	public function GET_index($tag_name = '') {
-		
+				
 		// import the ere database and its associated models
 		$db = $this->import('db.ere');
 		
@@ -22,6 +22,7 @@ class IndexController extends PinqController {
 		// eventually be moved to some sort of view
 		foreach($db->getAll($jobs, array($tag_name)) as $job) {
 			
+			// custom method in JobPostingsRecord
 			$job->job_postings->sayHi();
 			
 			// output the job posting content. The fields being accessed in
@@ -41,10 +42,6 @@ class IndexController extends PinqController {
 				'<ul>'
 			);
 			
-			// output the tags. the tags need to be found using
-			// $job->job_postings because $job is an ambiguous record, meaning
-			// it is actually two records in one.
-			//
 			// the way this query works is it says: get tags using the data
 			// from $job->job_postings by satisying any relationships between
 			// the two tables.
@@ -53,9 +50,6 @@ class IndexController extends PinqController {
 			
 			out('</ul>');
 		}
-		// all done :D
-		
-		yield('/index/moo');
 	}
 	
 	public function GET_moo() {
