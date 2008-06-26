@@ -7,7 +7,7 @@ class IndexController extends PinqController {
 	 * route.
 	 */
 	public function GET_index($tag_name = '') {
-			
+		
 		// import the ere database and its associated models
 		$db = $this->import('db.ere');
 		
@@ -54,5 +54,11 @@ class IndexController extends PinqController {
 			out('</ul>');
 		}
 		// all done :D
+		
+		yield('/index/moo');
+	}
+	
+	public function GET_moo() {
+		out('in moo!!!');
 	}
 }

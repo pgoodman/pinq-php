@@ -4,14 +4,11 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-if(!function_exists("queue")) {
-	
-	/**
-	 * Quciker way to make a queue.
-	 */
-	function queue() {
-		return new Queue;
-	}
+/**
+ * Quciker way to make a queue.
+ */
+function queue() {
+	return new Queue;
 }
 
 /**
