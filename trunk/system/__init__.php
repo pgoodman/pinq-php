@@ -64,6 +64,7 @@ require_once DIR_SYSTEM .'/data-source/__init__.php';
 require_once DIR_SYSTEM .'/output-buffer.php';
 require_once DIR_SYSTEM .'/config-loader.php';
 require_once DIR_SYSTEM .'/package-loader.php';
+require_once DIR_SYSTEM .'/yield-control-exception.php';
 require_once DIR_SYSTEM .'/functions/__init__.php';
 
 /**
@@ -122,50 +123,78 @@ function pinq($script_file, $app_dir) {
 			'controller_dir' => DIR_APPLICATION .'/controllers/',
 			'file_extension' => EXT,
 		));
+		
+		$route = get_route();
+		
+		do {
+			$continue = FALSE;
+			
+			// parse the URI, if it can't be parsed a 404 error will occur.
+			if(!$router->parse($route))
+				set_http_status(404);
+			
+			// get the controller, method, and arguments form the route
+			// parser
+			list($dir, $controller, $method, $arguments) = $router->getPathInfo();
+			
+			// bring in the controller file, we know it exists because the 
+			// route parser figured that out.
+			require_once $dir .'/'. $controller . EXT;
+
+			// get the class name and clean up the method name
+			$class = class_name($controller) .'Controller';
+			$method = $_SERVER['REQUEST_METHOD'] .'_'. function_name($method);
+
+			// the following two functions will fail if the class doesn't 
+			// exist, so we will skip that test. make sure that the class 
+			// is a Controller and make sure that is has a method for the 
+			// action we're trying to  call.
+			$is_a_controller = is_subclass_of($class, 'PinqController');
+			if(!$is_a_controller || !method_exists($class, $method))
+				set_http_status(404);
+	
+			// compress any output using zlib. this is done before the method
+			// call as people might be using php's output functions instead of
+			//  pinq's.
+			if($config['config']['compress_output'])
+				OutputBuffer::compress();
+			
+			// look for a yield or a flush buffer
+			try {
+		
+				// load up the view
+				//$layout = $packages->load('view');
+		
+				// insantiate the controller an call its method
+				$event = new $class($packages);
+				$event->beforeAction(); // hook
+				call_user_func_array(array($event, $method), $arguments);
+				$event->afterAction(); // hook
 				
-		// parse the URI, if it can't be parsed a 404 error will occur.
-		if(!$router->parse(get_route()))
-			set_http_status(404);
-		
-		// get the controller, method, and arguments form the route parser
-		list($dir, $controller, $method, $arguments) = $router->getPathInfo();
-
-		// bring in the controller file, we know it exists because the route
-		// parser figured that out.
-		require_once $dir .'/'. $controller . EXT;
-
-		// get the class name and clean up the method name
-		$class = class_name($controller) .'Controller';
-		$method = $_SERVER['REQUEST_METHOD'] .'_'. function_name($method);
-
-		// the following two functions will fail if the class doesn't exist,
-		// so we will skip that test. make sure that the class is a Controller
-		// and make sure that is has a method for the action we're trying to 
-		// call.
-		if(!is_subclass_of($class, 'PinqController') || !method_exists($class, $method))
-			set_http_status(404);
-		
-		// compress any output using zlib. this is done before the method call
-		// as people might be using php's output functions instead of pinq's.
-		if($config['config']['compress_output'])
-			OutputBuffer::compress();
-		
-		// load up the view
-		//$layout = $packages->load('view');
-		
-		try {
-			// insantiate the controller an call its method
-			$event = new $class($packages);
-			$event->beforeAction(); // hook
-			call_user_func_array(array($event, $method), $arguments);
-			$event->afterAction(); // hook
-
-		// other exceptions will be allowed to bubble up
-		} catch(FlushBufferException $e) { }
+				unset($event);
+			
+			// the controller has yielded its control to another controller
+			} catch(YieldControlException $y) {
 				
+				// don't want infinite loop!
+				if($route === ($new_route = $y->getRoute()))
+					break;
+				
+				// change the next route that will be parsed
+				$route = $new_route;
+				$continue = TRUE;
+				
+			// output and stop
+			} catch(FlushBufferException $e) {
+				break;
+			}
+			// all other exceptions will bubble up
+			
+		} while($continue);
+		
 		// flush the output buffer
 		OutputBuffer::flush();
-
+			
 	// HTTP request errors, Thus is for allall http status codes >= 400.
 	} catch(HttpRequestException $e) {
 

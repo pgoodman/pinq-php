@@ -3,15 +3,12 @@
 /* $Id$ */
 
 !defined('DIR_SYSTEM') && exit();
-
-if(!function_exists("dict")) {
 	
-	/**
-	 * Simpler way to make a dictionary. Very pythonesque :P
-	 */
-	function dict(array $vals = NULL) {
-		return new Dictionary($vals);
-	}
+/**
+ * Simpler way to make a dictionary. Very pythonesque :P
+ */
+function dict(array $vals = NULL) {
+	return new Dictionary($vals);
 }
 
 /**
