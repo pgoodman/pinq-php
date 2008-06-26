@@ -40,6 +40,12 @@ define('RAW_POST_DATA', 'php://input');
 // is php being dumb?
 define('PHP_IS_BEING_DUMB', (bool)get_magic_quotes_gpc());
 
+// some of the error controllers
+define('ERROR_403', '/error/403');
+define('ERROR_404', '/error/404');
+define('ERROR_405', '/error/405');
+define('ERROR_500', '/error/500');
+
 // start the session and regenerate the id
 session_start();
 //session_regenerate_id(FALSE);
@@ -124,57 +130,72 @@ function pinq($script_file, $app_dir) {
 			'file_extension' => EXT,
 		));
 		
+		// the starting route, taken from the url, it's outside of the
+		// do-while loop because if any controllers yield to another
+		// controller then the route to go to is passed in through the yield-
+		// control exception and set in the catch() block.
 		$route = get_route();
 		
 		do {
-			$continue = FALSE;
-			
-			// parse the URI, if it can't be parsed a 404 error will occur.
-			if(!$router->parse($route))
-				set_http_status(404);
-			
-			// get the controller, method, and arguments form the route
-			// parser
-			list($dir, $controller, $method, $arguments) = $router->getPathInfo();
-			
-			// bring in the controller file, we know it exists because the 
-			// route parser figured that out.
-			require_once $dir .'/'. $controller . EXT;
-
-			// get the class name and clean up the method name
-			$class = class_name($controller) .'Controller';
-			$method = $_SERVER['REQUEST_METHOD'] .'_'. function_name($method);
-
-			// the following two functions will fail if the class doesn't 
-			// exist, so we will skip that test. make sure that the class 
-			// is a Controller and make sure that is has a method for the 
-			// action we're trying to  call.
-			$is_a_controller = is_subclass_of($class, 'PinqController');
-			if(!$is_a_controller || !method_exists($class, $method))
-				set_http_status(404);
-	
-			// compress any output using zlib. this is done before the method
-			// call as people might be using php's output functions instead of
-			//  pinq's.
-			if($config['config']['compress_output'])
-				OutputBuffer::compress();
 			
 			// look for a yield or a flush buffer
 			try {
+			
+				// parse the URI, if it can't be parsed a 404 error will occur.
+				if(!$router->parse($route))
+					yield(ERROR_404);
+			
+				// get the controller, method, and arguments form the route
+				// parser
+				$path_info = $router->getPathInfo();
+				list($dir, $controller, $method, $arguments) = $path_info;
+			
+				// bring in the controller file, we know it exists because the 
+				// route parser figured that out.
+				require_once $dir .'/'. $controller . EXT;
+
+				// get the class name and clean up the method name
+				$class = class_name($controller) .'Controller';
+				$method = function_name($method);
+				$request_method = $_SERVER['REQUEST_METHOD'];
+
+				// if we're not working with a valid controller then error
+				if(!is_subclass_of($class, 'PinqController'))
+					yield(ERROR_404);
 		
-				// load up the view
-				//$layout = $packages->load('view');
-		
-				// insantiate the controller an call its method
+				// insantiate the controller an call its hooks and action 
+				// method
 				$event = new $class($packages);
-				$event->beforeAction(); // hook
-				call_user_func_array(array($event, $method), $arguments);
-				$event->afterAction(); // hook
 				
-				unset($event);
+				// we're working with a valid controller, are we working with
+				// a valid method?
+				if(is_callable(array($event, "{$request_method}_{$method}")))
+					$method = "{$request_method}_{$method}";
+				
+				// method to handle any unsupported / or just all request
+				// methods at once
+				else if(is_callable(array($event, "ANY_{$method}")))
+					$method = "ANY_{$method}";		
+				
+				// no available action method exists
+				else
+					yield(ERROR_405);
+				
+				$event->beforeAction();
+				call_user_func_array(
+					array($event, $method), 
+					$arguments
+				);
+				$event->afterAction();
+				unset($event); 
 			
 			// the controller has yielded its control to another controller
 			} catch(YieldControlException $y) {
+				
+				// clear the output buffer for the new action
+				// TODO: does it make sense to clear the output buffer or
+				//       not? Someone else decide!!!
+				OutputBuffer::clear();
 				
 				// don't want infinite loop!
 				if($route === ($new_route = $y->getRoute()))
@@ -182,24 +203,25 @@ function pinq($script_file, $app_dir) {
 				
 				// change the next route that will be parsed
 				$route = $new_route;
-				$continue = TRUE;
+				continue;
 				
-			// output and stop
-			} catch(FlushBufferException $e) {
-				break;
-			}
-			// all other exceptions will bubble up
+			// output and stop, we catch this early 
+			} catch(FlushBufferException $e) { }
 			
-		} while($continue);
+			// all other exceptions will bubble up
+			break;
+			
+		} while(TRUE);
+		
+		// compress any output using zlib. this is done before the method
+		// call as people might be using php's output functions instead of
+		//  pinq's.
+		if($config['config']['compress_output'])
+			OutputBuffer::compress();
 		
 		// flush the output buffer
 		OutputBuffer::flush();
-			
-	// HTTP request errors, Thus is for allall http status codes >= 400.
-	} catch(HttpRequestException $e) {
-
-		echo 'request exception';
-
+		
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.
 	} catch(HttpRedirectException $e) {
@@ -215,5 +237,5 @@ function pinq($script_file, $app_dir) {
 	}
 
 	// break references, we're done.
-	unset($event, $config, $packages);
+	unset($config, $packages);
 }

@@ -13,7 +13,7 @@
  */
 class OutputBuffer {
 	
-	static public $buffer = "";
+	static public $buffer = '';
 	
 	/**
 	 * Set output compression.
@@ -25,11 +25,18 @@ class OutputBuffer {
 	}
 	
 	/**
+	 * Clear the current buffer.
+	 */
+	static public function clear() {
+		self::$buffer = '';
+	}
+	
+	/**
 	 * Flush the output buffer.
 	 */
 	static public function flush() {
 		echo self::$buffer;
-		self::$buffer = '';
+		self::clear();
 	}
 }
 

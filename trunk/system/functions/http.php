@@ -133,8 +133,4 @@ function set_http_status($code) {
 	// set the header
 	header("HTTP/1.1 {$code} {$message}", TRUE);
 	header("Status: {$code} {$message}", TRUE);
-	
-	// this is an http error, let pinq deal with it :D
-	if($code >= 400)
-		throw new HttpRequestException($code, $message);
 }

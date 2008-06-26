@@ -211,14 +211,14 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$this->controller = $this->default_controller;
 		$this->method = $this->default_method;
 		$this->directory = $this->base_dir;
-		
+
 		// route is empty, we're at the base controller and method
 		if(empty($route))
 			return $this->controllerFileExists();
-		
+
 		// calculate the prefix
 		$prefix = $this->getLongestMatchingPrefix($route);
-		
+				
 		// this will hold intermediate arguments
 		$dynamic = array();
 		
@@ -247,7 +247,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 				// match the routes from start to finish
 				if(!preg_match('~^'.$pattern.'$~', $temp, $matches))
 					continue;
-
+				
 				// make sure we get the arguments in the right order
 				$this->reorderArguments($maps_to, $matches);
 				$path = trim($maps_to, '/');
