@@ -163,8 +163,8 @@ function pinq($script_file, $app_dir) {
 				if(!is_subclass_of($class, 'PinqController'))
 					yield(ERROR_404);
 		
-				// insantiate the controller an call its hooks and action 
-				// method
+				// insantiate the controller so that we can do checks on its
+				// methods
 				$event = new $class($packages);
 				
 				// we're working with a valid controller, are we working with
@@ -191,6 +191,11 @@ function pinq($script_file, $app_dir) {
 			
 			// the controller has yielded its control to another controller
 			} catch(YieldControlException $y) {
+				
+				// get rid of the previous controller
+				// TODO: getting rid of the controller is useful, but should
+				//       the afterAction() hook be called?
+				if(isset($event)) unset($event);
 				
 				// clear the output buffer for the new action
 				// TODO: does it make sense to clear the output buffer or
@@ -224,12 +229,14 @@ function pinq($script_file, $app_dir) {
 		
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.
-	} catch(HttpRedirectException $e) {
-
-		echo 'redirect exception';
+	} catch(HttpRedirectException $r) {
+		
+		set_http_status(303);
+		
+		echo 'redirect: '. $r->getLocation();
 
 	// catch ALL exceptions that have bubbled up this far. We hope there are 
-	// none but there's no guarantee	
+	// none but there's no guarantee.
 	} catch(Exception $e) {
 		print_r($e);
 		echo '<br>top-level exception';

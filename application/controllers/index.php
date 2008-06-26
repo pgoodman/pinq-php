@@ -51,8 +51,4 @@ class IndexController extends PinqController {
 			out('</ul>');
 		}
 	}
-	
-	public function GET_moo() {
-		out('in moo!!!');
-	}
 }

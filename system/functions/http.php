@@ -53,7 +53,6 @@ function get_http_scheme() {
 	return $scheme;
 }
 
-
 /**
  * Set the HTTP status code. If the request is an error, an exception will be
  * thrown.
@@ -133,4 +132,15 @@ function set_http_status($code) {
 	// set the header
 	header("HTTP/1.1 {$code} {$message}", TRUE);
 	header("Status: {$code} {$message}", TRUE);
+}
+
+/**
+ * Do a HTTP redirect. If $as_url is TRUE then it means we're redirecting to
+ * a url and not a path.
+ */
+function redirect($location, $as_url = FALSE) {
+	
+	// we throw an exception instead of redirecting so that when the exception
+	// is caught we can tear down any existing resources properly
+	throw new HttpRedirectException($location, $as_url);
 }
