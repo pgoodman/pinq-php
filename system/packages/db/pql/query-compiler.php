@@ -455,7 +455,11 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// build up the field listing
 			$fields = array_merge(
 				$fields,
-				$this->buildFieldsList($context, $model, "{$model_alias}.")
+				$this->buildFieldsList(
+					$context, 
+					$definition, 
+					"{$model_alias}."
+				)
 			);
 		}
 		
@@ -490,7 +494,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		foreach($values as $column => $value) {
 			
 			// ignore non-existant properties
-			if(!$definitiom->hasField($column))
+			if(!$definition->hasField($column))
 				continue;
 			
 			// typecast the field's value
