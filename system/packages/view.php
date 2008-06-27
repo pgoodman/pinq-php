@@ -86,9 +86,7 @@ class PinqView extends View implements ConfigurablePackage {
 	public function setFile($file, $type) {
 				
 		$file = DIR_APPLICATION ."/views/{$type}/{$file}.html";
-		
-		var_dump($file);
-		
+				
 		// uh oh, we will fail silently
 		if(!is_readable($file))
 			return;

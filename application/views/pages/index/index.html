@@ -1,4 +1,4 @@
-<?php foreach($jobs as $job): ?>
+<? foreach($jobs as $job): ?>
 <h3><?=$job['Title'];?></h3>
 <hr />
 <p>
@@ -7,7 +7,9 @@
 <p>
 	Tags:
 	<ul>
-		
+		<? foreach($job->tags as $tag): ?>
+		<li><?=$tag['Name'];?></li>
+		<? endforeach; ?>
 	</ul>
 </p>
-<?php endforeach; ?>
+<? endforeach; ?>
