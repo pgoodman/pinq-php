@@ -61,7 +61,7 @@ require_once DIR_SYSTEM .'/loader.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 
 // exceptions
-require_once DIR_SYSTEM .'/general-exception.php';
+require_once DIR_SYSTEM .'/general-exceptions.php';
 require_once DIR_SYSTEM .'/control-flow-exceptions.php';
 
 // bring in the model stuff
