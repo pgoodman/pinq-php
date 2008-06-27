@@ -30,3 +30,25 @@ class YieldControlException extends PinqException {
 		return $this->_route;
 	}
 }
+
+/**
+ * An exception representing an HTTP redirect.
+ * @author Peter Goodman
+ */
+class HttpRedirectException extends PinqException {
+	
+	protected $_location;
+	
+	// TODO: implement a distinction between $as_url = {FALSE, TRUE}
+	public function __construct($location, $as_url) {
+		
+		// trim off any new lines + anything after them
+		$location = preg_replace('~\r?\n.*~', '', $location);
+		
+		$this->_location = $location;
+	}
+	
+	public function getLocation() {
+		return $this->_location;
+	}
+}

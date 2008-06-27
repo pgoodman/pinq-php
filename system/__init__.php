@@ -168,13 +168,15 @@ function pinq($script_file, $app_dir) {
 				// create the page and layout views
 				$packages->load('view');
 				$layout_view = View::factory();
-				$layout_view['page'] = page_view("{$pdir}/{$controller}/{$method}");
+				$layout_view['page_view'] = page_view(
+					"{$pdir}/{$controller}/{$method}"
+				);
 				
 				// insantiate the controller and call its action
 				$event = new $class(
 					$packages, 
 					$layout_view, 
-					$layout_view['page']
+					$layout_view['page_view']
 				);
 				
 				$event->act($request_method, $method, $arguments);
@@ -194,7 +196,7 @@ function pinq($script_file, $app_dir) {
 				// TODO: good idea to pass it to the output buffer or not?
 				$layout_view->render(new StackOfDictionaries);
 				
-				// these are no longer needed
+				// layout view no longer needed
 				unset($layout_view);
 			
 			// the controller has yielded its control to another controller

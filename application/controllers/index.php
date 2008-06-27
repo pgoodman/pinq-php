@@ -29,10 +29,10 @@ class IndexController extends PinqController {
 		
 		// find all job postings with their content by a given tag name
 		$query = from('job_postings', 'jp')->select(ALL)->
-				from('content', 'c')->select(ALL)->
-				link('jp', 'c')->
-				from('tags', 't')->link('jp', 't')->
-				where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
+		         from('content', 'c')->select(ALL)->
+		         link('jp', 'c')->
+		         from('tags', 't')->link('jp', 't')->
+		         where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
 		
 		// send some variables to the view
 		$this->view['jobs'] = new JobPostingsIterator(

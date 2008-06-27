@@ -107,6 +107,12 @@ abstract class OuterRecordIterator extends IteratorIterator implements RecordIte
 /**
  * A record iterator that is like an outer-record-iterator but also brings in
  * a gateway to do all model-related things.
+ *
+ * This class is somewhat of an anti-pattern because it implicitly means that
+ * the programmer is likely to commit the N+1 query problem. However, given
+ * the explicitness of how gateways are used the programmer ought realize 
+ * that. This class thus must be used with a grain of salt.
+ *
  * @author Peter Goodman
  */
 abstract class GatewayRecordIterator extends OuterRecordIterator {
