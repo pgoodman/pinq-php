@@ -31,9 +31,10 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	// so that it will fit nicely into CodeIgniter / Kohana
 	protected $allowed_chars = "a-zA-Z0-9_-",
 			  $arguments = array(), // arguments passed through the route
-			  $directory = '',		// the directory where the controller is
+			  $directory, // the directory where the controller is
+			  $partial_directory,
 			  $controller, // the controller class to instantiate
-			  $method,	   // the method of the controller to call
+			  $method, // the method of the controller to call
 			  $default_controller = 'index',
 			  $default_method = 'index';
 	
@@ -101,6 +102,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	public function getPathInfo() {
 		return array(
 			$this->directory,
+			$this->partial_directory,
 			$this->controller,
 			$this->method,
 			$this->arguments,
@@ -211,7 +213,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$this->controller = $this->default_controller;
 		$this->method = $this->default_method;
 		$this->directory = $this->base_dir;
-
+		
 		// route is empty, we're at the base controller and method
 		if(empty($route))
 			return $this->controllerFileExists();
@@ -263,12 +265,16 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		
 		$i = -1;
 		$base = $this->directory;
+		$partial = '';
 		
 		// build up the directory to the controller, making sure to ignore
 		// empty sub-directories
-		while(isset($path_parts[++$i]) &&  is_dir($base .'/'. $path_parts[$i]))
+		while(isset($path_parts[++$i]) &&  is_dir($base .'/'. $path_parts[$i])) {
 			$base .= '/'. $path_parts[$i];
+			$partial .= '/'. $path_parts[$i];
+		}
 		
+		$this->partial_directory = $partial;
 		$this->directory = $base;
 
 		// we might have found what we're looking for ;)

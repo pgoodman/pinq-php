@@ -18,9 +18,14 @@ class IndexController extends PinqController {
 				from('tags', 't')->link('jp', 't')->
 				where()->t('Name')->eq->_->limit(5)->order()->jp('Id')->desc;
 		
+		// send some variables to the view
+		$this->view[] = array(
+			'jobs' => $db->getAll($jobs, array($tag_name))
+		);
+		
 		// iterate over the jobs and output html for them. this would
 		// eventually be moved to some sort of view
-		foreach($db->getAll($jobs, array($tag_name)) as $job) {
+		/*foreach($db->getAll($jobs, array($tag_name)) as $job) {
 			
 			// custom method in JobPostingsRecord
 			$job->job_postings->sayHi();
@@ -49,6 +54,6 @@ class IndexController extends PinqController {
 				out('<li>', $tag['Name'], '</li>');
 			
 			out('</ul>');
-		}
+		}*/
 	}
 }

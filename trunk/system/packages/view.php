@@ -87,6 +87,8 @@ class PinqView extends View implements ConfigurablePackage {
 				
 		$file = DIR_APPLICATION ."/views/{$type}/{$file}.html";
 		
+		var_dump($file);
+		
 		// uh oh, we will fail silently
 		if(!is_readable($file))
 			return;
@@ -98,6 +100,7 @@ class PinqView extends View implements ConfigurablePackage {
 	 * Render a view.
 	 */
 	public function render(StackOfDictionaries $scope) {
+		
 		if(NULL === $this->file)
 			return;
 		

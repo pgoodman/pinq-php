@@ -24,7 +24,7 @@ abstract class PinqController implements Package {
 	 * use the initialize() hook instead so that they don't forget to bring in
 	 * the package loader dependency.
 	 */
-	final public function __construct(Loader $packages, View $page, View $layout) {
+	final public function __construct(Loader $packages, View $layout, View $page) {
 		
 		// package loader
 		$this->packages = &$packages;

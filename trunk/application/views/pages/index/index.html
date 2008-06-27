@@ -1,0 +1,13 @@
+<?php foreach($jobs as $job): ?>
+<h3><?=$job['Title'];?></h3>
+<hr />
+<p>
+	<?=strip_tags($job['ContentHtml']);?>
+</p>
+<p>
+	Tags:
+	<ul>
+		
+	</ul>
+</p>
+<?php endforeach; ?>

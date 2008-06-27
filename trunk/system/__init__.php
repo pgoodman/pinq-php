@@ -150,7 +150,7 @@ function pinq($script_file, $app_dir) {
 				// get the controller, method, and arguments form the route
 				// parser
 				$path_info = $router->getPathInfo();
-				list($dir, $controller, $method, $arguments) = $path_info;
+				list($dir, $pdir, $controller, $method, $arguments) = $path_info;
 			
 				// bring in the controller file, we know it exists because the 
 				// route parser figured that out.
@@ -168,7 +168,7 @@ function pinq($script_file, $app_dir) {
 				// create the page and layout views
 				$packages->load('view');
 				$layout_view = View::factory();
-				$layout_view['page'] = page_view("{$dir}/{$controller}/{$method}");
+				$layout_view['page'] = page_view("{$pdir}/{$controller}/{$method}");
 				
 				// insantiate the controller and call its action
 				$event = new $class(
@@ -192,7 +192,7 @@ function pinq($script_file, $app_dir) {
 				
 				// render and output the layout view
 				// TODO: good idea to pass it to the output buffer or not?
-				out($layout_view->render(new StackOfDictionaries));
+				$layout_view->render(new StackOfDictionaries);
 				
 				// these are no longer needed
 				unset($layout_view);

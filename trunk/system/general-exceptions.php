@@ -10,7 +10,7 @@ class StackException extends PinqException { }
 class QueueException extends PinqException { }
 //class ParserException extends PinqException { }
 //class PrinterException extends PinqException { }
-class HandlerException extends PinqException { }
+//class HandlerException extends PinqException { }
 class ImmutableException extends PinqException { }
 //class CompositionException extends PinqException { }
 class InvalidStateException extends PinqException { }
