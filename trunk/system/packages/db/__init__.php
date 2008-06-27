@@ -84,8 +84,9 @@ class PinqDb implements ConfigurablePackage {
 		// bring in the database-specific classes
 		require_once $file;
 
-		// figure out the class name for this database
-		$class = class_name($driver) . 'Database';
+		// figure out the class name for this database. It's not suffixed with
+		// Database because that caused problems for SQLite.
+		$class = class_name($driver) . 'DataSource';
 
 		// connect to the database
 		$database = new $class($host, $user, $pass);

@@ -28,7 +28,7 @@ abstract class Database implements DataSource {
 	/**
 	 * Select rows from the database.
 	 */
-	final public function select($query, array $args = array()) {
+	public function select($query, array $args = array()) {
 		$result = $this->query($query, $args);		
 		return $result;
 	}
@@ -36,7 +36,7 @@ abstract class Database implements DataSource {
 	/**
 	 * Insert/update/delete rows from a database.
 	 */
-	final public function update($query, array $args = array()) {
+	public function update($query, array $args = array()) {
 		return (bool)$this->query($query, $args);
 	}
 	

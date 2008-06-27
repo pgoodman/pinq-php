@@ -1,8 +1,10 @@
 <html>
 <head>
-	<title>This is the default layout</title>
+	<title>I/O Reader<?=isset($title)?" : {$title}":'';?></title>
 </head>
 <body>
+	<h3>I/O Reader</h3>
+	<hr />
 	<?=$page_view->render($scope);?>
 </body>
 </html>

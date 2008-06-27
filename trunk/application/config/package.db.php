@@ -2,11 +2,11 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-$config['ere'] = array(
-	'user' => 'root',
-	'pass' => 'root',
-	'host' => 'localhost',
-	'name' => 'ere_jobs',
-	'driver' => 'mysql',
-	'port' => 80,
+$config['blog'] = array(
+	'user' => '',
+	'pass' => '',
+	'host' => realpath(DIR_APPLICATION .'/sqlite/blog.sqlite'),
+	'name' => '',
+	'driver' => 'sqlite',
+	'port' => 0,
 );
