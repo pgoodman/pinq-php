@@ -112,3 +112,43 @@ class ReadOnlyDictionary extends Dictionary {
 		throw new ImmutableException("This dictionary is read-only.");
 	}
 }
+
+/**
+ * A stack of dictionaries. This is implemented using Dictionary as the base
+ * instead of Stack because implementing a dictionary as a stack is fundamentally
+ * simpler than implementing a stack as a dictionary.
+ * @author Peter Goodman
+ */
+class StackOfDictionaries extends Dictionary {
+	
+	protected $_stack;
+	
+	public function __construct() {
+		parent::__construct();
+		
+		$vars = array();
+		$this->push($vars);
+	}
+	
+	/**
+	 * Push an array onto the stack of dictionaries.
+	 */
+	public function push(array &$vars) {
+		$this->_stack[] = &$this->_dict;
+		$this->_dict = $vars;
+	}
+	
+	/**
+	 * Pop an array off the stack of dictionaries.
+	 */
+	public function pop() {
+		$this->_dict = array_pop($this->_stack);
+	}
+	
+	/**
+	 * Return what's on the top of the stack.
+	 */
+	public function top() {
+		return $this->toArray();
+	}
+}

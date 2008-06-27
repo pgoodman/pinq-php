@@ -19,7 +19,10 @@ function yield($route = NULL) {
  * Exception to handle moving to a new controller.
  * @author Peter Goodman
  */
-final class YieldControlException extends PinqException {
+class YieldControlException extends PinqException {
+	
+	protected $_route;
+	
 	public function __construct($route) {
 		$this->_route = $route;
 	}

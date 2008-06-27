@@ -11,16 +11,32 @@
 abstract class PinqController implements Package {
 	
 	// package loader
-	protected $_packages;
+	protected $packages,
+	          $view, // page view
+	          $layout; // layout view
+	
+	// view-related things
+	public $render_layout = TRUE,
+	       $layout_file = 'default';
 	
 	/**
 	 * Constructor. Constructor is final because I want to encourage people to
 	 * use the initialize() hook instead so that they don't forget to bring in
 	 * the package loader dependency.
 	 */
-	final public function __construct(Loader $package_loader) {
-		$this->_packages = &$package_loader;
-		$this->initialize(); // hook
+	final public function __construct(Loader $packages, View $page, View $layout) {
+		
+		// package loader
+		$this->packages = &$packages;
+		
+		// view stuff, if someone wants to change the file used by the layout
+		// they need only do: $this->layout->setFile('...', View::LAYOUT);
+		$this->view = $page;
+		$this->layout = $layout;
+		$layout->setFile($this->layout_file, 'layouts');
+		
+		// hook
+		$this->initialize();
 	}
 	
 	/**
@@ -29,9 +45,38 @@ abstract class PinqController implements Package {
 	final public function __destruct() {		
 		$this->destroy(); // hook
 		unset(
-			$this->_packages, 
-			$this->_view
+			$this->packages, 
+			$this->layout,
+			$this->view
 		);
+	}
+	
+	/**
+	 * Try to call a method of this controller.
+	 */
+	final public function act($request_method, $method, array $arguments) {
+		
+		// we're working with a valid controller, are we working with
+		// a valid method?
+		if(is_callable(array($this, "{$request_method}_{$method}")))
+			$method = "{$request_method}_{$method}";
+		
+		// method to handle any unsupported / or just all request
+		// methods at once
+		else if(is_callable(array($this, "ANY_{$method}")))
+			$method = "ANY_{$method}";		
+		
+		// no available action method exists
+		else
+			yield(ERROR_405);
+		
+		// call the controller's action
+		$this->beforeAction();
+		call_user_func_array(
+			array($this, $method), 
+			$arguments
+		);
+		$this->afterAction();
 	}
 	
 	/**
@@ -50,7 +95,7 @@ abstract class PinqController implements Package {
 		// go over them. if we've cached one, return it, otherwise if we need to
 		// load one, pass it off to the appropriate function
 		foreach($packages as $package_name)
-			$return[] = $this->_packages->load($package_name);
+			$return[] = $this->packages->load($package_name);
 				
 		// hook
 		$this->afterImport();
@@ -70,16 +115,9 @@ abstract class PinqController implements Package {
 		// a dictionary.
 		DEBUG_MODE && assert('$this->_packages instanceof Dictionary');
 		
-		$package = $this->_packages->load($package_name);
-		$this->_packages[$alias] = $package;
+		$package = $this->packages->load($package_name);
+		$this->packages[$alias] = $package;
 		return $package;
-	}
-	
-	/**
-	 * Get a new view.
-	 */
-	public function view($file_name) {
-		$file_name = DIR_APPLICATION .'/views/';
 	}
 	
 	/**
