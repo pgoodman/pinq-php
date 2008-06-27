@@ -56,10 +56,13 @@ require_once DIR_SYSTEM .'/stack.php';
 require_once DIR_SYSTEM .'/queue.php';
 require_once DIR_SYSTEM .'/dictionary.php';
 
-// interfaces and exceptions
+// interfaces and abstract classes
 require_once DIR_SYSTEM .'/loader.php';
 require_once DIR_SYSTEM .'/interfaces.php';
-require_once DIR_SYSTEM .'/exceptions.php';
+
+// exceptions
+require_once DIR_SYSTEM .'/general-exception.php';
+require_once DIR_SYSTEM .'/control-flow-exceptions.php';
 
 // bring in the model stuff
 require_once DIR_SYSTEM .'/pql/__init__.php';
@@ -70,7 +73,6 @@ require_once DIR_SYSTEM .'/data-source/__init__.php';
 require_once DIR_SYSTEM .'/output-buffer.php';
 require_once DIR_SYSTEM .'/config-loader.php';
 require_once DIR_SYSTEM .'/package-loader.php';
-require_once DIR_SYSTEM .'/yield-control-exception.php';
 require_once DIR_SYSTEM .'/functions/__init__.php';
 
 /**
@@ -162,32 +164,38 @@ function pinq($script_file, $app_dir) {
 				// if we're not working with a valid controller then error
 				if(!is_subclass_of($class, 'PinqController'))
 					yield(ERROR_404);
-		
-				// insantiate the controller so that we can do checks on its
-				// methods
-				$event = new $class($packages);
 				
-				// we're working with a valid controller, are we working with
-				// a valid method?
-				if(is_callable(array($event, "{$request_method}_{$method}")))
-					$method = "{$request_method}_{$method}";
+				// create the page and layout views
+				$packages->load('view');
+				$layout_view = View::factory();
+				$layout_view['page'] = page_view("{$dir}/{$controller}/{$method}");
 				
-				// method to handle any unsupported / or just all request
-				// methods at once
-				else if(is_callable(array($event, "ANY_{$method}")))
-					$method = "ANY_{$method}";		
-				
-				// no available action method exists
-				else
-					yield(ERROR_405);
-				
-				$event->beforeAction();
-				call_user_func_array(
-					array($event, $method), 
-					$arguments
+				// insantiate the controller and call its action
+				$event = new $class(
+					$packages, 
+					$layout_view, 
+					$layout_view['page']
 				);
-				$event->afterAction();
-				unset($event); 
+				
+				$event->act($request_method, $method, $arguments);
+				
+				// get some view info before we finish with the controller
+				// stuff
+				$render_layout = (bool)$event->render_layout;
+				
+				// clear the controller, it's no longer needed
+				unset($event);
+				
+				// not rendering a layout, leave
+				if(!$render_layout)
+					break;
+				
+				// render and output the layout view
+				// TODO: good idea to pass it to the output buffer or not?
+				out($layout_view->render(new StackOfDictionaries));
+				
+				// these are no longer needed
+				unset($layout_view);
 			
 			// the controller has yielded its control to another controller
 			} catch(YieldControlException $y) {

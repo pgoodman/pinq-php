@@ -8,7 +8,7 @@ class PinqException extends Exception { }
 
 class StackException extends PinqException { }
 class QueueException extends PinqException { }
-class ParserException extends PinqException { }
+//class ParserException extends PinqException { }
 //class PrinterException extends PinqException { }
 class HandlerException extends PinqException { }
 class ImmutableException extends PinqException { }

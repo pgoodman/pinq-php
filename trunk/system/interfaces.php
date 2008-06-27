@@ -28,17 +28,6 @@ interface Package {
 }
 
 /**
- * A view.
- */
-abstract class View extends Dictionary implements Printer {
-	abstract public function render();
-	
-	final public function __toString() {
-		return $this->render();
-	}
-}
-
-/**
  * Interface for a configurable package.
  */
 interface ConfigurablePackage extends Package {
