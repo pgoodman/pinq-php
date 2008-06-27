@@ -103,3 +103,19 @@ abstract class OuterRecordIterator extends IteratorIterator implements RecordIte
 		return $this->getInnerIterator()->count();
 	}
 }
+
+/**
+ * A record iterator that is like an outer-record-iterator but also brings in
+ * a gateway to do all model-related things.
+ * @author Peter Goodman
+ */
+abstract class GatewayRecordIterator extends OuterRecordIterator {
+	
+	protected $gateway;
+	
+	public function __construct(RecordIterator $it, Gateway $gateway) {
+		parent::__construct($it);
+		$this->gateway = $gateway;
+	}
+}
+

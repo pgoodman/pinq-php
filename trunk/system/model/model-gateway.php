@@ -10,7 +10,7 @@
  * the models to fill in the relationships between them and validate data.
  * @author Peter Goodman
  */
-abstract class ModelGateway {
+abstract class ModelGateway implements Gateway {
 	
 	protected $_models,
 	          $_relations,

@@ -28,6 +28,13 @@ interface Package {
 }
 
 /**
+ * Interface for gateways.
+ */
+interface Gateway {
+	
+}
+
+/**
  * Interface for a configurable package.
  */
 interface ConfigurablePackage extends Package {
