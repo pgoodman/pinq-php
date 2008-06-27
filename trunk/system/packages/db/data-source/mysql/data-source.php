@@ -43,10 +43,24 @@ class MysqlDatabase extends Database {
 	 * Query a MySQL database and return a result.
 	 */
 	protected function query($query, array $args) {
-		return mysql_query(
+		$result = mysql_query(
 			$this->substituteArgs($query, $args), 
 			$this->conn
 		);
+		
+		// usually the result of a malformed query. This won't reveal too much
+		// assuming proper use of the $args array because the query has not
+		// had its substitutes replaced
+		if(FALSE === $result) {
+			throw new DatabaseException(
+				"The following database query failed:".
+				"<pre>{$query}</pre>".
+				"The error reported was: ".
+				"<pre>". $this->error() ."</pre>"
+			);
+		}
+		
+		return $result;
 	}
 	
 	/**

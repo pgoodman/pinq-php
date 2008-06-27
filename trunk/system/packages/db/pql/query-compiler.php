@@ -294,7 +294,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			'and' => 'AND', 'or' => 'OR', 'xor' => 'XOR',
 		);
 		
-		// crap
+		// programmer error, die hard!
 		if(!isset($infixes[$operator])) {
 			throw new UnexpectedValueException(
 				"PQL infix operator [{$operator}] is not supported."

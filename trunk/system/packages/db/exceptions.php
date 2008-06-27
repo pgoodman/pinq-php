@@ -4,4 +4,20 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-class DatabaseException extends Exception { }
+/**
+ * A database exception will cause an internal error to occur which will yield
+ * control to the errors controller.
+ *
+ * Note: often times the database exception will no be used. In those cases
+ *       it is because the errors caused are usually programmer / configuration
+ *       related and should be immediately fixed.
+ *
+ * @author Peter Goodman
+ */
+class DatabaseException extends YieldControlException {
+	
+	public function __construct($message) {
+		parent::__construct(ERROR_500);
+		$this->message = $message;
+	}
+}

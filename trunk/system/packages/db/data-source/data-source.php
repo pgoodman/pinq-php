@@ -29,17 +29,7 @@ abstract class Database implements DataSource {
 	 * Select rows from the database.
 	 */
 	final public function select($query, array $args = array()) {
-				
-		$result = $this->query($query, $args);
-		
-		// usually the result of a malformed query
-		if(!is_resource($result)) {
-			throw new DatabaseException(
-				"Database query failed. The following error was returned: ".
-				"<pre>". $this->error() ."</pre>"
-			);
-		}
-		
+		$result = $this->query($query, $args);		
 		return $result;
 	}
 	
