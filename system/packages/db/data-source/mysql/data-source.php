@@ -8,7 +8,7 @@
  * An instance of a MySQL database connection.
  * @author Peter Goodman
  */
-class MysqlDatabase extends Database {
+class MysqlDataSource extends Database {
 	
 	protected $conn;
 	
