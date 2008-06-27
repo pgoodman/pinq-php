@@ -123,5 +123,9 @@ abstract class GatewayRecordIterator extends OuterRecordIterator {
 		parent::__construct($it);
 		$this->gateway = $gateway;
 	}
+	
+	public function __destruct() {
+		unset($this->gateway);
+	}
 }
 

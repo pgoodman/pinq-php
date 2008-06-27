@@ -193,7 +193,6 @@ function pinq($script_file, $app_dir) {
 					break;
 				
 				// render and output the layout view
-				// TODO: good idea to pass it to the output buffer or not?
 				$layout_view->render(new StackOfDictionaries);
 				
 				// layout view no longer needed
