@@ -19,23 +19,3 @@ class InvalidPackageException extends PinqException { }
 class FlushBufferException extends PinqException { }
 class ConfigurationException extends PinqException { }
 
-/**
- * An exception representing an HTTP redirect.
- */
-final class HttpRedirectException extends PinqException {
-	
-	protected $_location;
-	
-	// TODO: implement a distinction between $as_url = {FALSE, TRUE}
-	public function __construct($location, $as_url) {
-		
-		// trim off any new lines + anything after them
-		$location = preg_replace('~\r?\n.*~', '', $location);
-		
-		$this->_location = $location;
-	}
-	
-	public function getLocation() {
-		return $this->_location;
-	}
-}
