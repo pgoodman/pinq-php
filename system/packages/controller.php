@@ -113,7 +113,7 @@ abstract class PinqController implements Package {
 		
 		// this is here because the package loader is a Loader first, and then
 		// a dictionary.
-		DEBUG_MODE && assert('$this->_packages instanceof Dictionary');
+		PINQ_DEBUG && assert('$this->_packages instanceof Dictionary');
 		
 		$package = $this->packages->load($package_name);
 		$this->packages[$alias] = $package;

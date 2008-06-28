@@ -2,8 +2,9 @@
 
 /* $Id$ */
 
-// everyone should code with these settings
-error_reporting(E_ALL | E_STRICT);
+// get all the error levels we need
+!defined('E_RECOVERABLE_ERROR') && define('E_RECOVERABLE_ERROR', 4096);
+error_reporting(E_ALL | E_STRICT | E_RECOVERABLE_ERROR);
 
 // no need for this stuff
 ini_set('register_argc_argv', 0);
@@ -25,7 +26,7 @@ set_time_limit(120);
 ignore_user_abort(FALSE);
 
 // should some of the libraries in pinq operate in debug mode?
-define('DEBUG_MODE', TRUE);
+define('PINQ_DEBUG', TRUE);
 
 // are we in IIS?
 define('PINQ_IN_IIS', defined('SERVER_IIS') && TRUE === SERVER_IIS);
@@ -207,12 +208,12 @@ function pinq($script_file, $app_dir) {
 				if(isset($event)) unset($event);
 				
 				// clear the output buffer for the new action
-				// TODO: does it make sense to clear the output buffer or
-				//       not? Someone else decide!!!
 				OutputBuffer::clear();
 				
-				// temporary
-				out('<pre>'. $y->getMessage() .'</pre>');
+				// put the message from the exception into the new output
+				// buffer. if there was no message, ie: this was not cause by
+				// an error that threw an exception
+				out($y->getMessage());
 				
 				// don't want infinite loop!
 				if($route === ($new_route = $y->getRoute()))

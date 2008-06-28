@@ -50,7 +50,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		extract($args);
 		
 		// require these array keys in the $args array
-		DEBUG_MODE && expect_array_keys($args, array(
+		PINQ_DEBUG && expect_array_keys($args, array(
 			'controller_dir', 
 			'file_extension', 
 			'key'
