@@ -130,14 +130,13 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	 */
 	protected function calculateLongestPrefix($route) {
 		$matches = array();
-		$bad = '/'; // worst-case prefix
 		
 		// get the longest prefix of terminals in this route
 		$pattern = "~^(([". $this->allowed_chars ."]|/)+)~";
 		if(preg_match($pattern, $route, $matches))
-			return !empty($matches[0]) ? $matches[0] : $bad;
+			return !empty($matches[0]) ? $matches[0] : '';
 				
-		return $bad;
+		return '';
 	}
 	
 	/**
@@ -146,21 +145,18 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	 */
 	protected function getLongestMatchingPrefix($route) {
 		
+		$parts = preg_split('~/~', $route, -1, PREG_SPLIT_NO_EMPTY);
+		
 		// we break the route up into segments
-		if(0 == count($parts = explode('/', $route)))
-			return '/';
+		if(0 == count($parts))
+			return '';
 		
-		$prefix = $temp = '';
-		$i = 0;
-		
-		// build up the longest prefix incrementally
-		do {
-			$prefix = $temp;
-			$temp .= '/'. $parts[$i++];
-		
-		} while(isset($parts[$i]) && isset($this[$temp]));
-		
-		return '/';
+		// go find the longest matching prefix
+		$prefix = '';
+		while(!empty($parts) && isset($this[$prefix .'/'. $parts[0]]))
+			$prefix .= '/'. array_shift($parts);
+				
+		return $prefix;
 	}
 	
 	/**
@@ -184,7 +180,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$route = str_replace($this->macro_keys, $this->macro_vals, $route);
 		
 		// get the prefix of the route that is the sum of terminals
-		$prefix = $this->calculateLongestPrefix($route);
+		$prefix = '/'. trim($this->calculateLongestPrefix($route), '/');
 		
 		// make sure we group all routes with the same prefix together, that
 		// way when we encounter a route, we only search given its prefix
@@ -217,10 +213,10 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		// route is empty, we're at the base controller and method
 		if(empty($route))
 			return $this->controllerFileExists();
-
+		
 		// calculate the prefix
 		$prefix = $this->getLongestMatchingPrefix($route);
-				
+		
 		// this will hold intermediate arguments
 		$dynamic = array();
 		
@@ -284,7 +280,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$first_arg = isset($this->arguments[0]) ? $this->arguments[0] : NULL;
 		if(!empty($path_parts[$i]) && $path_parts[$i] != $first_arg)
 			$this->method = $path_parts[$i];
-
+		
 		// does the controller file exist?
 		return $this->controllerFileExists();
 	}
@@ -301,10 +297,13 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	 * order than they are in the actual route, and thus need to be sent to
 	 * the controller in a corrected order.
 	 */
-	protected function reorderArguments($route, array &$sub) {		  
+	protected function reorderArguments($route, array &$sub) {		
+		  
 		// make sure we end up with the right number of arguments. It doesn't
 		// matter if we count too many, eg: $$1 counting as 2 instead of 1.
-		$this->arguments = array_fill(0, substr_count($route, '$'), NULL);
+		$num_args = substr_count($route, '$');
+		if($num_args > 0)
+			$this->arguments = array_fill(0, $num_args, NULL);
 		
 		// find all the variables within the route (in order)
 		$matches = array();

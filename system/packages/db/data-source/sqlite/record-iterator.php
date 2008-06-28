@@ -46,6 +46,7 @@ class SqliteRecordIterator extends InnerRecordIterator {
 	 * Return a record for the current mysql row.
 	 */
 	public function current() {
+		echo 'here';
 		return $this->result->fetch(SQLITE_ASSOC);
 	}
 }

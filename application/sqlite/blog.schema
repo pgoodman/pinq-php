@@ -1,0 +1,42 @@
+
+CREATE TABLE links (
+	id integer primary key,
+	url varchar(255) NOT NULL DEFAULT '',
+	title varchar(100),
+	description TEXT,
+	
+	UNIQUE(url)
+);
+
+CREATE TABLE posts (
+	id integer primary key,
+	title varchar(100),
+	body TEXT,
+	user_id integer unsigned,
+	nice_title varchar(100),
+	created integer,
+	published integer,
+	
+	UNIQUE(nice_title)
+);
+
+CREATE TABLE tags (
+	id integer primary key,
+	name varchar(20),
+	UNIQUE(name)
+);
+
+CREATE TABLE users (
+	id integer primary key,
+	email varchar(150),
+	display_name varchar(50),
+	password varchar(32),
+	
+	UNIQUE(email)
+);
+
+CREATE TABLE post_tags (
+	post_id integer unsigned,
+	tag_id integer unsigned,
+	PRIMARY KEY(post_id, tag_id)
+);

@@ -1,0 +1,19 @@
+<? if(!empty($post)): ?>
+	<?=element('post')->render($scope, $post);?>
+	
+	<hr />
+	
+	<? if(!empty($posts)): ?>
+	<ul>
+		<? foreach($posts as $post): ?>
+		<li>
+			
+		</li>
+		<? endforeach; ?>
+	</ul>
+	<? endif; ?>
+<? else: ?>
+<div>
+	No posts here!
+</div>
+<? endif; ?>

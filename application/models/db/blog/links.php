@@ -4,9 +4,9 @@
 
 class LinksDefinition extends DatabaseModelDefinition {
 	public function describe() {
-		$this->id = int(3);
+		$this->id = int(10); // sqlite's own row id
 		$this->url = string(255);
-		$this->title = string(50);
+		$this->title = string(100);
 		$this->description = text();
 	}
 }

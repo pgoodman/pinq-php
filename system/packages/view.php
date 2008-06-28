@@ -95,14 +95,19 @@ class PinqView extends View implements ConfigurablePackage {
 	}
 	
 	/**
-	 * Render a view.
+	 * Render a view. This also allows for easier applying of vars through
+	 * the secodn parameter.
 	 */
-	public function render(StackOfDictionaries $scope) {
+	public function render(StackOfDictionaries $scope, array $vars = array()) {
 		
 		if(NULL === $this->file)
 			return;
 		
-		$immediate_vars = $this->toArray();
+		// set the immediate vars
+		$immediate_vars = array_merge(
+			$this->toArray(),
+			($vars instanceof Record) ? $vars->toArray() : (array)$vars
+		);
 		
 		// push the immediate variables onto the scope stack
 		$scope->push($immediate_vars);

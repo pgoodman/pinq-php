@@ -2,4 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-$routes['/(:alphanum)'] = '/index/index/$1';
+$routes['/page/(:num)'] = '/index/index/';
+$routes['/archive'] = '/index/archive';
+$routes['/install'] = '/index/install';
+

@@ -24,7 +24,6 @@ class SqliteDataSource extends Database {
 				"this server."
 			);
 		}
-		
 		// if the database doesn't exist, create it
 		if(!file_exists($host)) {
 			
@@ -36,6 +35,8 @@ class SqliteDataSource extends Database {
 			}
 			
 			fclose($fp);
+			
+			@chmod($host, 0666);
 		}
 		
 		// the db file isnt readable/writable
@@ -47,10 +48,15 @@ class SqliteDataSource extends Database {
 		
 		// connect
 		$error = NULL;
-		$this->conn = new SQLiteDatabase($host, 0666, $error);
+		try {
+			$this->conn = new SQLiteDatabase($host, 0666, $error);
+		
+		} catch(SQLiteException $e) {
+			$error = $e->getMessage();
+		}
 		
 		// connection failed
-		if($this->conn === FALSE) {
+		if(!empty($error)) {
 			throw new DatabaseException(
 				"Unable to connect to the SQLite database [{$error}]."
 			);
@@ -72,7 +78,12 @@ class SqliteDataSource extends Database {
 		unset($this->conn);
 	}
 	
-	protected function queryError($query) {
+	protected function queryError($query, $error) {
+		
+		$last_error = $this->error();
+
+		if($last_error != $error)
+			$error .= "\n{$last_error}";
 		
 		// usually the result of a malformed query. This won't reveal too much
 		// assuming proper use of the $args array because the query has not
@@ -81,7 +92,7 @@ class SqliteDataSource extends Database {
 			"The following database query failed:".
 			"<pre>{$query}</pre>".
 			"The error reported was: ".
-			"<pre>". $this->error() ."</pre>"
+			"<pre>{$error}</pre>"
 		);
 	}
 	
@@ -89,9 +100,17 @@ class SqliteDataSource extends Database {
 	 * Query the database and return a result.
 	 */
 	protected function query($query, array $args) {
-		$result = $this->conn->query($this->substituteArgs($query, $args));		
+		
+		$error = '';
+		
+		$result = $this->conn->query(
+			$this->substituteArgs($query, $args),
+			SQLITE_ASSOC,
+			$error
+		);
+		
 		if(FALSE === $result)
-			$this->queryError($query);
+			$this->queryError($query, $error);
 		
 		return $result;
 	}
@@ -99,10 +118,16 @@ class SqliteDataSource extends Database {
 	/**
 	 * Perform an update query. This is a result-less query.
 	 */
-	public function update($query, array $args = array()) {
-		$result = $this->conn->queryExec($this->substituteArgs($query, $args));
+	public function update($query, array $args = array()) {		
+		
+		$error = '';
+		$result = $this->conn->queryExec(
+			$this->substituteArgs($query, $args),
+			$error
+		);
+		
 		if(FALSE === $result)
-			$this->queryError($query);
+			$this->queryError($query, $error);
 			
 		return TRUE;
 	}
@@ -118,7 +143,7 @@ class SqliteDataSource extends Database {
 	 * Get the last insert id from mysql.
 	 */
 	protected function insertId() {
-		return $this->conn->lastInsertRowid();
+		return $this->conn->lastInsertid();
 	}
 	
 	/**
