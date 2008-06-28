@@ -28,7 +28,7 @@ class PinqDb implements ConfigurablePackage {
 		
 		// make sure the arguments passed into this package from the loader
 		// has the information that we expect
-		DEBUG_MODE && expect_array_keys($args, array(
+		PINQ_DEBUG && expect_array_keys($args, array(
 			'argv',
 			'argc',
 			'class',
@@ -57,7 +57,7 @@ class PinqDb implements ConfigurablePackage {
 		
 		// make sure that the config array has the information that we expect 
 		// to extract from it
-		DEBUG_MODE && expect_array_keys($info[$argv[0]], array(
+		PINQ_DEBUG && expect_array_keys($info[$argv[0]], array(
 			'driver',
 			'host',
 			'user',

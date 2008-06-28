@@ -22,7 +22,7 @@ final class TemplateTagStack extends Stack implements Printer {
 	 */
 	public function __construct(Handler &$tag_handler, array &$parse_func) {
 		
-		DEBUG_MODE && assert('call_user_func_array("method_exists", $parse_func)');
+		PINQ_DEBUG && assert('call_user_func_array("method_exists", $parse_func)');
 		
 		$this->tag_handler = &$tag_handler;
 		$this->parse_func = &$parse_func;
@@ -42,7 +42,7 @@ final class TemplateTagStack extends Stack implements Printer {
 									   "name [{$tag_name}].");
 		
 		// make sure we're dealing with what we want to be.
-		DEBUG_MODE && assert('$tag instanceof Compilable');
+		PINQ_DEBUG && assert('$tag instanceof Compilable');
 		
 		// push the tag compiler onto the stack
 		parent::push($tag);

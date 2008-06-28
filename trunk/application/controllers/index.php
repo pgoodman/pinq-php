@@ -51,6 +51,7 @@ class IndexController extends PinqController {
 		}
 		
 		$db->post(to('posts')->set(array(
+			'id' => NULL,
 			'title' => 'First blog post',
 			'nice_title' => 'first-blog-post',
 			'body' => str_repeat('This is the body of the first blog post. ', 20),
@@ -60,6 +61,7 @@ class IndexController extends PinqController {
 		)));
 		
 		$db->post(to('users')->set(array(
+			'id' => NULL,
 			'email' => 'peter.goodman@gmail.com',
 			'display_name' => 'Peter Goodman',
 			'password' => md5('test'),

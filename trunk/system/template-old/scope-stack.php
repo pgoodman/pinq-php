@@ -20,7 +20,7 @@ class ScopeStack extends Stack implements ArrayAccess {
 	 * Push a scope onto the stack.
 	 */
 	public function push($val) {
-		DEBUG_MODE && assert("is_array($val)");
+		PINQ_DEBUG && assert("is_array($val)");
 		parent::push($val);
 	}
 	
