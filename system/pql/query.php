@@ -49,7 +49,8 @@ class Query {
 	          $_pivots = array(), // query pivots following the relationships
 	          $_predicates, // query-predicates instance or null
 	          $_aliases = array(), // maps query aliases to the model names
-	          $_id;
+	          $_id,
+	          $_compiled = FALSE;
 	
 	/** 
 	 * Constructor, very little to set up.
@@ -79,6 +80,26 @@ class Query {
 	 */
 	public function __clone() {
 		$this->_id = self::$query_id++;
+	}
+	
+	/**
+	 * Tell the query that it has been compiled.
+	 */
+	public function setCompiled() {
+		$this->_compiled = TRUE;
+		if($this->_predicates)
+			$this->_predicates->setCompiled();
+	}
+	
+	/**
+	 * Has this query and its predicates been compiled yet?
+	 */
+	public function isCompiled() {
+		
+		if(NULL !== $this->_predicates)
+			return $this->_compiled && $this->_predicates->isCompiled();
+		
+		return $this->_compiled;
 	}
 	
 	/**
@@ -154,6 +175,8 @@ class Query {
 	 */
 	protected function setContext($model_name, $model_alias) {
 		
+		$this->_compiled = FALSE;
+		
 		// create a new context
 		if(!isset($this->_contexts[$model_alias])) {
 			$this->_contexts[$model_alias] = array(
@@ -201,8 +224,6 @@ class Query {
 	public function select() {
 		$args = func_get_args();
 		
-		
-		
 		// we're dealing with some 
 		if(count($args) == 1) {
 			if(is_array($args[0]))
@@ -211,6 +232,8 @@ class Query {
 		
 		if(empty($args))
 			return $this;
+		
+		$this->_compiled = FALSE;
 		
 		// TODO: in_array very oddly didn't work
 		if(ALL === $args[0])
@@ -229,6 +252,9 @@ class Query {
 	 * Create some select count fields.
 	 */
 	public function count($field, $alias = NULL) {
+		
+		$this->_compiled = FALSE;
+		
 		if(NULL === $alias)
 			$alias = $field;
 		
@@ -244,6 +270,8 @@ class Query {
 	 * Link two models together by their aliases.
 	 */
 	public function link($left_alias, $right_alias, $flags = 0) {
+		
+		$this->_compiled = FALSE;
 		
 		// read the error: you can't link a model to itself using the same two
 		// aliases.
@@ -289,6 +317,9 @@ class Query {
 	 * Set (key,value) pairs, or a single (key,value) pair.
 	 */
 	public function set($key, $value = NULL) {
+		
+		$this->_compiled = FALSE;
+		
 		$keys = is_array($key) ? $key : array((string)$key => $value);
 				
 		$this->_context['modify_values'] = array_merge(

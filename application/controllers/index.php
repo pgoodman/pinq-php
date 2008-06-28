@@ -1,28 +1,15 @@
 <?php
 
 /**
- * Iterate over job postings and find tags for a job.
- * @author Peter Goodman
- */
-class JobPostingsIterator extends GatewayRecordIterator {	
-	public function current() {
-		$job = parent::current();
-		$job->tags = $this->gateway->tags->getAll($job->content);
-		return $job;
-	}
-}
-
-/**
- * Index controller, this is where default actions come. Index controllers
- * are only really useful for having an index method.
+ * Index controller.
  */
 class IndexController extends PinqController {
 	
 	/**
-	 * Main function for the index controller. Accepts a tag name from the
-	 * route.
+	 * Main function for the index controller.
 	 */
-	public function GET_index($tag_name = '') {
+	public function GET_index() {
+		
 		$db = $this->import('db.blog');
 		
 		// this query is used twice, yay!
@@ -30,8 +17,8 @@ class IndexController extends PinqController {
 		              from('users')->select(ALL)->
 		              link('posts', 'users')->order()->posts('created')->desc;
 		
+		// set stuff to the view
 		$this->view[] = array(
-			
 			// get the most recent blog post
 			'post' => $db->get($post_query),
 			
@@ -41,9 +28,10 @@ class IndexController extends PinqController {
 	}
 	
 	/**
-	 * Install the db tables.
+	 * Install the database tables.
 	 */
 	public function GET_install() {
+		
 		$db = $this->import('db.blog');
 		
 		$queries = explode(

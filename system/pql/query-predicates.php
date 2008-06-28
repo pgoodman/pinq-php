@@ -38,7 +38,8 @@ class QueryPredicates extends StackOfStacks {
 	          $_operands,
 	          $_query,
 	          $_context,
-	          $_values;
+	          $_values,
+	          $_compiled = FALSE;
 	
 	// operators and their precedence levels. high precedence level means
 	// that the operator is more difficult to tear apart
@@ -106,6 +107,20 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
+	 * Tell the query that it has been compiled.
+	 */
+	public function setCompiled() {
+		$this->_compiled = TRUE;
+	}
+	
+	/**
+	 * Have these predicates been compiled yet?
+	 */
+	public function isCompiled() {
+		return $this->_compiled;
+	}
+	
+	/**
 	 * Get the query that these predicates link to.
 	 */
 	public function getQuery() {
@@ -133,6 +148,7 @@ class QueryPredicates extends StackOfStacks {
 	 * @internal
 	 */
 	public function setContext($context) {
+		$this->_compiled = FALSE;
 		$this->addTrailingOperators();
 		$this->_context = &$this->_contexts[$context];
 		return $this;
@@ -150,6 +166,7 @@ class QueryPredicates extends StackOfStacks {
 	 * Add an operand.
 	 */
 	protected function addOperand($key, $value) {
+		$this->_compiled = FALSE;
 		$type = ($value === _) ? self::SUBSTITUTE : self::OPERAND;
 		$this->_context[] = array($type, $key, $value);
 		return $this;
@@ -160,6 +177,7 @@ class QueryPredicates extends StackOfStacks {
 	 * the conditions list.
 	 */
 	protected function addOperator($key) {
+		$this->_compiled = FALSE;
 		$this->_context[] = array(self::OPERATOR, $key, NULL);
 		return $this;
 	}
@@ -168,6 +186,7 @@ class QueryPredicates extends StackOfStacks {
 	 * Add a model/field reference.
 	 */
 	protected function addReference($model, $field) {
+		$this->_compiled = FALSE;
 		$this->_context[] = array(self::REFERENCE, $model, $field);
 		return $this;
 	}
@@ -234,6 +253,8 @@ class QueryPredicates extends StackOfStacks {
 	public function parseOperator($op, array $args = NULL) {
 		$op = strtolower($op);
 		$ops = self::$_operators;
+		
+		$this->_compiled = FALSE;
 		
 		// a opening brace is being used, push on a new stack
 		if($op == 'in')
@@ -325,6 +346,7 @@ class QueryPredicates extends StackOfStacks {
 	 * Special case for a keyed substitute value.
 	 */
 	public function _($key) {
+		$this->_compiled = FALSE;
 		$this->_context[] = array(self::SUBSTITUTE, $key, NULL);
 		return $this;
 	}
@@ -337,6 +359,7 @@ class QueryPredicates extends StackOfStacks {
 		if($val === _)
 			return $this->_(NULL);
 		
+		$this->_compiled = FALSE;
 		$this->_context[] = array(self::IMMEDIATE, NULL, $val);
 		return $this;
 	}

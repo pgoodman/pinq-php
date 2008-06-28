@@ -190,17 +190,26 @@ abstract class ModelGateway implements Gateway {
 				
 				$query_id = $query->getId();
 				
-				// the query has already been compiled and cached, use it
-				if(isset($this->_cached_queries[$query_id]))
+				// the query has already been compiled and cached, use it. This
+				// is a double test because if the query (query or predicates)
+				// are ever changed then those changes need to invalidate the
+				// cache
+				if($query->isCompiled() && isset($this->_cached_queries[$query_id]))
 					return $this->_cached_queries[$query_id ];
-			
+
 				// nope, we need to compile the query
-				$query = $this->compileQuery(
+				$stmt = $this->compileQuery(
 					$query, 
 					$type
 				);
 				
-				$this->_cached_queries[$query_id] = $query;
+				// tell the query and its predicates that it has been compiled
+				// it is done after the query has been compiled because the
+				// query compiler might add in predicates.
+				$query->setCompiled();
+				
+				$this->_cached_queries[$query_id] = $stmt;
+				$query = $stmt;
 			}
 			
 			// cache this relation, this is when we're in a sub-model gateway
