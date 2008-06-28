@@ -13,7 +13,7 @@ function float($length = 0) {
 }
 
 function bool($default = FALSE) {
-	return array(ModelDefinition::TYPE_BOOL, 1, $default);
+	return array(ModelDefinition::TYPE_BOOLEAN, 1, $default);
 }
 
 function string($length = 0, $default = NULL) {

@@ -151,7 +151,7 @@ function pinq($script_file, $app_dir) {
 				// parser
 				$path_info = $router->getPathInfo();
 				list($dir, $pdir, $controller, $method, $arguments) = $path_info;
-			
+				
 				// bring in the controller file, we know it exists because the 
 				// route parser figured that out.
 				require_once $dir .'/'. $controller . EXT;
@@ -210,6 +210,9 @@ function pinq($script_file, $app_dir) {
 				// TODO: does it make sense to clear the output buffer or
 				//       not? Someone else decide!!!
 				OutputBuffer::clear();
+				
+				// temporary
+				out('<pre>'. $y->getMessage() .'</pre>');
 				
 				// don't want infinite loop!
 				if($route === ($new_route = $y->getRoute()))

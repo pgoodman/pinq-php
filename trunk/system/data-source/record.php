@@ -8,7 +8,7 @@
  * Interface for a record.
  */
 interface Record extends ArrayAccess {
-	
+	public function toArray();
 }
 
 /**
@@ -148,5 +148,9 @@ abstract class OuterRecord implements Record {
 	}
 	public function offsetUnset($key) {
 		return $this->_inner_record->offsetUnset($key);
+	}
+	
+	public function toArray() {
+		return $this->_inner_record->toArray();
 	}
 }
