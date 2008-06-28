@@ -15,7 +15,9 @@ class IndexController extends PinqController {
 		// this query is used twice, yay!
 		$post_query = from('posts')->select(ALL)->
 		              from('users')->select(ALL)->
-		              link('posts', 'users')->order()->posts('created')->desc;
+		              link('posts', 'users')->
+		              where()->posts('published')->is(TRUE)->
+		              order()->posts('created')->desc;
 		
 		// set stuff to the view
 		$this->view[] = array(
@@ -47,6 +49,21 @@ class IndexController extends PinqController {
 			out('<pre>', $query, '</pre>');
 			$db->post($query);
 		}
+		
+		$db->post(to('posts')->set(array(
+			'title' => 'First blog post',
+			'nice_title' => 'first-blog-post',
+			'body' => str_repeat('This is the body of the first blog post. ', 20),
+			'user_id' => 1,
+			'created' => time(),
+			'published' => TRUE,
+		)));
+		
+		$db->post(to('users')->set(array(
+			'email' => 'peter.goodman@gmail.com',
+			'display_name' => 'Peter Goodman',
+			'password' => md5('test'),
+		)));
 		
 		out('installed');
 	}

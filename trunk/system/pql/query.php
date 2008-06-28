@@ -10,22 +10,32 @@
 !defined('ALL') && define('ALL', INF)
 				&& define('_', -INF);
 
+
 /**
- * The PINQ starter functions don't exist yet.
+ * Return a new pinq object
+ * @author Peter Goodman
  */
-if(!function_exists("from")) {
-	
-	// return a new pinq object
-	function from($model_name, $model_alias = NULL) {
-		$query = new Query;
-		return $query->from($model_name, $model_alias);
-	}
-	
-	// alias to from, makes more semantic sense for other functions.
-	function in($model_name, $model_alias = NULL) {
-		$query = new Query;
-		return $query->from($model_name, $model_alias);
-	}
+function from($model_name, $model_alias = NULL) {
+	$query = new Query;
+	return $query->from($model_name, $model_alias);
+}
+
+/**
+ * Return a new pinq object
+ * @author Peter Goodman
+ */
+function in($model_name, $model_alias = NULL) {
+	$query = new Query;
+	return $query->from($model_name, $model_alias);
+}
+
+/**
+ * Return a new pinq object
+ * @author Peter Goodman
+ */
+function to($model_name, $model_alias = NULL) {
+	$query = new Query;
+	return $query->from($model_name, $model_alias);
 }
 
 /**
