@@ -12,61 +12,26 @@ class IndexController extends PinqController {
 		
 		$db = $this->import('db.blog');
 		
-		// this query is used twice, yay!
+		// this query is used twice, yay! find the current published posts
+		// ordered by their created time (descending)
 		$post_query = from('posts')->select(ALL)->
 		              from('users')->select(ALL)->
 		              link('posts', 'users')->
 		              where()->posts('published')->is(TRUE)->
 		              order()->posts('created')->desc;
 		
+		$post = $db->get($post_query);
+		
 		// set stuff to the view
 		$this->view[] = array(
 			// get the most recent blog post
-			'post' => $db->get($post_query),
+			'post' => $post,
 			
 			// the next few older posts after the most recent, offset by 1
-			'posts' => $db->getAll($post_query->limit(10, 1))
+			'posts' => ($post === NULL
+				? array()
+				: $db->getAll($post_query->limit(10, 1))
+			)
 		);
-	}
-	
-	/**
-	 * Install the database tables.
-	 */
-	public function GET_install() {
-		
-		$db = $this->import('db.blog');
-		
-		$queries = explode(
-			';', 
-			file_get_contents(DIR_APPLICATION .'/sqlite/blog.schema')
-		);
-		
-		foreach($queries as $query) {
-			
-			if(empty($query))
-				continue;
-			
-			out('<pre>', $query, '</pre>');
-			$db->post($query);
-		}
-		
-		$db->post(to('posts')->set(array(
-			'id' => NULL,
-			'title' => 'First blog post',
-			'nice_title' => 'first-blog-post',
-			'body' => str_repeat('This is the body of the first blog post. ', 20),
-			'user_id' => 1,
-			'created' => time(),
-			'published' => TRUE,
-		)));
-		
-		$db->post(to('users')->set(array(
-			'id' => NULL,
-			'email' => 'peter.goodman@gmail.com',
-			'display_name' => 'Peter Goodman',
-			'password' => md5('test'),
-		)));
-		
-		out('installed');
 	}
 }

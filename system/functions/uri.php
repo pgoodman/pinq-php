@@ -56,6 +56,7 @@ function get_request_uri() {
 		return $uri;
 	
 	// IIS, we need to harmonize it with other servers
+	// TODO: do GET variables need to be added back in?
 	if(NULL === ($uri = get_env('REQUEST_URI')))
 		$uri = rtrim(dirname(get_env('SCRIPT_NAME')), '/') .'/'. get_route();
 	

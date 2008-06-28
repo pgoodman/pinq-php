@@ -47,10 +47,9 @@ class DatabaseModelGateway extends ModelGateway {
 		
 		// cache the compiler
 		if($this->_compiler === NULL) {
-			$this->_compiler = new DatabaseQueryCompiler(
+			$this->_compiler = $this->_ds->getQueryCompiler(
 				$this->_models,
-				$this->_relations,
-				$this->_ds
+				$this->_relations
 			);
 		}
 		

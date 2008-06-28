@@ -187,4 +187,17 @@ class SqliteDataSource extends Database {
 	public function getRecordIterator($result) {
 		return new SqliteRecordIterator($result);
 	}
+	
+	/**
+	 * Get the query compiler.
+	 */
+	public function getQueryCompiler(Dictionary $models, 
+		                             ModelRelations $relations) {
+		
+		return new SqliteQueryCompiler(
+			$models,
+			$relations,
+			$this
+		);
+	}
 }
