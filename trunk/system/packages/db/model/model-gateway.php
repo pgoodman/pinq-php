@@ -22,7 +22,12 @@ class DatabaseModelGateway extends ModelGateway {
 	 * route--oh well.
 	 */
 	protected function getRecord($result_resource) {
-		return $this->getRecordIterator($result_resource)->current();
+		$record_iterator = $this->getRecordIterator($result_resource);
+		
+		if(0 === count($record_iterator))
+			return NULL;
+		
+		return $record_iterator->current();
 	}
 	
 	/**

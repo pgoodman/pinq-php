@@ -98,7 +98,7 @@ class PinqView extends View implements ConfigurablePackage {
 	 * Render a view. This also allows for easier applying of vars through
 	 * the secodn parameter.
 	 */
-	public function render(StackOfDictionaries $scope, array $vars = array()) {
+	public function render(StackOfDictionaries $scope, $vars = array()) {
 		
 		if(NULL === $this->file)
 			return;
