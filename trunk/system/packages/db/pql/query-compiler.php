@@ -508,6 +508,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// make sure to quote it for insertion as a string
 			if(is_string($value))
 				$value = "'". $this->db->quote($value) ."'";
+			else if(NULL === $value)
+				$value = 'NULL';
 			
 			$fields[] = "{$prefix}{$column}={$value}";
 		}

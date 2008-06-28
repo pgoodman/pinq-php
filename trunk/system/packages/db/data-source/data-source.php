@@ -26,6 +26,19 @@ abstract class Database implements DataSource {
 	}
 	
 	/**
+	 * Get the query compiler.
+	 */
+	public function getQueryCompiler(Dictionary $models, 
+		                             ModelRelations $relations) {
+		
+		return new DatabaseQueryCompiler(
+			$models,
+			$relations,
+			$this
+		);
+	}
+	
+	/**
 	 * Select rows from the database.
 	 */
 	public function select($query, array $args = array()) {

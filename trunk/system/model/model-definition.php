@@ -192,14 +192,14 @@ abstract class ModelDefinition implements Object {
 	public function coerceValueForField($field, $value) {
 		
 		// this model doesn't contain the supplied field
-		if(!$this->hasField($field))
+		if(!$this->hasField($field) || NULL === $value)
 			return NULL;
 		
 		$context = $this->_fields[$field];
 		
 		switch($context['type']) {
 			
-			case self::TYPE_INT:
+			case self::TYPE_INT:				
 				return (int)$value;
 			
 			case self::TYPE_BOOLEAN:

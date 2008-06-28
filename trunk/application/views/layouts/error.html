@@ -1,0 +1,13 @@
+<html>
+<head>
+	<title>Error</title>
+</head>
+<body>
+	<?=$page_view->render($scope);?>
+	
+	<fieldset>
+		<legend>Message</legend>
+		<? PINQ_DEBUG ? OutputBuffer::flush() : OutputBuffer::clear(); ?>
+	</fieldset>
+</body>
+</html>
