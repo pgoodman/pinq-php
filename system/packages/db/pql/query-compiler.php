@@ -289,7 +289,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$infixes = array(
 			'mul' => '*', 'div' => '/',
 			'add' => '+', 'sub' => '-',
-			'eq' => '=', 'leq' => '<=', 'geq' => '>=', 
+			'eq' => '=', 'is' => '=', 'leq' => '<=', 'geq' => '>=', 
 			'lt' => '<', 'gt' => '>', 'neq' => '!=',
 			'and' => 'AND', 'or' => 'OR', 'xor' => 'XOR',
 		);
@@ -536,7 +536,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			$sql = "INSERT INTO {$table_name}";
 			$comma = '';
 			
-			$fields = $this->buildFieldsList($context, $model, '');
+			$fields = $this->buildFieldsList($context, $definition, '');
 			
 			if(!empty($fields))
 				$sql .= ' SET '. implode(', ', $fields);
