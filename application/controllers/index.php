@@ -25,9 +25,6 @@ class IndexController extends PinqController {
 	public function GET_index($tag_name = '') {
 		$db = $this->import('db.blog');
 		
-		$row = $db->get('select * from posts');
-		print_r($row);
-		/*
 		// this query is used twice, yay!
 		$post_query = from('posts')->select(ALL)->
 		              from('users')->select(ALL)->
@@ -40,7 +37,7 @@ class IndexController extends PinqController {
 			
 			// the next few older posts after the most recent, offset by 1
 			'posts' => $db->getAll($post_query->limit(10, 1))
-		);*/
+		);
 	}
 	
 	/**

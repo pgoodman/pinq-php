@@ -186,7 +186,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// be comma-separated
 			$comma = empty($prefix) ? ',' : '';
 		}
-					
+		
 		return $sql;
 	}
 	
@@ -406,8 +406,10 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			$this->models
 		);
 		
-		if(!empty($graph))
-			$sql .= ' FROM '. $this->recursiveJoin(NULL, $graph, '');
+		if(!empty($graph)) {
+			$joins = $this->recursiveJoin(NULL, $graph, '');
+			$sql .= ' FROM '. trim($joins, ' ()');
+		}
 		
 		// get parts of the query
 		$this->createPivots();
