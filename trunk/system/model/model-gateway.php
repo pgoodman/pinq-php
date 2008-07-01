@@ -89,7 +89,7 @@ abstract class ModelGateway implements Gateway {
 	/**
 	 * $g->__get(string $model_name) <==> $g->$model_name -> ModelGateway
 	 *
-	 * @see ModelGateway::__call()
+	 * @see ModelGateway::__call(...)
 	 */
 	public function __get($model_name) {
 		return $this->__call($model_name, array(ALL));
@@ -153,12 +153,12 @@ abstract class ModelGateway implements Gateway {
 	 *     this model gateway/data source and returned.
 	 *
 	 * The type of the query is an integer belonging to:
-	 * enum {
-	 *     QueryCompiler::SELECT, 
-	 *     QueryCompiler::UPDATE, 
-	 *     QueryCompiler::INSERT, 
-	 *     QueryCompiler::DELETE,
-	 * }
+	 *     enum {
+	 *         QueryCompiler::SELECT, 
+	 *         QueryCompiler::UPDATE, 
+	 *         QueryCompiler::INSERT, 
+	 *         QueryCompiler::DELETE,
+	 *     }
 	 *
 	 * @internal
 	 */
@@ -311,6 +311,8 @@ abstract class ModelGateway implements Gateway {
 	 * $g->selectResult(string $query[, array $args]) -> resource
 	 *
 	 * Query the datasource and return a result resource.
+	 *
+	 * @see ModelGateway::getQuery(...)
 	 */
 	protected function selectResult($query, array $args = array()) {
 		
@@ -342,38 +344,41 @@ abstract class ModelGateway implements Gateway {
 	 * array can be either associative or numeric, but not both (unless keys
 	 * are indexed numerically in the queyr, eg: :1).
 	 *
-	 * Example usage:
-	 *
-	 * 1) pql query:
-	 *     $record = $g->get(from('model_name')->select(ALL));
-	 *
-	 * 2) pql query with substitute value:
-	 *     $record = $g->get(
-	 *         from('model_name')->select(ALL)->where->id->eq-_,
-	 *         array(10)
-	 *     );
-	 *
-	 * 3) sql query with substitute value:
-	 *     $record = $g->get(
-	 *         "SELECT * FROM model_name WHERE id=?",
-	 *         array(10)
-	 *     );
-	 *
-	 * 4) pql query with keyed-substitute value:
-	 *     $record = $g->get(
-	 *         from('model_name')->select(ALL)->where->id->eq-_('id'),
-	 *         array('id' => 10)
-	 *     );
-	 *
-	 * 5) sql query with keyed-substitute value:
-	 *     $record = $g->get(
-	 *         "SELECT * FROM model_name WHERE id=:id",
-	 *         array('id' => 10)
-	 *     );
-	 *
-	 * 6) pql predicates query + partial query:
-	 *     $record = $g->model_name->get(where()->id->eq->_);
-	 *
+	 * @example
+	 *     PQL query:
+	 *         $record = $g->get(from('model_name')->select(ALL));
+	 *     
+	 *     PQL query with substitute value:
+	 *         $record = $g->get(
+	 *             from('model_name')->select(ALL)->where->id->eq-_,
+	 *             array(10)
+	 *         );
+	 *     
+	 *     SQL query with substitute value:
+	 *         $record = $g->get(
+	 *             "SELECT * FROM model_name WHERE id=?",
+	 *             array(10)
+	 *         );
+	 *     
+	 *     PQL query with keyed-substitute value:
+	 *         $record = $g->get(
+	 *             from('model_name')->select(ALL)->where->id->eq-_('id'),
+	 *             array('id' => 10)
+	 *         );
+	 *     
+	 *     SQL query with keyed-substitute value:
+	 *         $record = $g->get(
+	 *             "SELECT * FROM model_name WHERE id=:id",
+	 *             array('id' => 10)
+	 *         );
+	 *     
+	 *     PQL predicates query + partial query:
+	 *         $record = $g->model_name->get(where()->id->eq->_);
+	 *     
+	 *     using a record to pivot a relation:
+	 *         $record = $g->model_name->get($related_record);
+	 *     
+	 * @see ModelGateway::getQuery(...)
 	 */
 	public function get($query, array $args = array()) {
 		
@@ -392,15 +397,18 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * $g->getValue(mixed $query[, array $args]) -> mixed
+	 * $g->getValue(mixed $query[, array $args]) -> {string, int, void}
 	 *
 	 * Using the record returned from ModelGateway::get(), return the value of
 	 * the first selected field or NULL if no record could be found.
 	 *
-	 * Example usage:
+	 * @example
+	 *     pql query to get the number of rows in a model:
+	 *         $num_records = $g->getValue(
+	 *             from('model_name')->count('field_name')
+	 *         ); 
 	 *
-	 * 1) pql query to get the number of rows in a model:
-	 *     $num_records = $g->getValue(from('model_name')->count('field_name')); 
+	 * @see ModelGateway::getQuery(...)
 	 */
 	public function getValue($query, array $args = array()) {
 		$row = $this->get($query, $args);
@@ -427,9 +435,12 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Find >= one records from the data source. This function accepts a
-	 * string query or an abstract query object. It also takes arguments to
-	 * substitute into the query.
+	 * $g->getAll(mixed $query[, array $args]) -> {RecordIterator, void}
+	 *
+	 * Get many records from the data source and return them in a RecordIterator
+	 * object. If the query fails this method returns NULL.
+	 *
+	 * @see ModelGateway::getQuery(...)
 	 */
 	public function getAll($query, array $args = array()) {
 		$result = $this->selectResult($query, $args);
@@ -441,10 +452,13 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Delete records from the data source. This function accepts a string
-	 * query, an abstract query object, or a record object (that exists in
-	 * the datasource and not just in memory). If a query is being passed then
-	 * the arguments array will be substituted into the query.
+	 * $g->delete(mixed $query[, array $args]) -> bool
+	 *
+	 * Delete records from the data source. If a Record is passed in and it is
+	 * not named an UnexpectedValueException will be thrown.
+	 *
+	 * @note Deleting a record using a Record object is currently note supported.
+	 * @see ModelGateway::getQuery(...)
 	 */
 	public function delete($what, array $args = array()) {
 		
@@ -479,11 +493,17 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Create the query needed to find one or more rows from the data source 
-	 * a field in the model.
+	 * $g->getByPredicates(string field, mixed $value) -> QueryPredicates
+	 *
+	 * Create the predicates needed to find one or more rows from the data 
+	 * source given a field a what value it should have. The value passed in
+	 * to $value must be scalar and cannot be a substitute value (_).
+	 *
 	 * @internal
 	 */
-	protected function createFindByQuery($field, $value) {
+	protected function getByPredicates($field, $value) {
+		
+		$field = (string)$field;
 		
 		// make sure a substitute value isn't being passed in
 		if(_ === $value) {
@@ -511,65 +531,82 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Find a row by a (field, value) pair.
+	 * $m->getBy(string $field, mixed $value) -> Record
+	 * 
+	 * Get a single record from the data source where the record's field=value.
+	 *
+	 * @see ModelGateway::get(...)
 	 */
 	public function getBy($field, $value) {
 		if(NULL === $this->_partial_query)
 			return NULL;
 		
 		return $this->get(
-			$this->createFindByQuery($field, $value)
+			$this->getByPredicates($field, $value)
 		);
 	}
 	
 	/**
-	 * Find many rows with a (field,value) pair.
+	 * $g->getAllBy(string $field, mixed $value) -> RecordIterator
+	 *
+	 * Get many records from the data source where each record's field=value.
+	 *
+	 * @see ModelGateway::getAll(...)
 	 */
 	public function getAllBy($field, $value) {
 		if(NULL === $this->_partial_query)
 			return NULL;
 		
 		return $this->getAll(
-			$this->createFindByQuery($field, $value)
+			$this->getByPredicates($field, $value)
 		);
 	}
 	
 	/**
+	 * $g->post(mixed $query[, array $args]) -> bool
+	 *
 	 * Create a new record and return the created record. This accepts a
 	 * named record, a PQL query, or a SQL query.
+	 *
+	 * @note This will only compile one query for the first model used in the
+	 *       PQL query and ignore the other models and the predicates.
+	 * @see ModelGateway::getQuery(...)
+	 * @todo Make sure that the query hasn't already been compiled as another
+	 *       type of query else there will be problems.
 	 */
-	public function post($query, array $args = array(), $return = TRUE) {
+	public function post($query, array $args = array()) {
 		
 		// compile the query
 		if($query instanceof Query || $query instanceof QueryPredicates)
-			$query = $this->getQuery($query, QueryCompiler::CREATE);
+			$query = $this->getQuery($query, QueryCompiler::INSERT);
 		
-		$results = array();
-		
-		// compiling the query might return multiple queries if we are working
-		// with multiple tabls in a pql query
-		if(!is_array($query))
-			$query = array($query);
-		
-		// TODO: the $args passed in might be ambiguous, ie: the query would
-		//       yield unwanted results if more than one query are compiled.
-		foreach($query as $stmt)
-			$results[] = $this->_ds->update($stmt, $args);
-		
-		return count($results) == 1 ? array_pop($results) : $results;
+		return (bool)$this->_ds->update($stmt, $args);
 	}
 	
 	/**
-	 * Update a record and return the updated record. This accepts a named
-	 * record, a PQL query, or a SQL query.
+	 * $g->put(mixed $query[, array $args]) -> bool
+	 *
+	 * Modify any number of records in the data source and return if the update
+	 * was successful.
+	 *
+	 * @see ModelGateway::getQuery(...)
 	 */
 	public function put($query, array $args = array()) {
-		$query = $this->getQuery($query, QueryCompiler::MODIFY);
-		return $this->_ds->update($query);
+		$query = $this->getQuery($query, QueryCompiler::UPDATE);
+		return (bool)$this->_ds->update($query);
 	}
 	
 	/**
+	 * $g->__init__(void) -> void
+	 *
+	 * Hook called after class construction.
 	 */
 	protected function __init__() { }
+	
+	/**
+	 * $g->__del__(void) -> void
+	 *
+	 * Hook called before class resources are released.
+	 */
 	protected function __del__() { }
 }
