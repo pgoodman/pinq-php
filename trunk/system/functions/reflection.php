@@ -378,19 +378,20 @@ function __doc_format_class($class_name) {
 			if($method->isConstructor() || $method->isDestructor())
 				continue;
 			
-			$visibility = array();
-			$method->isStatic() && ($visibility[] = 'static');
-			$method->isAbstract() && ($visibility[] = 'abstract');
-			$visibility = empty($visibility) ? '' : '&lt;'. implode(', ', $visibility) .'&gt;';
-			
-			//$visibility = $method->isStatic() ? ' [static]' : '';
-			//$visibility .= $method->isAbstract() ? ' [abstract]' : '';
+			// method modifiers (static, abstract)
+			$modifiers = array();
+			$method->isStatic() && ($modifiers[] = 'static');
+			$method->isAbstract() && ($modifiers[] = 'abstract');
+			if(!empty($modifiers))
+				$modifiers = '&lt;'. implode(', ', $modifiers) .'&gt;';
+			else
+				$modifiers = '';
 			
 			// add in the formatted section
 			$str .= $section_prefix . __doc_format_section(
 				__doc_format_function(
 					__doc_format_block($method->getDocComment()),
-					$method->getName() . $visibility
+					$method->getName() . $modifiers
 				),
 				$method_prefix
 			);
