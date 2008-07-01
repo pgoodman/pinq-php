@@ -523,7 +523,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Compile an INSERT query. This ignores predicates entirely. Also, this
 	 * ignores any relations made in the query and so it will not satisfy
-	 * those in any way.
+	 * those in any way. This also ingores multiple tables.
 	 */
 	protected function compileInsert() {
 		
@@ -531,26 +531,23 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$queries = array();
 		
 		// unlike with UPDATE, we can't INSERT into multiple tables at the
-		// same time, but it doesn't mean that we can't chain several insert
-		// queries together.
-		foreach($this->query->getContexts() as $model_alias => $context) {
-			
-			$definition = $this->getDefinitionByModelAlias($model_alias);
-			$table_name = $definition->getInternalName();
-			
-			$sql = "INSERT INTO {$table_name}";
-			$comma = '';
-			
-			$fields = $this->buildFieldsList($context, $definition, '');
-			
-			if(!empty($fields))
-				$sql .= ' SET '. implode(', ', $fields);
-			
-			// add this insert query to the queries
-			$queries[] = $sql;
-		}
+		// same time so we will only insert into one table
+		$contexts = $this->query->getContexts();
+		list($model_alias, $context) = each($contexts);
 		
-		return $queries;
+		// get the info for the model
+		$definition = $this->getDefinitionByModelAlias($model_alias);
+		$table_name = $definition->getInternalName();
+		
+		$sql = "INSERT INTO {$table_name}";
+		$comma = '';
+		
+		$fields = $this->buildFieldsList($context, $definition, '');
+		
+		if(!empty($fields))
+			$sql .= ' SET '. implode(', ', $fields);
+			
+		return $sql;
 	}
 	
 	/**

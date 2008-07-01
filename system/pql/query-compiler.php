@@ -13,8 +13,8 @@ abstract class QueryCompiler implements Compiler {
 	
 	// query types
 	const SELECT = 1,
-	      CREATE = 2,
-	      MODIFY = 4,
+	      INSERT = 2,
+	      UPDATE = 4,
 	      DELETE = 8;
 		
 	// the query and models
@@ -211,17 +211,17 @@ abstract class QueryCompiler implements Compiler {
 	 */
 	public function compile($flags = 0) {
 		
-		$query_types = self::SELECT | self::MODIFY | self::CREATE | self::DELETE;
+		$query_types = self::SELECT | self::UPDATE | self::INSERT | self::DELETE;
 		$this->query_type = $flags & $query_types;
 		
 		switch($flags) {
 			case self::SELECT:
 				return $this->compileSelect();
 			
-			case self::MODIFY:
+			case self::UPDATE:
 				return $this->compileUpdate();
 			
-			case self::CREATE:
+			case self::INSERT:
 				return $this->compileInsert();
 			
 			case self::DELETE:

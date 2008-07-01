@@ -378,14 +378,19 @@ function __doc_format_class($class_name) {
 			if($method->isConstructor() || $method->isDestructor())
 				continue;
 			
-			$visibility = $method->isStatic() ? '[static] ' : '';
-			$visibility .= $method->isAbstract() ? '[abstract] ' : '';
+			$visibility = array();
+			$method->isStatic() && ($visibility[] = 'static');
+			$method->isAbstract() && ($visibility[] = 'abstract');
+			$visibility = empty($visibility) ? '' : '&lt;'. implode(', ', $visibility) .'&gt;';
+			
+			//$visibility = $method->isStatic() ? ' [static]' : '';
+			//$visibility .= $method->isAbstract() ? ' [abstract]' : '';
 			
 			// add in the formatted section
 			$str .= $section_prefix . __doc_format_section(
 				__doc_format_function(
 					__doc_format_block($method->getDocComment()),
-					$visibility . $method->getName()
+					$method->getName() . $visibility
 				),
 				$method_prefix
 			);
