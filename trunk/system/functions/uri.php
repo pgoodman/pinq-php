@@ -5,7 +5,10 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Get the route from the URI.
+ * get_route(void) -> string
+ *
+ * Get the current route from the URI.
+ *
  * @author Peter Goodman
  */
 function get_route() {
@@ -46,10 +49,14 @@ function get_route() {
 }
 
 /**
- * Get the http request uri.
+ * get_uri(void) -> string
+ *
+ * Get the http request uri. This is everything but the scheme, user/pass,
+ * host, and port. Meaning: this is any directory/route path and file name.
+ *
  * @author Peter Goodman
  */
-function get_request_uri() {
+function get_uri() {
 	static $uri;
 	
 	if(NULL !== $uri)
@@ -66,10 +73,13 @@ function get_request_uri() {
 }
 
 /**
- * Get the current URL including the URI.
+ * get_url(void) -> string
+ *
+ * Get the current URL.
+ *
  * @author Peter Goodman
  */
 function get_url() {
-	return get_http_scheme() .'://'. get_http_host() . get_request_uri();
+	return get_http_scheme() .'://'. get_http_host() . get_uri();
 }
 

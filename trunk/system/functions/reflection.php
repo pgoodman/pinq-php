@@ -37,7 +37,7 @@ function help($thing) {
 		// could be a file rooted somewhere	
 		} else {
 			if(strpos($thing, '.') !== FALSE) {
-				// todo
+				// todo, make it so that a file can also be introspected
 			}
 		}
 	
@@ -58,30 +58,7 @@ function help($thing) {
 }
 
 /**
- * __doc_format_block(string) -> string
- *
- * Format a string as a doc block.
- *
- * @author Peter Goodman
- */
-function __doc_format_block($doc_block) {
-	$doc_block = preg_replace('~(\r?\n)+~', "\n", $doc_block);
-	
-	// get rid of leading and trailing multi-line comments delimiters
-	$doc_block = preg_replace('~(/[*]{1,2}|[*]/)~', '', $doc_block);
-	
-	// get rid of leading comment markers (*'s)
-	$doc_block = preg_replace('~(\A|\n|\s)+[*][ ]*~', "\n", $doc_block);
-	
-	// replace php-doc identifiers with something readable
-	$doc_block = preg_replace('~@internal~s', '', $doc_block);
-	$doc_block = preg_replace('~@(\w+)~e', 'ucfirst("$1").":"', $doc_block);
-	
-	return trim($doc_block);
-}
-
-/**
- * __doc__(mixed[, string])__ -> string
+ * __doc__(mixed $method_or_class[, string $method])__ -> string
  *
  * Gets a nicely formatted doc-block for a function/method/class/object. To
  * get the documentation for a class/method, do: 
@@ -128,7 +105,30 @@ function __doc__() {
 }
 
 /**
- * __doc_format_function(string, string) -> string
+ * __doc_format_block(string) -> string
+ *
+ * Format a string as a doc block.
+ *
+ * @author Peter Goodman
+ */
+function __doc_format_block($doc_block) {
+	$doc_block = preg_replace('~(\r?\n)+~', "\n", $doc_block);
+	
+	// get rid of leading and trailing multi-line comments delimiters
+	$doc_block = preg_replace('~(/[*]{1,2}|[*]/)~', '', $doc_block);
+	
+	// get rid of leading comment markers (*'s)
+	$doc_block = preg_replace('~(\A|\n|\s)+[*][ ]*~', "\n", $doc_block);
+	
+	// replace php-doc identifiers with something readable
+	$doc_block = preg_replace('~@internal~s', '', $doc_block);
+	$doc_block = preg_replace('~@(\w+)~e', 'ucfirst("$1").":"', $doc_block);
+	
+	return trim($doc_block);
+}
+
+/**
+ * __doc_format_function(string $doc_block, string $function_name) -> string
  *
  * Given a paragraph of documentation and the name of a function, return a
  * nicely formatted string.
@@ -136,13 +136,13 @@ function __doc__() {
  * @author Peter Goodman
  * @internal
  */
-function __doc_format_function($doc_block, $name) {
+function __doc_format_function($doc_block, $function_name) {
 	$doc_block = preg_replace('~\n~', "\n    ", "    ".trim($doc_block));
-	return "<i>{$name}(...)</i>\n{$doc_block}";
+	return "<i>{$function_name}(...)</i>\n{$doc_block}";
 }
 
 /**
- * __doc_format_section(doc_block, prefix) -> string
+ * __doc_format_section(string $doc_block, string $prefix) -> string
  *
  * Prefix each line of a documentation block.
  *
@@ -179,18 +179,20 @@ function __doc_format_constructor(ReflectionClass $reflector) {
 }
 
 /**
- * __doc_get_child_classes(string $class_name, [array &$parent[, array $seen]]) 
+ * __doc_get_child_classes(string $class_name, [array &$parent[, array &$seen]]) 
  * -> array
  * 
  * Return a tree of the classes/interfaces the extend/implement this class or
  * interface. If the class or interface name passed in does not exist then
  * an InvalidArgumentException will be thrown.
  *
- * @note This function is anything but efficient to use it sparingly.
+ * @note This function is anything but efficient so use it sparingly.
  * @author Peter Goodman
  * @internal
  */
-function __doc_get_class_descendents($class_name, array &$parent = array(), &$seen = array()) {
+function __doc_get_class_descendents($class_name, 
+	                                 array &$parent = array(), 
+	                                 array &$seen = array()) {
 	
 	if(!class_exists($class_name, FALSE) && !interface_exists($class_name, FALSE)) {
 		throw new InvalidArgumentException(
@@ -268,7 +270,7 @@ function __doc_format_class_descendents(array $descendents, $level = 0) {
 }
 
 /**
- * __doc_format_class(string) -> string
+ * __doc_format_class(string $class_name) -> string
  *
  * Given a class or interface name, return a nicely formatted documentation 
  * string describing the public, private, and protected methods of that class.
@@ -379,6 +381,7 @@ function __doc_format_class($class_name) {
 	$classes = array();
 	__doc_get_class_descendents($class_name, $classes);
 	
+	// there are parent classes so format them
 	if(!empty($classes)) {
 		$str .= "{$section_prefix}{$line_prefix}<u>Class Descendents:</u>\n";
 		$str .= "{$line_prefix}\n";

@@ -18,7 +18,7 @@
 // by the client
 $server = array_merge($_SERVER, array(
 	'HTTP_HOST' => get_http_host(),
-	'REQUEST_URI' => get_request_uri(),
+	'REQUEST_URI' => get_uri(),
 	'DOCUMENT_ROOT' => get_document_root(),
 	'SCRIPT_FILENAME' => get_script_filename(),
 	'HTTPS' => (get_http_scheme() == 'https' ? 'on' : 'off'),
@@ -29,10 +29,10 @@ $server = array_merge($_SERVER, array(
 // only put what we want into the super-globals array, and remove redundancies
 // such as the $GLOBALS' recursive reference to itself.
 $super_globals = array(
-	'_SERVER' => new ReadOnlyDictionary($server),
+	'_SERVER' => $server,
 	'_GET' => new ReadOnlyDictionary($_GET),
 	'_POST' => new ReadOnlyDictionary($_POST),
-	'_ENV' => new ReadOnlyDictionary($_ENV),
+	//'_ENV' => new ReadOnlyDictionary($_ENV),
 	'_FILES' => new ReadOnlyDictionary($_FILES),
 	'_REQUEST' => NULL,
 );

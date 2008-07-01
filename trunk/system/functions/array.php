@@ -5,7 +5,11 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Test that an array has, at the minimum, the desired keys set.
+ * expect_array_keys(array $array, array $required_keys) ! UnexpectedValueException
+ *
+ * Test that $array has all keys present in the values of $required_keys. If
+ * that is not the case then this function will throw an UnexpectedValueException.
+ *
  * @author Peter Goodman
  */
 function expect_array_keys(array $array, array $required_keys) {
@@ -22,7 +26,11 @@ function expect_array_keys(array $array, array $required_keys) {
 }
 
 /**
- * Make a deep copy of an array.
+ * &array_copy(array &$array) -> array
+ *
+ * Make a deep copy of an array. Scalar values and arrays are copied as usual
+ * and objects are cloned.
+ *
  * @author Peter Goodman
  */
 function &array_copy(array &$array) {

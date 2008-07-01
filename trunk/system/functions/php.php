@@ -5,8 +5,12 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Turn a string into a camel-cased ASCII word that's suitable for being the
- * name of a class.
+ * class_name(string) -> string
+ *
+ * Turn a string into a mixed-cased ASCII word that's suitable for being the
+ * name of a class. For example:
+ *     class_name(' foo--bar') -> 'FooBar'
+ *
  * @author Peter Goodman
  */
 function class_name($str = '') {
@@ -15,7 +19,12 @@ function class_name($str = '') {
 }
 
 /**
- * Turn a string into something that is suitable as a function/method name.
+ * function_name(string) -> string
+ *
+ * Turn a string into a lower case ASCII string where each word is separated
+ * with an underscore. For example:
+ *     function_name(' foo--bar') -> 'foo_bar'
+ *
  * @author Peter Goodman
  */
 function function_name($str = '') {
@@ -23,7 +32,11 @@ function function_name($str = '') {
 }
 
 /**
- * Instantiate a class with constructor arguments.
+ * call_user_class(string $class_name[, mixed $arg1[, mixed $arg2[, ...]]])
+ * -> new($class_name)
+ *
+ * Instantiate a class with constructor arguments. Similar to call_user_func().
+ *
  * @author Peter Goodman
  */
 function call_user_class() {
@@ -39,24 +52,28 @@ function call_user_class() {
 }
 
 /**
- * Instantiate a class given an array of arguments.
+ * call_user_class_array(string $class_name[, array $args]) -> new($class_name)
+ *
+ * Instantiate a class given the class name and an array of its arguments. This
+ * function is similar to call_user_func_array().
+ *
  * @author Peter Goodman
  */
-function call_user_class_array($class, array $args = array()) {
+function call_user_class_array($class_name, array $args = array()) {
 	
-	if(!class_exists($class, FALSE)) {
+	if(!class_exists($class_name, FALSE)) {
 		throw new UnexpectedValueException(
 			"call_user_class[_array]() expects first argument to be a valid ".
-			"class name. Class [{$class}] does not exist."
+			"class name. Class [{$class_name}] does not exist."
 		);
 	}
 	
 	// don't load up reflection unnecessarily	
 	if(empty($args))
-		return new $class;
+		return new $class_name;
 	
 	// reflect the class and instantiate it with arguments
-	$reflection = new ReflectionClass($class);
-    return $reflection->newInstanceArgs($args);
+	$reflector = new ReflectionClass($class_name);
+    return $reflector->newInstanceArgs($args);
 }
 

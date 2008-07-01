@@ -9,7 +9,9 @@ class InvalidPackageException extends PinqException {
 }
 
 /**
- * Import packages.
+ * Loader that imports packages from the applications/packages and system/
+ * packages directories.
+ *
  * @author Peter Goodman
  */
 class PackageLoader extends Loader {
@@ -17,14 +19,15 @@ class PackageLoader extends Loader {
 	protected $config;
 	
 	/**
-	 * Constructor, bring in the config parser.
+	 * PackageLoader(Loader $config)
+	 *
+	 * Required a Loader instance to load configuration files.
 	 */
 	public function __construct(Loader $config) {
 		$this->config = $config;
 	}
 	
 	/**
-	 * Destructor.
 	 */
 	public function __destruct() {
 		parent::__destruct();
@@ -32,8 +35,13 @@ class PackageLoader extends Loader {
 	}
 	
 	/**
+	 * $p->load(string $key[, array $context]) -> mixed
+	 *
 	 * Load and configure a package. Context becomes arguments to pass to the
-	 * class controller if it exists.
+	 * class controller if it exists. If the package is found in the applications
+	 * directory and an equivalent package exists in the system directory then
+	 * this function will include the system one first but make no attempts to
+	 * configure the package.
 	 */
 	public function load($key, array $context = array()) {
 		
@@ -157,7 +165,7 @@ class PackageLoader extends Loader {
 	}
 	
 	/**
-	 * Store a package.
+	 * $p->store(string $key, mixed $val) <==> $s[$key] = $val
 	 */
 	public function store($key, $val = NULL) {
 		$this->offsetSet($key, $val);
