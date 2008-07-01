@@ -14,7 +14,9 @@ function through() {
 }
 
 /**
- * Store up relations between models.
+ * Class that stores all relations, mappings, and paths between models for a 
+ * given data source.
+ *
  * @author Peter Goodman
  */
 class ModelRelations {
@@ -27,16 +29,25 @@ class ModelRelations {
 	          $paths = array(); // cached paths
 	
 	/**
-	 * Register a model with the relations class.
+	 * $r->registerModel(string $model_name) -> void
+	 *
+	 * Register a model with the relations class. This creates default empty
+	 * relations, mappings, and paths for this model.
 	 */
 	public function registerModel($model_name) {
+		
+		$model_name = strtolower($model_name);
+		
 		$this->relations[$model_name] = array();
 		$this->mappings[$model_name] = array();
 		$this->paths[$model_name] = array();
 	}
 	
 	/**
-	 * Add a relation between two models.
+	 * $r->addRelation(string $from, string $to[, array $through]) -> void
+	 *
+	 * Add a relation between two models. If $through is not empty the path
+	 * is indirect and goes through the intermediate models somehow.
 	 */
 	public function addRelation($from, $to, array $through = NULL) {
 		
@@ -69,9 +80,14 @@ class ModelRelations {
 	}
 	
 	/**
+	 * $r->addMapping(string $this_model, string $this_field,
+	 *                string $that_model, string $that_field) -> void
+	 *
 	 * Add a mapping between the fields of one model and those of another.
-	 * this will also immediately add in a cached path between the two
-	 * directly related models.
+	 * This also adds in a cached path between the two models and creates a
+	 * direct relationship between them automatically.
+	 *
+	 * @see ModelRelation::addRelation(...), ModelRelation::addDirectPath(...)
 	 */
 	public function addMapping($this_model, $this_field, 
 		                       $that_model, $that_field) {
@@ -104,7 +120,11 @@ class ModelRelations {
 	}
 	
 	/**
-	 * Add a path between two models.
+	 * $r->addDirectPath(string $this_model, string $this_field,
+	 *                  string $that_model, string $that_field) -> void
+	 *
+	 * Create a direct simple path between two models.
+	 *
 	 * @internal
 	 */
 	protected function addDirectPath($this_model, $this_field, 
@@ -121,8 +141,12 @@ class ModelRelations {
 	}
 	
 	/**
-	 * 	Given the alias of where we're starting to where we're trying to get,
-	 * map out a path that can picked up by anything else between them.
+	 * $r->getPath(string $from_alias, string $to_alias, ModelDictionary)
+	 * -> array
+	 *
+	 * Given the external names of the starting and ending models, find a path
+	 * of field-to-field mappings between them. If no path exists then an empty
+	 * array is returned.
 	 */
 	public function getPath($from_alias, $to_alias, ModelDictionary $models) {
 		
@@ -251,9 +275,21 @@ class ModelRelations {
 	}
 	
 	/**
+	 * $r->getRelationDependencies(array $aliases, array $relations, ModelDictionary)
+	 * -> array
+	 *
 	 * Return a graph of the dependencies for this query, that is, lay out the
 	 * links made in the query such that the links will occur in the proper
 	 * order.
+	 * 
+	 * @example The graph returned is structured and interpreted as such:
+	 *     'post' => array(               // post depends on users and content
+	 *         'users' => array(          // users depends on profiles
+	 *             'profiles' => array(), // profiles has no dependencies
+	 *         ),                         
+	 *         'content' => array(),      // content has no dependencies
+	 *     );
+	 *
 	 * @param array $aliases An array mapping aliases => model names in the query
 	 * @param array $relations An array of from => (to, ...) relations in a query
 	 * @internal
@@ -364,7 +400,7 @@ class ModelRelations {
 		//     'users' => array(          // users depends on profiles
 		//         'profiles' => array(), // profiles has no dependencies
 		//     ),                         
-		//     'content' => array(),	  // content has no dependencies
+		//     'content' => array(),      // content has no dependencies
 		// )
 		//
 		// this algorithm works for a very simple reason: all data sources
