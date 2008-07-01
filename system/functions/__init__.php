@@ -11,3 +11,4 @@ require_once DIR_SYSTEM_FUNCTIONS .'/env.php';
 require_once DIR_SYSTEM_FUNCTIONS .'/http.php';
 require_once DIR_SYSTEM_FUNCTIONS .'/uri.php';
 require_once DIR_SYSTEM_FUNCTIONS .'/php.php';
+require_once DIR_SYSTEM_FUNCTIONS .'/reflection.php';

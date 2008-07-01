@@ -74,8 +74,8 @@ abstract class ModelDefinition implements Object {
 	 * will pass validation. Note that validation is a distinct step from
 	 * coercing values to a specific type.
 	 */
-	public function validateFields(array $fields) {
-		return $fields;
+	public function validateFields(array &$fields, $query_type) {
+		return array_intersect_key($fields, $this->_fields);
 	}
 	
 	/**

@@ -17,4 +17,5 @@ class ErrorController extends PinqController {
 	public function ANY_404() { set_http_status(404); }
 	public function ANY_405() { set_http_status(405); }
 	public function ANY_500() { set_http_status(500); }
+	public function ANY_validation() { set_http_status(500); }
 }

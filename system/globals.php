@@ -32,9 +32,9 @@ $super_globals = array(
 	'_SERVER' => new ReadOnlyDictionary($server),
 	'_GET' => new ReadOnlyDictionary($_GET),
 	'_POST' => new ReadOnlyDictionary($_POST),
-	'_REQUEST' => new ReadOnlyDictionary($_REQUEST),
 	'_ENV' => new ReadOnlyDictionary($_ENV),
 	'_FILES' => new ReadOnlyDictionary($_FILES),
+	'_REQUEST' => NULL,
 );
 
 // overwrite the $GLOBALS array, then extract the new super globals by

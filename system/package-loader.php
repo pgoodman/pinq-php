@@ -4,6 +4,10 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+class InvalidPackageException extends PinqException {
+	
+}
+
 /**
  * Import packages.
  * @author Peter Goodman

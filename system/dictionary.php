@@ -5,24 +5,30 @@
 !defined('DIR_SYSTEM') && exit();
 	
 /**
- * Simpler way to make a dictionary. Very pythonesque :P
+ * dict([array]) -> Dictionary(array)
+ *
+ * Return a new Dictionary object with the default values in the dictionary
+ * present.
+ *
+ * @author Peter Goodman
  */
 function dict(array $vals = NULL) {
 	return new Dictionary($vals);
 }
 
 /**
- * Simple dictionary. This is a class that is array-like, although clearly not
- * as robust as PHP's ArrayObject class.
+ * An array-like class for mapping keys to values.
+ *
+ * @author Peter Goodman
  */
 class Dictionary implements ArrayAccess {
+	
 	protected $_dict = array();
 	
 	/**
-	 * Constructor, bring in any default values.
+	 * Dictionary([array $default_values]) <==> dict($default_values)
 	 */
 	public function __construct(array &$vals = NULL) {
-		
 		if(!empty($vals))
 			$this->_dict = &$vals;
 	}
@@ -35,7 +41,10 @@ class Dictionary implements ArrayAccess {
 	}
 	
 	/**
-	 * Get a value by its key from the dictionary.
+	 * $d->offsetGet($key) <==> $d[$key]
+	 *
+	 * Get the value (entry) for a specific key in the dictionary. If the key
+	 * does not exist in the dictionary then this function will return NULL.
 	 */
 	public function offsetGet($key) {
 		if(!isset($this->_dict[$key]))
@@ -45,7 +54,12 @@ class Dictionary implements ArrayAccess {
 	}
 	
 	/**
-	 * Set a value to a specific key in the dictionary.
+	 * $d->offsetSet($key, $val) <==> $d[$key] = $val
+	 * $d->offsetSet(NULL, array $val) <==> $d[] = $val
+	 * 
+	 * Map a key in the dictionary to a specific value.
+	 *
+	 * @note When specifying the key as NULL, val must be an array.
 	 */
 	public function offsetSet($key, $val) {		
 		if(NULL === $key) {
@@ -70,21 +84,28 @@ class Dictionary implements ArrayAccess {
 	}
 	
 	/**
-	 * Unset a specific key,value pair in the dictionary.
+	 * $d->offsetUnset($key) <==> unset($d[$key])
+	 *
+	 * Remove a (key,value) entry in the dictionary.
 	 */
 	public function offsetUnset($key) {
 		unset($this->_dict[$key]);
 	}
 	
 	/**
-	 * Check if an entry in the dictionary exists for a given key.
+	 * $d->offsetExists($key) <==> isset($d[$key])
+	 *
+	 * Check if an entry in this dictionary exists for a given key.
 	 */
 	public function offsetExists($key) {
 		return isset($this->_dict[$key]);
 	}
 	
 	/**
-	 * Return the array in the dictionary.
+	 * $d->toArray(void) -> array
+	 *
+	 * Return the (key,value) pairs in the dictionary as an array mapping keys
+	 * to values.
 	 */
 	public function toArray() {
 		return $this->_dict;
@@ -92,22 +113,36 @@ class Dictionary implements ArrayAccess {
 }
 
 /**
- * Sort of like the little-brother to the tuple. The dictionary is still
- * writable through references; however, use cases such as limiting super-
- * globals means that we overwrite something else. By doing so, a special
- * case is made where a key means something different and maintainability
- * will just avalanche from there.
+ * An exception representing an invalid operation (write/delete) on an
+ * immutable data structure.
  *
- * This class does little to insure the property of immutability, but is a
- * satisfactory implementation.
+ * @author Peter Goodman
+ */
+class ImmutableException extends PinqException {
+	
+}
+
+/**
+ * A dictionar that after instantiation cannot be written to or have entries
+ * removed from.
+ *
+ * @note This class does little to ensure the property of immutability for
+ *       non-scalar data types.
+ * @see Dictionary, ImmutableException
  * @author Peter Goodman
  */
 class ReadOnlyDictionary extends Dictionary {
 	
+	/**
+	 * $d->offsetSet($key, $val) ! ImmutableException
+	 */
 	public function offsetSet($key, $val) {
 		throw new ImmutableException("This dictionary is read-only.");
 	}
 	
+	/**
+	 * $d->offsetUnset($key) ! ImmutableException
+	 */
 	public function offsetUnset($key) {
 		throw new ImmutableException("This dictionary is read-only.");
 	}
@@ -117,12 +152,16 @@ class ReadOnlyDictionary extends Dictionary {
  * A stack of dictionaries. This is implemented using Dictionary as the base
  * instead of Stack because implementing a dictionary as a stack is fundamentally
  * simpler than implementing a stack as a dictionary.
+ *
  * @author Peter Goodman
  */
 class StackOfDictionaries extends Dictionary {
 	
 	protected $_stack;
 	
+	/**
+	 * StackOfDictionaries(void)
+	 */
 	public function __construct() {
 		parent::__construct();
 		
@@ -131,6 +170,8 @@ class StackOfDictionaries extends Dictionary {
 	}
 	
 	/**
+	 * $s->push(array &$vars) -> void
+	 *
 	 * Push an array onto the stack of dictionaries.
 	 */
 	public function push(array &$vars) {
@@ -139,6 +180,8 @@ class StackOfDictionaries extends Dictionary {
 	}
 	
 	/**
+	 * $d->pop(void) -> void
+	 *
 	 * Pop an array off the stack of dictionaries.
 	 */
 	public function pop() {
@@ -146,7 +189,9 @@ class StackOfDictionaries extends Dictionary {
 	}
 	
 	/**
-	 * Return what's on the top of the stack.
+	 * $d->top(void) -> mixed
+	 *
+	 * Return whatever is on top of the top dictionary in the stack.
 	 */
 	public function top() {
 		return $this->toArray();

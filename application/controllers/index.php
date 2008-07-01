@@ -8,7 +8,9 @@ class IndexController extends PinqController {
 	/**
 	 * Main function for the index controller.
 	 */
-	public function GET_index() {
+	public function ANY_index() {
+		
+		help('Stack');
 		
 		$db = $this->import('db.blog');
 		
@@ -24,14 +26,16 @@ class IndexController extends PinqController {
 		
 		// set stuff to the view
 		$this->view[] = array(
+			
 			// get the most recent blog post
 			'post' => $post,
 			
 			// the next few older posts after the most recent, offset by 1
+			// only look for other posts if we have a first one
 			'posts' => ($post === NULL
 				? array()
 				: $db->getAll($post_query->limit(10, 1))
-			)
+			),
 		);
 	}
 }

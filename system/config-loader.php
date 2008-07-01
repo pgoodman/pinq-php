@@ -5,17 +5,27 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Parse INI configuration files. The parser keeps already parsed files in
- * memory (via the dictionary object).
+ * An exception thrown when a configuration file cannot be found.
+ *
+ * @author Peter Goodman
+ */
+class ConfigurationException extends PinqException {
+	
+}
+
+/**
+ * Load a PHP configuration file into memory.
+ *
  * @author Peter Goodman
  */
 class ConfigLoader extends Loader {
 	
 	/**
-	 * Parse a configuration file in the applications folder. The context is
-	 * there so that whatever loading the config file can pass in its own
-	 * variables for the configuration file to use. This is not available for
-	 * INI configuration files.
+	 * $l->load(string $key, array $context) -> array
+	 *
+	 * Load a configuration file from the applications folder. The context is
+	 * there so that whatever is loading the config file can pass in its own
+	 * variables for the configuration file to use.
 	 */
 	public function load($key, array $context = array()) {
 		
@@ -40,7 +50,7 @@ class ConfigLoader extends Loader {
 		// config file doesn't exist, error
 		if(NULL === $file_name) {
 			throw new ConfigurationException(
-				"ConfigParser::parse() expected a valid PHP configuration ".
+				"ConfigParser::load() expected a valid PHP configuration ".
 				"file name (without extension). File [{$key}.php] does not ".
 				"exist."
 			);
@@ -62,7 +72,7 @@ class ConfigLoader extends Loader {
 	}
 	
 	/**
-	 * Store some config stuff.
+	 * $l->store(string $key, mixed $val) -> void
 	 */
 	public function store($key, $val = NULL) {
 		

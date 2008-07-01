@@ -4,6 +4,10 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+class FlushBufferException extends PinqException {
+	
+}
+
 /**
  * A buffer to hold temporary output information. Why use this? It's often the
  * case that when people are making calls to header() and outputting data at
@@ -13,30 +17,50 @@
  */
 class OutputBuffer {
 	
-	static public $buffer = '';
-	
-	/**
-	 * Set output compression.
-	 */
-	static public function compress() {
-		/*ini_set('output_handler', '');
-		ini_set('zlib.output_compression', 'On');
-		ini_set('zlib.output_compression_level', 6);*/
-	}
+	static public $buffers = array(
+		'out' => '',
+		'err' => '',
+	);
 	
 	/**
 	 * Clear the current buffer.
 	 */
-	static public function clear() {
-		self::$buffer = '';
+	static public function clear($which) {
+		
+		// whoops :P
+		if(!isset(self::$buffers[$which])) {
+			throw new InvalidArgumentException(
+				"Output buffer [{$which}] does not exist."
+			);
+		}
+		
+		self::$buffers[$which] = '';
+	}
+	
+	/**
+	 * Clear all output buffers.
+	 */
+	static public function clearAll() {
+		self::$buffers = array(
+			'out' => '',
+			'err' => '',
+		);
 	}
 	
 	/**
 	 * Flush the output buffer.
 	 */
-	static public function flush() {
-		echo self::$buffer;
-		self::clear();
+	static public function flush($which) {
+		
+		// whoops :P
+		if(!isset(self::$buffers[$which])) {
+			throw new InvalidArgumentException(
+				"Output buffer [{$which}] does not exist."
+			);
+		}
+		
+		echo self::$buffers[$which];
+		self::clear($which);
 	}
 }
 
@@ -46,7 +70,7 @@ class OutputBuffer {
  */
 function out() {
 	$args = func_get_args();	
-	OutputBuffer::$buffer .= implode('', $args);
+	OutputBuffer::$buffers['out'] .= implode('', $args);
 }
 
 /**
@@ -55,7 +79,15 @@ function out() {
  */
 function outln() {
 	$args = func_get_args();
-	OutputBuffer::$buffer .= implode("\n", $args) ."\n";
+	OutputBuffer::$buffers['out'] .= implode("\n", $args) ."\n";
+}
+
+/**
+ * Set something to the errors output buffer.
+ */
+function err() {
+	$args = func_get_args();	
+	OutputBuffer::$buffers['err'] .= implode('', $args);
 }
 
 /**

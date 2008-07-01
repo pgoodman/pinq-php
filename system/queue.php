@@ -5,14 +5,17 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Quciker way to make a queue.
+ * Exception representing invalid operations in a queue.
+ *
+ * @author Peter Goodman
  */
-function queue() {
-	return new Queue;
+class QueueException extends PinqException {
+	
 }
 
 /**
- * Simple generic queue.
+ * Implementation of the Queue data structure.
+ *
  * @author Peter Goodman
  */
 class Queue implements Countable, IteratorAggregate {
@@ -22,7 +25,9 @@ class Queue implements Countable, IteratorAggregate {
 		   $_end = -1;
 	
 	/**
-	 * Push something onto the stack.
+	 * $q->push(mixed $val)
+	 *
+	 * Push a value on to the end of the queue.
 	 */
 	public function push($val) {
 		$this->_queue[] = $val;
@@ -30,9 +35,12 @@ class Queue implements Countable, IteratorAggregate {
 	}
 	
 	/**
-	 * Pop a scope off the stack.
+	 * $q->shift(void) -> mixed
+	 *
+	 * Remove and return the first item from the queue. If there are zero items
+	 * left in the queue this method will throw a QueueException.
 	 */
-	public function shift($null = NULL) {
+	public function shift() {
 		if($this->_end < 0)
 			throw new QueueException("Nothing to shift off queue.");
 		
@@ -41,7 +49,10 @@ class Queue implements Countable, IteratorAggregate {
 	}
 	
 	/**
-	 * Return whatever's on the top of the stack.
+	 * $q->front(void) -> mixed
+	 *
+	 * Return the first item from the queue. If there are zero items left in
+	 * the queue this method will throw a QueueException.
 	 */
 	public function &front() {
 		if($this->_end < 0) {
@@ -54,20 +65,27 @@ class Queue implements Countable, IteratorAggregate {
 	}
 	
 	/**
-	 * Return how many items are in the stack.
+	 * $q->count(void) -> int
+	 *
+	 * Return the number of items in the queue.
 	 */
 	public function count() {
 		return $this->_end + 1;
 	}
 	
 	/**
-	 * Is the queue empty? */
+	 * $q->isEmpty(void) -> bool
+	 *
+	 * Check if there are zero items in queue.
+	 */
 	public function isEmpty() {
 		return $this->_end < 0;
 	}
 
 	/**
-	 * Clear the queue.
+	 * $q->clear(void) -> void
+	 *
+	 * Remove all items from the queue.
 	 */
 	public function clear() {
 		$this->_end = -1;
@@ -75,22 +93,35 @@ class Queue implements Countable, IteratorAggregate {
 	}
 	
 	/**
-	 * Extend the queue.
+	 * $q->extend(array $items) -> void
+	 *
+	 * Merge an array of items on to the end of a queue, thus extending it.
 	 */
 	public function extend(array $items) {
-		$this->_queue = array_merge($this->_queue, array_values($items));
+		
+		$this->_queue = array_merge(
+			$this->_queue, 
+			array_values($items)
+		);
+		
+		// recount
 		$this->_end = count($this->_queue) - 1;
 	}
 	
 	/**
-	 * Get the queue as an array.
+	 * $q->toArray(void) -> array
+	 *
+	 * Return the queue as a numerically indexed array.
 	 */
 	public function getArray() {
 		return $this->_queue;
 	}
 	
 	/**
-	 * Get an iterator.
+	 * $q->getIterator(void) -> ArrayIterator
+	 *
+	 * Return an iterator of the items in the queue. This allows a queue to be
+	 * passed into a foreach() loop and iterated over.
 	 */
 	public function getIterator() {
 		return new ArrayIterator($this->_queue);
