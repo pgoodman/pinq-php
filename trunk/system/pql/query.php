@@ -201,6 +201,7 @@ class Query {
 			// a given alias
 			$this->_aliases[$model_alias] = $model_name;
 			$this->_aliases[$model_name] = $model_name;
+			$this->_links[$model_alias] = array();
 		}
 		
 		// set the current context

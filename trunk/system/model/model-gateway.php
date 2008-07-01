@@ -5,9 +5,10 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * The model gateway is the link between the model layer and the data sources.
- * It deals with finding and manipulation records in the data source by using
- * the models to fill in the relationships between them and validate data.
+ * Class that links the model layer and the data sources. It deals with finding
+ * and manipulation records in the data source by using the models to fill in 
+ * the relationships between them and validate data.
+ *
  * @author Peter Goodman
  */
 abstract class ModelGateway implements Gateway {
@@ -21,20 +22,30 @@ abstract class ModelGateway implements Gateway {
 	          $_cached_relations = array();
 	
 	/**
-	 * Constructor, bring in the models and the data source.
+	 * ModelGateway(ModelDictionary, ModelRelations, DataSource[, string $name])
+	 *
+	 * Bring in all resources needed to relate models to each other, query a
+	 * data source, and associate the results of those queries to models.
 	 */
-	public function __construct(ModelDictionary $models, 
-		                        ModelRelations $relations,
-		                        DataSource $ds, 
-		                        $name = NULL) {
+	final public function __construct(ModelDictionary $models, 
+	                                   ModelRelations $relations,
+	                                       DataSource $ds, 
+	                                                  $name = NULL) {
 		
 		$this->_models = $models;
 		$this->_ds = $ds;
 		$this->_model_name = $name;
 		$this->_relations = $relations;
+		
+		$this->__init__();
 	}
 	
+	/**
+	 */
 	public function __destruct() {
+		
+		$this->__del__();
+		
 		unset(
 			$this->_models,
 			$this->_relations,
@@ -46,7 +57,13 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Set a partial query.
+	 * $g->setPartialQuery(Query) -> void
+	 *
+	 * Set a partial query to the model gateway. This is internally used when
+	 * using a gateway to a specific model. The partial query is a way to build
+	 * up part of a PQL query so that further operations on a specific model
+	 * can be streamlined by only specifying a preficates query.
+	 *
 	 * @internal
 	 */
 	public function setPartialQuery(Query $query) {
@@ -54,8 +71,12 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Get the partial query. Partial queries are a nice way to allow model
-	 * specific gateways.
+	 * $g->getPartialQuery(void) -> Query
+	 *
+	 * If there is a partial query stored in the gateway then this method will
+	 * return a clone of that query. If no such query is stored then a new 
+	 * PQL query (Query instance) is returned.
+	 *
 	 * @internal
 	 */
 	public function getPartialQuery() {
@@ -66,16 +87,22 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Get a sub-model gateway.
+	 * $g->__get(string $model_name) <==> $g->$model_name -> ModelGateway
+	 *
+	 * @see ModelGateway::__call()
 	 */
 	public function __get($model_name) {
 		return $this->__call($model_name, array(ALL));
 	}
 	
 	/**
-	 * Get a sub-model gateway, also selecting specific fields in a PQL query.
+	 * $g->__call(string $model_name[, array $select]) -> ModelGateway
+	 *
+	 * Get a new model gateway specific to a model by identifying it with its
+	 * external model name. The model gateway returned is pre-populated with a
+	 * partial PQL query with the model as a source of data. 
 	 */
-	public function __call($model_name, array $select = array()) {
+	public function __call($model_name, array $select = array(ALL)) {
 		
 		// if the model doesn't exist then this will throw an exception
 		$definition = $this->_models[$model_name];
@@ -89,15 +116,51 @@ abstract class ModelGateway implements Gateway {
 			$model_name
 		);
 		
+		// set the partial query to the model
 		$gateway->setPartialQuery(
-			$this->getPartialQuery()->from($model_name)->select(ALL)
+			$this->getPartialQuery()->from($model_name)->select($select)
 		);
 		
 		return $gateway;
 	}
 	
 	/**
-	 * Get a string representation of a query.
+	 * $g->getQuery(mixed $query, enum int $type) -> string
+	 *
+	 * Get a string representation of a query. This accepts instances of:
+	 * Query, QueryPredicates, and Record, as well as string queries. This
+	 * mthod behaves in the following ways given the type of $query:
+	 *
+	 * string
+	 *     $query is returned as-is.
+	 * Record
+	 *     To pass a record as a query (known as pivoting on a record),
+	 *     the gateway must have a partial query. If there is none then
+	 *     an InvalidArgumentException is thrown. The record must also
+	 *     not be ambiguous (it must be directly associated with a model
+	 *     definition). If the record is not associated with a model name
+	 *     then a InvalidArgumentException is thrown. Assuming everything
+	 *     is right with the Record, it is used to extend the partial
+	 *     query in model gateway.
+	 * QueryPredicates
+	 *     If the predicates object is not associated to a Query object
+	 *     and there is partial query in the model then the predicates
+	 *     object is attached to that query and we then work with the
+	 *     method as if a Query object was passed. If a query is associated
+	 *     with the predicated object then we use it.
+	 * Query
+	 *     The query is compiled using the query compiler associated with
+	 *     this model gateway/data source and returned.
+	 *
+	 * The type of the query is an integer belonging to:
+	 * enum {
+	 *     QueryCompiler::SELECT, 
+	 *     QueryCompiler::UPDATE, 
+	 *     QueryCompiler::INSERT, 
+	 *     QueryCompiler::DELETE,
+	 * }
+	 *
+	 * @internal
 	 */
 	protected function getQuery($query, $type) {
 		
@@ -122,9 +185,12 @@ abstract class ModelGateway implements Gateway {
 			while($query instanceof OuterRecord)
 				$query = $query->getInnerRecord();
 			
+			// get the model name that this record belongs to
+			$model_name = $record->getModelName();
+			
 			// we can't work with an ambiguous record
-			if(!$record->isNamed()) {
-				throw new DomainException(
+			if(NULL === $model_name) {
+				throw new InvalidArgumentException(
 					"Cannot build relationship off of ambiguous record. If ".
 					"this record has sub-records (ie: the PQL query selected ".
 					"from multiple models at once) then the relationship ".
@@ -134,20 +200,18 @@ abstract class ModelGateway implements Gateway {
 				);
 			}
 			
-			$record_name = $record->getName();
-			
 			// if we haven't already created a query for this relation, then
 			// do so. the reason why these types of relations are cached is
 			// because if they are called on in a loop then this function
 			// would otherwise be very slow
-			if(!isset($this->_cached_relations[$record_name])) {
+			if(!isset($this->_cached_relations[$model_name])) {
 												
 				// clone it so that we can use it again if necessary
 				$query = $this->getPartialQuery();
 				
 				// add in the predicates to make linking and pivoting to the
 				// record possible
-				$query->from($record_name)->link(
+				$query->from($model_name)->link(
 					$this->_model_name, 
 					$record_name, 
 					Query::PIVOT_RIGHT
@@ -157,7 +221,7 @@ abstract class ModelGateway implements Gateway {
 			// query exists and this will fall down nicely to the is_string
 			// check
 			} else
-				$query = $this->_cached_relations[$record_name];
+				$query = $this->_cached_relations[$model_name];
 		}
 		
 		// check if the query is a string, if so, return it
@@ -221,12 +285,32 @@ abstract class ModelGateway implements Gateway {
 		return $query;
 	}
 	
+	/**
+	 * $g->compileQuery(Query, enum int $type) -> string[]
+	 *
+	 * Get the query compiler for this gateway / data source and compile the
+	 * query into a string (or array of strings).
+	 */
 	abstract protected function compileQuery(Query $query, $type);
+	
+	/**
+	 * $g->getRecord(resource) -> Record
+	 *
+	 * Return an model-specific (or generic) Record object.
+	 */
 	abstract protected function getRecord($result_resource);
+	
+	/**
+	 * $g->getRecordIterator(resource) -> RecordIterator
+	 *
+	 * Return a model-specific RecordIterator object.
+	 */
 	abstract protected function getRecordIterator($result_resource);
 	
 	/**
-	 * Query the datasource.
+	 * $g->selectResult(string $query[, array $args]) -> resource
+	 *
+	 * Query the datasource and return a result resource.
 	 */
 	protected function selectResult($query, array $args = array()) {
 		
@@ -248,9 +332,48 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Find a single record from a data source. This function accepts a string
-	 * query or an abstract query object. It also takes arguments to substitute
-	 * into the query.
+	 * $g->get(mixed $query[, array $args]) -> Record
+	 *
+	 * Get a single record from the data source. This method accepts all forms
+	 * of query values as ModelGateway::getQuery(). If no record can be found
+	 * then NULL is returned.
+	 *
+	 * The $args array is an array of data to substitute into the query. This
+	 * array can be either associative or numeric, but not both (unless keys
+	 * are indexed numerically in the queyr, eg: :1).
+	 *
+	 * Example usage:
+	 *
+	 * 1) pql query:
+	 *     $record = $g->get(from('model_name')->select(ALL));
+	 *
+	 * 2) pql query with substitute value:
+	 *     $record = $g->get(
+	 *         from('model_name')->select(ALL)->where->id->eq-_,
+	 *         array(10)
+	 *     );
+	 *
+	 * 3) sql query with substitute value:
+	 *     $record = $g->get(
+	 *         "SELECT * FROM model_name WHERE id=?",
+	 *         array(10)
+	 *     );
+	 *
+	 * 4) pql query with keyed-substitute value:
+	 *     $record = $g->get(
+	 *         from('model_name')->select(ALL)->where->id->eq-_('id'),
+	 *         array('id' => 10)
+	 *     );
+	 *
+	 * 5) sql query with keyed-substitute value:
+	 *     $record = $g->get(
+	 *         "SELECT * FROM model_name WHERE id=:id",
+	 *         array('id' => 10)
+	 *     );
+	 *
+	 * 6) pql predicates query + partial query:
+	 *     $record = $g->model_name->get(where()->id->eq->_);
+	 *
 	 */
 	public function get($query, array $args = array()) {
 		
@@ -269,16 +392,23 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * Take only the first value from a record. This makes COUNT queries, for
-	 * example, very simple.
+	 * $g->getValue(mixed $query[, array $args]) -> mixed
+	 *
+	 * Using the record returned from ModelGateway::get(), return the value of
+	 * the first selected field or NULL if no record could be found.
+	 *
+	 * Example usage:
+	 *
+	 * 1) pql query to get the number of rows in a model:
+	 *     $num_records = $g->getValue(from('model_name')->count('field_name')); 
 	 */
 	public function getValue($query, array $args = array()) {
-		$row = $this->find($query, $args);
+		$row = $this->get($query, $args);
 		
 		// oh well, no row to return
 		if(NULL === $row)
 			return NULL;
-		
+
 		// dig deep into the record if we are dealing with an outer record
 		while($row instanceof OuterRecord)
 			$row = $row->getInnerRecord();
@@ -331,7 +461,7 @@ abstract class ModelGateway implements Gateway {
 			
 			// the record is not named, ie: we cannot identify which model
 			// is having row(s) deleted from it.
-			if(!$what->isNamed()) {
+			if(NULL === $what->getModelName()) {
 				throw new UnexpectedValueException(
 					"RecordGateway::delete() expected first argument to be ".
 					"an unambiguous record."
@@ -387,7 +517,7 @@ abstract class ModelGateway implements Gateway {
 		if(NULL === $this->_partial_query)
 			return NULL;
 		
-		return $this->find(
+		return $this->get(
 			$this->createFindByQuery($field, $value)
 		);
 	}
@@ -399,7 +529,7 @@ abstract class ModelGateway implements Gateway {
 		if(NULL === $this->_partial_query)
 			return NULL;
 		
-		return $this->findAll(
+		return $this->getAll(
 			$this->createFindByQuery($field, $value)
 		);
 	}
@@ -437,4 +567,9 @@ abstract class ModelGateway implements Gateway {
 		$query = $this->getQuery($query, QueryCompiler::MODIFY);
 		return $this->_ds->update($query);
 	}
+	
+	/**
+	 */
+	protected function __init__() { }
+	protected function __del__() { }
 }

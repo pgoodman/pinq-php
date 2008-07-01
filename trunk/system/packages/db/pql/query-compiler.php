@@ -111,7 +111,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// as well
 			foreach($counts as $allias => $column) {
 				$select[] = "COUNT({$table_alias}.{$column}) AS ".
-				            "{$model_name}_{$alias}";
+				            "{$model_name}_count_{$column}";
 			}
 		}
 		
@@ -125,8 +125,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * @internal
 	 */
 	protected function recursiveJoin($dependent_model_name, 
-		                             array $graph = array(), 
-		                             $prefix) {
+	                           array $graph = array(), 
+	                                 $prefix) {
 		
 		$sql = '';
 		$comma = '';

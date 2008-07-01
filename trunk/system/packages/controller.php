@@ -21,7 +21,7 @@ abstract class PinqController implements Package {
 	
 	/**
 	 * Constructor. Constructor is final because I want to encourage people to
-	 * use the initialize() hook instead so that they don't forget to bring in
+	 * use the __init__() hook instead so that they don't forget to bring in
 	 * the package loader dependency.
 	 */
 	final public function __construct(Loader $packages, View $layout, View $page) {
@@ -36,14 +36,14 @@ abstract class PinqController implements Package {
 		$layout->setFile($this->layout_file, 'layouts');
 		
 		// hook
-		$this->initialize();
+		$this->__init__();
 	}
 	
 	/**
 	 * Destructor, call a hook.
 	 */
 	final public function __destruct() {		
-		$this->destroy(); // hook
+		$this->__del__(); // hook
 		unset(
 			$this->packages, 
 			$this->layout,
@@ -128,6 +128,6 @@ abstract class PinqController implements Package {
 	public function beforeImport() { }
 	public function afterImport() { }
 	
-	public function initialize() { }
-	public function destroy() { }
+	protected function __init__() { }
+	protected function __del__() { }
 }

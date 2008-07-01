@@ -86,14 +86,14 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$this->base_dir = $base_dir;
 		$this->ext = $extension;
 		
-		$this->initialize(); // hook
+		$this->__init__(); // hook
 	}
 
 	/**
 	 * Destructor.
 	 */
 	final public function __destruct() {
-		$this->destroy(); // hook
+		$this->__del__(); // hook
 	}
 	
 	/**
@@ -341,6 +341,6 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	/**
 	 * Hooks.
 	 */
-	public function initialize() { }
-	public function destroy() { }
+	protected function __init__() { }
+	protected function __del__() { }
 }

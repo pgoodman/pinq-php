@@ -17,20 +17,26 @@ function man($thing) {
  *
  * @author Peter Goodman
  */
-function help($thing) {
+function help($thing, $method = NULL) {
 	$str = '';
 	
-	if(is_string($thing)) {
+	if($method !== NULL) {
+		$str = __doc_format_function(
+			__doc__($thing, $method),
+			$method
+		);
+	
+	} else if(is_string($thing)) {
 		
 		// existing function
-		if(function_exists($thing))
+		if(function_exists($thing)) {
 			$str = __doc_format_function(
 				__doc__($thing),
 				$thing
 			);
 		
 		// existing class/interface
-		else if(class_exists($thing, FALSE) || interface_exists($thing, FALSE)) {
+		} else if(class_exists($thing, FALSE) || interface_exists($thing, FALSE)) {
 			$str = __doc_format_class($thing);
 		
 		// could be a file rooted somewhere	
@@ -117,13 +123,13 @@ function __doc_format_block($doc_block) {
 	$doc_block = preg_replace('~(/[*]{1,2}|[*]/)~', '', $doc_block);
 	
 	// get rid of leading comment markers (*'s)
-	$doc_block = preg_replace('~(\A|\n|\s)+[*][ ]*~', "\n", $doc_block);
+	$doc_block = preg_replace('~(\n|\A)?(?<!\w)\s+[*][ ]?~', "\n", $doc_block);
 	
 	// replace php-doc identifiers with something readable
 	$doc_block = preg_replace('~@internal~s', '', $doc_block);
 	$doc_block = preg_replace('~@(\w+)~e', 'ucfirst("$1").":"', $doc_block);
 	
-	return trim($doc_block);
+	return htmlentities(trim($doc_block), ENT_QUOTES);
 }
 
 /**
@@ -178,7 +184,7 @@ function __doc_format_constructor(ReflectionClass $reflector) {
 }
 
 /**
- * __doc_get_child_classes(string $class_name, [array &$parent[, array &$seen]]) 
+ * __doc_get_child_classes(string $class_name, [array &$parent[, array &$classes]]) 
  * -> array
  * 
  * Return a tree of the classes/interfaces the extend/implement this class or
@@ -190,8 +196,8 @@ function __doc_format_constructor(ReflectionClass $reflector) {
  * @internal
  */
 function __doc_get_class_descendants($class_name, 
-	                                 array &$parent = array(), 
-	                                 array &$seen = array()) {
+                              array &$parent = array(), 
+                              array &$classes = array()) {
 	
 	if(!class_exists($class_name, FALSE) && !interface_exists($class_name, FALSE)) {
 		throw new InvalidArgumentException(
@@ -199,26 +205,35 @@ function __doc_get_class_descendants($class_name,
 		);
 	}
 	
-	// merge the list of declared classes and iterators
-	$classes = array_merge(
-		get_declared_interfaces(),
-		get_declared_classes()
-	);
+	// merge the list of declared classes and iterators. we only find these
+	// once and them subtract from them
+	if(empty($classes)) {
+		$classes = array_merge(
+			get_declared_interfaces(),
+			get_declared_classes()
+		);
+	}
 	
 	// go through the defined interfaces and classes and recursively build a
 	// tree of the extending classes/interfaces
-	foreach($classes as $class) {
+	foreach($classes as $i => $class) {
 		
-		if(isset($seen[$class]))
+		if($class === NULL)
 			continue;
 		
 		// look at its parent class
 		if(get_parent_class($class) == $class_name)
 			$parent[$class] = array();
 		
-		// look at its parent interfaces
+		// look at its parent interfaces, this won't actually get a proper
+		// tree of things given that multiple interfaces can be extended/
+		// implemented at once, but it will give a good idea of things
 		else {
 			$interfaces = class_implements($class, FALSE);
+			$interfaces = array_intersect(
+				$interfaces === FALSE ? array() : $interfaces,
+				$classes
+			);
 			
 			if(in_array($class_name, $interfaces))
 				$parent[$class] = array();
@@ -226,8 +241,8 @@ function __doc_get_class_descendants($class_name,
 		
 		// get the descendants recursively
 		if(isset($parent[$class])) {
-			$seen[$class] = TRUE;
-			__doc_get_class_descendants($class, $parent[$class], $seen);
+			$classes[$i] = NULL;
+			__doc_get_class_descendants($class, $parent[$class], $classes);
 		}
 		
 		// sort this level's classes
@@ -363,13 +378,14 @@ function __doc_format_class($class_name) {
 			if($method->isConstructor() || $method->isDestructor())
 				continue;
 			
-			$static = $method->isStatic() ? 'static ' : '';
+			$visibility = $method->isStatic() ? '[static] ' : '';
+			$visibility .= $method->isAbstract() ? '[abstract] ' : '';
 			
 			// add in the formatted section
 			$str .= $section_prefix . __doc_format_section(
 				__doc_format_function(
 					__doc_format_block($method->getDocComment()),
-					$static . $method->getName()
+					$visibility . $method->getName()
 				),
 				$method_prefix
 			);

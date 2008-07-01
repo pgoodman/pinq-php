@@ -11,19 +11,20 @@
 class SqliteRecordIterator extends InnerRecordIterator {
 	
 	// the number of rows in this result set
-	protected $count,
-	          $result;
+	protected $_count,
+	          $_result;
 	
 	/**
 	 * Constructor, bring in the result.
 	 */
 	public function __construct(SQLiteResult $result) {
 		
-		$this->result = $result;
-		$this->count = $result->numRows()
-		 or $this->count = 0;
+		$this->_result = $result;
 		
-		// this is after because RecordIterator calls $this->count
+		$this->_count = $result->numRows()
+		 or $this->_count = 0;
+		
+		// this is after because RecordIterator calls $this->_count
 		parent::__construct($result);
 	}
 	
@@ -31,7 +32,7 @@ class SqliteRecordIterator extends InnerRecordIterator {
 	 * Return how many rows there are in the result set.
 	 */
 	public function count() {
-		return $this->count;
+		return $this->_count;
 	}
 	
 	/**
@@ -39,14 +40,13 @@ class SqliteRecordIterator extends InnerRecordIterator {
 	 */
 	public function seek($key) {
 		parent::seek($key);
-		$this->result->seek($key);
+		$this->_result->seek($key);
 	}
 	
 	/**
 	 * Return a record for the current mysql row.
 	 */
 	public function current() {
-		echo 'here';
-		return $this->result->fetch(SQLITE_ASSOC);
+		return $this->_result->fetch();
 	}
 }

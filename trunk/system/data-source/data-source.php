@@ -5,20 +5,39 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * An interface for data sources.
+ * Interface for data sources.
+ *
  * @author Peter Goodman
  */
 interface DataSource {
 	
-	// open a connection to a data source
+	/**
+	 * $d->open(string $name) -> mixed resource
+	 *
+	 * Open a connection to a data source.
+	 */
 	public function open($name);
 	
-	// close the connection to a data source
+	/**
+	 * $d->close(void) -> void
+	 *
+	 * Close the connection to a data source.
+	 */
 	public function close();
 	
-	// select rows from a data source
+	/**
+	 * $d->select(string $query[, array $args]) -> result resource
+	 *
+	 * Select rows from a data source, The args are substituted in for ?'s and
+	 * keyed subsitiuted (eg: :key) in the query.
+	 */
 	public function select($query, array $args = array());
 	
-	// insert/update/delete/replace rows in a data source
+	/**
+	 * $d->update(string $query[, array $args]) -> void
+	 *
+	 * Insert/update/delete/replace rows in a data source. The args are 
+	 * substituted in for ?'s and keyed subsitiuted (eg: :key) in the query.
+	 */
 	public function update($query, array $args = array());
 }

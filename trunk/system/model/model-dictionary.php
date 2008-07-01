@@ -6,7 +6,9 @@
 
 /**
  * Manages all models for a specific data source (withough knowing what that
- * data source is).
+ * data source is). This class also manages all relations between the models
+ * through an instance of the ModelRelations class. 
+ *
  * @author Peter Goodman
  */
 class ModelDictionary extends Dictionary {
@@ -15,13 +17,26 @@ class ModelDictionary extends Dictionary {
 	        $model_dir;
 	
 	/**
-	 * Constructor, bring in the relations.
+	 * ModelDictionary(ModelRelations, string $dir)
+	 *
+	 * Bring in an instance of the ModelRelations class to manage all data-
+	 * souce/model specific relations and an absolute path to the directory
+	 * where model definition files are located. If the directory specified
+	 * does not exist then an InvalidArgumentException is thrown.
 	 */
 	public function __construct(ModelRelations $relations, $dir) {
 		$this->relations = $relations;
 		$this->model_dir = $dir;
+		
+		if(!is_dir($dir)) {
+			throw new InvalidArgumentException(
+				"Model directory [{$dir}] does not exist."
+			);
+		}
 	}
 	
+	/**
+	 */
 	public function __destruct() {
 		parent::__destruct();
 		unset(

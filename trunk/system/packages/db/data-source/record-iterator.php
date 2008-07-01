@@ -21,10 +21,10 @@ class DatabaseRecordIterator extends OuterRecordIterator {
 	 * Return a single record that possibly has multipel sub-records in it.
 	 */
 	public function current() {
-				
+
 		$data = parent::current();
 		$record = NULL;
-				
+		
 		// from a PQL query
 		if(isset($data['__pql__'])) {
 			
@@ -83,7 +83,7 @@ class DatabaseRecordIterator extends OuterRecordIterator {
 				$record_class = $definition->getRecordClass();
 				
 				$record = new $record_class($record_data);
-				$record->setName($model_name);
+				$record->setModelName($model_name);
 				$records[$model_name] = $record;
 				
 				// this is needed so that the referenced model to the above
