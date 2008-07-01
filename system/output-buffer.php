@@ -13,6 +13,7 @@ class FlushBufferException extends PinqException {
  * case that when people are making calls to header() and outputting data at
  * the same time a "headers have already been sent" error is triggered. Using
  * the out() and stop() functions allow one to reliably forgo these errors.
+ *
  * @author Peter Goodman
  */
 class OutputBuffer {
@@ -23,7 +24,9 @@ class OutputBuffer {
 	);
 	
 	/**
-	 * Clear the current buffer.
+	 * OutputBuffer::clear(string $which) -> void
+	 *
+	 * Clear one of the output buffer's internal buffers.
 	 */
 	static public function clear($which) {
 		
@@ -38,6 +41,8 @@ class OutputBuffer {
 	}
 	
 	/**
+	 * OutputBuffer::clearAll(void) -> void
+	 *
 	 * Clear all output buffers.
 	 */
 	static public function clearAll() {
@@ -48,7 +53,9 @@ class OutputBuffer {
 	}
 	
 	/**
-	 * Flush the output buffer.
+	 * OutputBuffer::flush(string $which) -> void
+	 *
+	 * Output and clear a specific output buffer.
 	 */
 	static public function flush($which) {
 		
@@ -65,7 +72,10 @@ class OutputBuffer {
 }
 
 /**
- * Send some data to the output buffer.
+ * out([string[, string[, ...]]]) -> void
+ *
+ * Send some data to the 'out' output buffer.
+ *
  * @author Peter Goodman
  */
 function out() {
@@ -74,7 +84,10 @@ function out() {
 }
 
 /**
- * Send data to the output buffer and follow it with a new-line character.
+ * outln([string[, string[, ...]]]) -> void
+ *
+ * Send some data to the output buffer, separating each datum with a new line.
+ *
  * @author Peter Goodman
  */
 function outln() {
@@ -83,7 +96,11 @@ function outln() {
 }
 
 /**
- * Set something to the errors output buffer.
+ * err([string[, string[, ...]]]) -> void
+ *
+ * Set something to the 'err' output buffer.
+ *
+ * @author Peter Goodman
  */
 function err() {
 	$args = func_get_args();	
@@ -91,8 +108,12 @@ function err() {
 }
 
 /**
+ * stop() ! FlushBufferException
+ *
  * Stop output. Analogous to PHP's exit() function, except that instead of
- * exiting it throws an exception to flush the output buffer.
+ * exiting it throws a FlushBufferException which is caught and used to output
+ * to the browser.
+ *
  * @author Peter Goodman
  */
 function stop() {

@@ -5,7 +5,13 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Get an environment variable.
+ * env(string $var) -> string
+ *
+ * Return an environment variable. This function looks in several places: the
+ * _SERVER and _ENV superglobals, then it uses getenv() and if the server is
+ * Apache it will look in Apache's environment variables as well.
+ *
+ * @author Peter Goodman
  */
 function get_env($var) {
 	
@@ -32,10 +38,17 @@ function get_env($var) {
 }
 
 /**
+ * set_env(string $var, string $val) -> void
+ *
  * Set an environment variable. If it exists somewhere then it will be
- * overwritten at that point.
+ * overwritten.
+ *
+ * @author Peter Goodman
  */
 function set_env($var, $val = NULL) {
+	
+	$var = (string)$var;
+	$val = (string)$val;
 	
 	// look in the usual places
 	if(isset($_SERVER[$var]))
@@ -54,9 +67,11 @@ function set_env($var, $val = NULL) {
 }
 
 /**
- * The contents of this function copied verbatim (then modified for length) 
- * from CakePHP. Why isn't this in the get_env function? Check globals.php!
- * Most of this function: Copyright 2005-2008, Cake Software Foundation, Inc.
+ * get_document_root(void) -> string
+ *
+ * Get the current document root.
+ *
+ * @copyright Copyright 2005-2008, Cake Software Foundation, Inc.
  */
 function get_document_root() {
 	
@@ -76,7 +91,11 @@ function get_document_root() {
 }
 
 /**
+ * get_script_filename(void) -> string
+ *
  * Get the script filename.
+ *
+ * @author Peter Goodman
  */
 function get_script_filename() {
 	
@@ -93,8 +112,11 @@ function get_script_filename() {
 }
 
 /**
- * Get the user's IP. Parts of this function are inspired by the CakePHP and
- * CodeIgniter PHP libraries.
+ * get_user_ip(void) -> string
+ *
+ * Attempt to get the user's IP address.
+ *
+ * @author Peter Goodman, CakePHP, CodeIgniter
  */
 function get_user_ip() {
 	
@@ -123,6 +145,7 @@ function get_user_ip() {
 		$ip = end(explode(',', $ip));
 	}
 	
+	// match the ip address against an IPv4 pattern matcher
 	if(!preg_match('~^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$~', $ip))
 		$ip = '0.0.0.0';
 	
@@ -130,7 +153,11 @@ function get_user_ip() {
 }
 
 /**
- * Get the current request method, If it doesn't validate then default to GET.
+ * get_request_method(void) -> {GET, HEAD, PUT, POST, DELETE, OPTIONS, TRACE}
+ *
+ * Get the current request method, If it doesn't validate then return GET.
+ *
+ * @note This function returns the request method in uppercase.
  */
 function get_request_method() {
 	static $request_method;

@@ -5,7 +5,12 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Get the current HTTP host.
+ * get_http_host(void) -> string
+ *
+ * Attempt to get the current http host. This function first tries to find the
+ * host and then validates it against the (partial) host given in the main
+ * PINQ application configuration file. If the host fails to validate then
+ * a YieldControlException is thrown.
  */
 function get_http_host() {
 	static $host;
@@ -29,13 +34,18 @@ function get_http_host() {
 	
 	// is this a possible hacking attempt?
 	if($hack) 
-		set_http_status(403); // forbidden
+		yield(ERROR_403); // forbidden
 	
 	return $host;
 }
 
 /**
- * Get the http scheme. (http or https)
+ * get_http_scheme(void) -> {http, https}
+ *
+ * Return the HTTP scheme currently in use. This function returns the scheme
+ * in lower case.
+ *
+ * @author Peter Goodman
  */
 function get_http_scheme() {
 	static $scheme;
@@ -54,8 +64,9 @@ function get_http_scheme() {
 }
 
 /**
- * Set the HTTP status code. If the request is an error, an exception will be
- * thrown.
+ * set_http_status(int $code) -> void
+ *
+ * Set the HTTP header status code.
  */
 function set_http_status($code) {
 	
@@ -135,8 +146,12 @@ function set_http_status($code) {
 }
 
 /**
+ * redirect(string $location[, bool $as_url]) ! HttpRedirectException
+ *
  * Do a HTTP redirect. If $as_url is TRUE then it means we're redirecting to
- * a url and not a path.
+ * a url and not a route.
+ *
+ * @author Peter Goodman
  */
 function redirect($location, $as_url = FALSE) {
 	
