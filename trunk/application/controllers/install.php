@@ -13,10 +13,8 @@ class InstallController extends PinqController {
 		$db = $this->import('db.blog');
 		
 		// get the db tables from the schema file
-		$queries = explode(
-			';', 
-			file_get_contents(DIR_APPLICATION .'/sqlite/blog.schema')
-		);
+		$schema = file_get_contents(DIR_APPLICATION .'/sqlite/blog.schema');
+		$queries = explode(';', $schema);
 		
 		// create all of the database tables
 		foreach($queries as $query) {

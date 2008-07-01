@@ -51,6 +51,10 @@ define('ERROR_500', '/error/500');
 session_start();
 //session_regenerate_id(FALSE);
 
+// exceptions
+require_once DIR_SYSTEM .'/general-exceptions.php';
+require_once DIR_SYSTEM .'/control-flow-exceptions.php';
+
 // core classes that stand on their own without pinq-defined interfaces/
 // abstract classes
 require_once DIR_SYSTEM .'/stack.php';
@@ -60,10 +64,6 @@ require_once DIR_SYSTEM .'/dictionary.php';
 // interfaces and abstract classes
 require_once DIR_SYSTEM .'/loader.php';
 require_once DIR_SYSTEM .'/interfaces.php';
-
-// exceptions
-require_once DIR_SYSTEM .'/general-exceptions.php';
-require_once DIR_SYSTEM .'/control-flow-exceptions.php';
 
 // bring in the model stuff
 require_once DIR_SYSTEM .'/pql/__init__.php';
@@ -77,13 +77,14 @@ require_once DIR_SYSTEM .'/package-loader.php';
 require_once DIR_SYSTEM .'/functions/__init__.php';
 
 /**
- * Run PINQ! This function sets up and tears down everything. It's simple to
- * follow so just read the comments to get an idea of how a pinq application
- * progresses from a request to output to teardown. Note: this function can
- * only be called once.
- * @param $script_file ALWAYS USE __FILE__!!!!!
- * @param $app_dir The directory of the applications folder RELATIVE to the
- *                 script file.
+ * pinq(file name, relative directory) -> void
+ *
+ * This function taks a file name (eg: __FILE__) of where PINQ is being run 
+ * from and a relative path from the dirname(file name) of where the
+ * applications directory is. This function will set up and tear down the pinq
+ * framework.
+ * 
+ * @note This function can only be run once
  * @author Peter Goodman.
  */
 function pinq($script_file, $app_dir) {
@@ -158,7 +159,7 @@ function pinq($script_file, $app_dir) {
 				require_once $dir .'/'. $controller . EXT;
 
 				// get the class name and clean up the method name
-				$class = class_name($controller) .'Controller';
+				$class = class_name("{$pdir} {$controller} controller");
 				$method = function_name($method);
 				$request_method = $_SERVER['REQUEST_METHOD'];
 
@@ -208,12 +209,12 @@ function pinq($script_file, $app_dir) {
 				if(isset($event)) unset($event);
 				
 				// clear the output buffer for the new action
-				OutputBuffer::clear();
+				OutputBuffer::clearAll();
 				
 				// put the message from the exception into the new output
 				// buffer. if there was no message, ie: this was not cause by
 				// an error that threw an exception
-				out($y->getMessage());
+				err($y->getMessage());
 				
 				// don't want infinite loop!
 				if($route === ($new_route = $y->getRoute()))
@@ -231,14 +232,8 @@ function pinq($script_file, $app_dir) {
 			
 		} while(TRUE);
 		
-		// compress any output using zlib. this is done before the method
-		// call as people might be using php's output functions instead of
-		//  pinq's.
-		if($config['config']['compress_output'])
-			OutputBuffer::compress();
-		
 		// flush the output buffer
-		OutputBuffer::flush();
+		OutputBuffer::flush('out');
 		
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.

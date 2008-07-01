@@ -33,7 +33,10 @@ class SqliteQueryCompiler extends DatabaseQueryCompiler {
 		// programmer can deal with any business logic stuff without worrying
 		// about manually typecasting the different fields, as that is already
 		// done in the loop
-		$values = $definition->validateFields($context['modify_values']);
+		$values = $definition->validateFields(
+			$context['modify_values'],
+			$this->query_type
+		);
 		
 		foreach($values as $column => $value) {
 			

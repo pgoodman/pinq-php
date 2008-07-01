@@ -38,7 +38,7 @@ function layout_view($id) {
  * A view.
  * @author Peter Goodman
  */
-abstract class View extends Dictionary implements Package {
+abstract class View extends Dictionary implements ConfigurablePackage {
 	
 	// view types, nicer to get at than using the plural strings
 	const LAYOUT = 'layouts',
@@ -75,7 +75,7 @@ abstract class View extends Dictionary implements Package {
  * Represents a single view.
  * @author Peter Goodman
  */
-class PinqView extends View implements ConfigurablePackage {
+class PinqView extends View {
 	
 	protected $file;
 	

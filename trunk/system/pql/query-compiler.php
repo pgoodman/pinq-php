@@ -20,7 +20,8 @@ abstract class QueryCompiler implements Compiler {
 	// the query and models
 	protected $query,
 	          $models,
-	          $relations;
+	          $relations,
+	          $query_type;
 	
 	/**
 	 * Constructor, bring in the query and models.
@@ -209,6 +210,9 @@ abstract class QueryCompiler implements Compiler {
 	 * Compile a certain type of query.
 	 */
 	public function compile($flags = 0) {
+		
+		$query_types = self::SELECT | self::MODIFY | self::CREATE | self::DELETE;
+		$this->query_type = $flags & $query_types;
 		
 		switch($flags) {
 			case self::SELECT:

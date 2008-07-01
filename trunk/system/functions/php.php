@@ -19,7 +19,7 @@ function class_name($str = '') {
  * @author Peter Goodman
  */
 function function_name($str = '') {
-	return preg_replace('~([^a-z0-9_]+)~', '_', strtolower($str));
+	return preg_replace('~([^a-z0-9_]+)~', '_', strtolower(trim($str)));
 }
 
 /**
@@ -59,3 +59,4 @@ function call_user_class_array($class, array $args = array()) {
 	$reflection = new ReflectionClass($class);
     return $reflection->newInstanceArgs($args);
 }
+
