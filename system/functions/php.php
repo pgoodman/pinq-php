@@ -44,7 +44,7 @@ function call_user_class() {
  */
 function call_user_class_array($class, array $args = array()) {
 	
-	if(!class_exists($class)) {
+	if(!class_exists($class, FALSE)) {
 		throw new UnexpectedValueException(
 			"call_user_class[_array]() expects first argument to be a valid ".
 			"class name. Class [{$class}] does not exist."

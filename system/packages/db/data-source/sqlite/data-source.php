@@ -18,7 +18,7 @@ class SqliteDataSource extends Database {
 	 */
 	public function __construct($host) {
 		
-		if(!class_exists('SQLiteDatabase')) {
+		if(!class_exists('SQLiteDatabase', FALSE)) {
 			throw new DatabaseException(
 				"SQLite does not appear to be installed or configured  on ".
 				"this server."
