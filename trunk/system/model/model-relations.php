@@ -5,8 +5,11 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
+ * through([string $model1[, string $model2[, ...]]]) -> array
+ *
  * Define a through relationship. This is simply syntactic sugar for an
  * array that gives more semantic meaning to relationships.
+ *
  * @author Peter Goodman
  */
 function through() {
