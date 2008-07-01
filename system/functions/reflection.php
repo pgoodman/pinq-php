@@ -19,7 +19,6 @@ function man($thing) {
  */
 function help($thing) {
 	$str = '';
-	$thing = trim($thing);
 	
 	if(is_string($thing)) {
 		
@@ -43,7 +42,7 @@ function help($thing) {
 	
 	// object
 	} else if(is_object($thing)) {
-		$str = __doc_format_class(class_name($thing));
+		$str = __doc_format_class(get_class($thing));
 	
 	// unknown
 	} else {
@@ -190,7 +189,7 @@ function __doc_format_constructor(ReflectionClass $reflector) {
  * @author Peter Goodman
  * @internal
  */
-function __doc_get_class_descendents($class_name, 
+function __doc_get_class_descendants($class_name, 
 	                                 array &$parent = array(), 
 	                                 array &$seen = array()) {
 	
@@ -225,10 +224,10 @@ function __doc_get_class_descendents($class_name,
 				$parent[$class] = array();
 		}
 		
-		// get the descendents recursively
+		// get the descendants recursively
 		if(isset($parent[$class])) {
 			$seen[$class] = TRUE;
-			__doc_get_class_descendents($class, $parent[$class], $seen);
+			__doc_get_class_descendants($class, $parent[$class], $seen);
 		}
 		
 		// sort this level's classes
@@ -239,21 +238,21 @@ function __doc_get_class_descendents($class_name,
 }
 
 /**
- * __doc_format_class_descendents(array $descendents[, int $level]) -> string
+ * __doc_format_class_descendants(array $descendants[, int $level]) -> string
  *
- * Return a formatted tree of class descendents from an array (tree) of class
- * descendents. This function builds the formatted string recursively.
+ * Return a formatted tree of class descendants from an array (tree) of class
+ * descendants. This function builds the formatted string recursively.
  *
  * @author Peter Goodman
  * @internal
  */
-function __doc_format_class_descendents(array $descendents, $level = 0) {
+function __doc_format_class_descendants(array $descendants, $level = 0) {
 	
 	$str = '';
 	$level = abs($level);
 	
-	// go over the descendents and build up the string
-	foreach($descendents as $class => $sub_classes) {
+	// go over the descendants and build up the string
+	foreach($descendants as $class => $sub_classes) {
 		
 		$str .= "\n";
 		
@@ -263,7 +262,7 @@ function __doc_format_class_descendents(array $descendents, $level = 0) {
 		$str .= $class;
 		
 		// recursively build up the sub-classes
-		$str .= __doc_format_class_descendents($sub_classes, $level+1);
+		$str .= __doc_format_class_descendants($sub_classes, $level+1);
 	}
 	
 	return $str;
@@ -379,14 +378,14 @@ function __doc_format_class($class_name) {
 	
 	// get the extending classes
 	$classes = array();
-	__doc_get_class_descendents($class_name, $classes);
+	__doc_get_class_descendants($class_name, $classes);
 	
 	// there are parent classes so format them
 	if(!empty($classes)) {
-		$str .= "{$section_prefix}{$line_prefix}<u>Class Descendents:</u>\n";
+		$str .= "{$section_prefix}{$line_prefix}<u>Class Descendants:</u>\n";
 		$str .= "{$line_prefix}\n";
 		$str .= __doc_format_section(
-			__doc_format_class_descendents($classes),
+			__doc_format_class_descendants($classes),
 			$method_prefix
 		);
 	}
