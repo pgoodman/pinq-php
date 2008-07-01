@@ -31,7 +31,7 @@ function help($thing) {
 			);
 		
 		// existing class/interface
-		else if(class_exists($thing) || interface_exists($thing)) {
+		else if(class_exists($thing, FALSE) || interface_exists($thing, FALSE)) {
 			$str = __doc_format_class($thing);
 		
 		// could be a file rooted somewhere	
@@ -111,7 +111,8 @@ function __doc__() {
 			if(function_exists($callback[0]))
 				$reflector = new ReflectionFunction($callback[0]);
 			
-			else if(class_exists($callback[0]) || interface_exists($callback[0]))
+			else if(class_exists($callback[0], FALSE) || 
+			        interface_exists($callback[0], FALSE))
 				$reflector = new ReflectionClass($callback[0]);
 			
 			else
@@ -137,7 +138,7 @@ function __doc__() {
  */
 function __doc_format_function($doc_block, $name) {
 	$doc_block = preg_replace('~\n~', "\n    ", "    ".trim($doc_block));
-	return "{$name}(...)\n{$doc_block}";
+	return "<i>{$name}(...)</i>\n{$doc_block}";
 }
 
 /**
@@ -178,6 +179,95 @@ function __doc_format_constructor(ReflectionClass $reflector) {
 }
 
 /**
+ * __doc_get_child_classes(string $class_name, [array &$parent[, array $seen]]) 
+ * -> array
+ * 
+ * Return a tree of the classes/interfaces the extend/implement this class or
+ * interface. If the class or interface name passed in does not exist then
+ * an InvalidArgumentException will be thrown.
+ *
+ * @note This function is anything but efficient to use it sparingly.
+ * @author Peter Goodman
+ * @internal
+ */
+function __doc_get_class_descendents($class_name, array &$parent = array(), &$seen = array()) {
+	
+	if(!class_exists($class_name, FALSE) && !interface_exists($class_name, FALSE)) {
+		throw new InvalidArgumentException(
+			"The class/interface [{$class_name}] does not exist."
+		);
+	}
+	
+	// merge the list of declared classes and iterators
+	$classes = array_merge(
+		get_declared_interfaces(),
+		get_declared_classes()
+	);
+	
+	// go through the defined interfaces and classes and recursively build a
+	// tree of the extending classes/interfaces
+	foreach($classes as $class) {
+		
+		if(isset($seen[$class]))
+			continue;
+		
+		// look at its parent class
+		if(get_parent_class($class) == $class_name)
+			$parent[$class] = array();
+		
+		// look at its parent interfaces
+		else {
+			$interfaces = class_implements($class, FALSE);
+			
+			if(in_array($class_name, $interfaces))
+				$parent[$class] = array();
+		}
+		
+		// get the descendents recursively
+		if(isset($parent[$class])) {
+			$seen[$class] = TRUE;
+			__doc_get_class_descendents($class, $parent[$class], $seen);
+		}
+		
+		// sort this level's classes
+		ksort($parent);
+	}
+	
+	return $parent;
+}
+
+/**
+ * __doc_format_class_descendents(array $descendents[, int $level]) -> string
+ *
+ * Return a formatted tree of class descendents from an array (tree) of class
+ * descendents. This function builds the formatted string recursively.
+ *
+ * @author Peter Goodman
+ * @internal
+ */
+function __doc_format_class_descendents(array $descendents, $level = 0) {
+	
+	$str = '';
+	$level = abs($level);
+	
+	// go over the descendents and build up the string
+	foreach($descendents as $class => $sub_classes) {
+		
+		$str .= "\n";
+		
+		if($level > 0)
+			$str .= str_repeat('    ', $level);
+		
+		$str .= $class;
+		
+		// recursively build up the sub-classes
+		$str .= __doc_format_class_descendents($sub_classes, $level+1);
+	}
+	
+	return $str;
+}
+
+/**
  * __doc_format_class(string) -> string
  *
  * Given a class or interface name, return a nicely formatted documentation 
@@ -189,7 +279,7 @@ function __doc_format_constructor(ReflectionClass $reflector) {
 function __doc_format_class($class_name) {
 	
 	// class doesn't exist
-	if(!class_exists($class_name) && !interface_exists($class_name)) {
+	if(!class_exists($class_name, FALSE) && !interface_exists($class_name, FALSE)) {
 		throw new InvalidArgumentException(
 			"Class/Interface [{$class_name}] does not exist and therefore ".
 			"cannot be introspected."
@@ -221,13 +311,13 @@ function __doc_format_class($class_name) {
 		$reflector->isAbstract() ? 'abstract class' : 'class'
 	);
 	
-	$str = "{$final}{$type} {$class_name}\n";	
+	$str = "<b>{$final}{$type} {$class_name}</b>\n";
 	$str .= __doc_format_section($doc_block, $line_prefix);
 	
 	// show the class constants
 	$constants = $reflector->getConstants();
 	if(!empty($constants)) {
-		$str .= "{$section_prefix}{$line_prefix}Constants:";
+		$str .= "{$section_prefix}{$line_prefix}<u>Constants:</u>";
 		
 		foreach($constants as $name => $value)
 			$str .= "\n{$method_prefix} {$name} -> {$value}";
@@ -236,7 +326,7 @@ function __doc_format_class($class_name) {
 	// format the class constructor (if it has one)
 	$doc_block = __doc_format_constructor($reflector);
 	if(!empty($doc_block)) {
-		$str .= "{$section_prefix}{$line_prefix}Constructor:";
+		$str .= "{$section_prefix}{$line_prefix}<u>Constructor:</u>";
 		$str .= $section_prefix. __doc_format_section(
 			$doc_block,
 			$method_prefix
@@ -263,7 +353,7 @@ function __doc_format_class($class_name) {
 		if(empty($types[$i]))
 			continue;
 		
-		$str .= "{$section_prefix}{$line_prefix}{$header}";
+		$str .= "{$section_prefix}{$line_prefix}<u>{$header}</u>";
 		
 		ksort($types[$i]);
 		foreach($types[$i] as $method) {
@@ -283,6 +373,19 @@ function __doc_format_class($class_name) {
 				$method_prefix
 			);
 		}
+	}
+	
+	// get the extending classes
+	$classes = array();
+	__doc_get_class_descendents($class_name, $classes);
+	
+	if(!empty($classes)) {
+		$str .= "{$section_prefix}{$line_prefix}<u>Class Descendents:</u>\n";
+		$str .= "{$line_prefix}\n";
+		$str .= __doc_format_section(
+			__doc_format_class_descendents($classes),
+			$method_prefix
+		);
 	}
 	
 	return $str;
