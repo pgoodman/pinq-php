@@ -9,22 +9,27 @@ interface RecordIterator extends Countable, SeekableIterator {
 }
 
 /**
- * A set of data records.
+ * Iterator for a set of records from a data source.
+ *
  * @author Peter Goodman
  */
 abstract class InnerRecordIterator implements RecordIterator {
 	
-	protected $key;
+	protected $_key;
 	
 	/**
-	 * Constructor, set the offset and count.
+	 * InnerRecordIterator(void)
 	 */
 	public function __construct() {
-		$this->key = 0;
+		$this->_key = 0;
 	}
 	
 	/**
-	 * Seek to a specific index in the iterator.
+	 * $i->seek(int $key) -> void
+	 *
+	 * Seek to a specific row in the iterator. Rows are indexed from [0, n-1].
+	 * If the row number supplied is out of bounds, ie: it is below zero or
+	 * above n-1 then a OutOfBoundsException is thrown.
 	 */
 	public function seek($key) {
 		
@@ -35,69 +40,99 @@ abstract class InnerRecordIterator implements RecordIterator {
 			);
 		}
 		
-		$this->key = $key;
+		$this->_key = $key;
 	}
 	
 	/**
-	 * Return the current key.
+	 * $i->key(void) -> int
+	 *
+	 * Return the current row number.
 	 */
 	public function key() {
-		return $this->key;
+		return $this->_key;
 	}
 	
 	/**
-	 * Rewind the record set.
+	 * $i->rewind(void) -> void
+	 *
+	 * Rewind the record iterator to start at row zero.
 	 */
 	public function rewind() {
-		if($this->key > 0)
-			$this->seek($this->offset);
+		if($this->_key > 0)
+			$this->seek(0);
 	}
 	
 	/**
-	 * Is the current row valid?
+	 * $i->valid(void) -> bool
+	 *
+	 * Check if the row in the record iterator represented by the current row
+	 * id exists. If it doesn't this will return FALSE.
 	 */
 	public function valid() {
-		return $this->key < $this->count();
+		return $this->_key < $this->count();
 	}
 	
 	/**
-	 * Move to the next row.
+	 * $i->next(void) -> void
+	 *
+	 * Move the internal record pointer to the next record.
 	 */
 	public function next() {
-		$this->key++;
+		$this->_key++;
 	}
 }
 
 /**
- * An iterator to handle an inner record iterator.
+ * Class to handle stacking iterators on top of a RecordIterator.
+ *
  * @author Peter Goodman
  */
 abstract class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 		
 	/**
-	 * Constructor, bring in the record iterator, the constructor is overridden
-	 * to force a RecordIterator to be accepted.
+	 * OuterRecordIterator(RecordIterator)
+	 *
+	 * Bring in the record iterator, the constructor is overridden such that
+	 * this class requires a RecordIterator.
 	 */
 	public function __construct(RecordIterator $it) {
 		parent::__construct($it);
 	}
 	
 	/**
+	 * $i->getRecordIterator(void) <==> $i->getInnerIterator(void) 
+	 * -> RecordIterator
+	 *
 	 * Get the inner record iterator.
 	 */
-	public function getInnerRecordIterator() {
+	public function getRecordIterator() {
 		return $this->getInnerIterator();
 	}
 	
 	/**
-	 * Seek to an offset.
+	 * $i->current(void) -> Record
+	 *
+	 * Return the current record from the inner record iterator. This is a bit
+	 * of a WTF because it should work automatically through IteratorIterator
+	 * yet for some reason it doesn't (at least for SQLite).
+	 */
+	public function current() {
+		return $this->getInnerIterator()->current();
+	}
+	
+	/**
+	 * $i->seek(int) -> void
+	 *
+	 * Seek the inner record iterator to a specific row.
 	 */
 	public function seek($offset) {
 		return $this->getInnerIterator()->seek($offset);
 	}
 	
 	/**
-	 * Return the row count.
+	 * $i->count(void) -> int
+	 *
+	 * Return the number of records in the inner record iterator.
 	 */
 	public function count() {
 		return $this->getInnerIterator()->count();
@@ -119,11 +154,16 @@ abstract class GatewayRecordIterator extends OuterRecordIterator {
 	
 	protected $gateway;
 	
+	/**
+	 * GatewayRecordIterator(RecordIterator, Gateway)
+	 */
 	public function __construct(RecordIterator $it, Gateway $gateway) {
 		parent::__construct($it);
 		$this->gateway = $gateway;
 	}
 	
+	/**
+	 */
 	public function __destruct() {
 		unset($this->gateway);
 	}

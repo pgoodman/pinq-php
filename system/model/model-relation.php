@@ -259,9 +259,9 @@ class ModelRelations {
 	 * @internal
 	 */
 	public function getRelationDependencies(array &$aliases, 
-		                                    array &$relations,
-		                                    ModelDictionary $models) {
-		
+	                                        array &$relations,
+	                               ModelDictionary $models) {
+
 		// to quickly access deeper areas in the graph, we will store
 		// references to each place where these nodes show up in the graph
 		// this is dependable based on the assumption that we've identified

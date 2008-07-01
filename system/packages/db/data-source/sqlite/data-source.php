@@ -192,7 +192,7 @@ class SqliteDataSource extends Database {
 	 * Get the query compiler.
 	 */
 	public function getQueryCompiler(Dictionary $models, 
-		                             ModelRelations $relations) {
+	                             ModelRelations $relations) {
 		
 		return new SqliteQueryCompiler(
 			$models,

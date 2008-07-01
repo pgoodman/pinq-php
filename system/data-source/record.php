@@ -12,7 +12,9 @@ interface Record extends ArrayAccess {
 }
 
 /**
- * A data record, this implements the generic things every record needs.
+ * A generic record of data.
+ *
+ * @author Peter Goodman
  */
 class InnerRecord extends Dictionary implements Record {
 	
@@ -21,29 +23,31 @@ class InnerRecord extends Dictionary implements Record {
 	          $_dirty = array();
 	
 	/**
+	 * $r->setName(string $name) -> void
+	 *
 	 * Set the model name of this record.
 	 */
-	public function setName($name) {
+	public function setModelName($name) {
 		$this->_name = $name;
 	}
 	
 	/**
-	 * Get the model name of this record.
+	 * $r->getModelName(void) -> mixed
+	 *
+	 * Get the model name of this record. If this record has not been assigned
+	 * a model name then this will return NULL.
 	 */
-	public function getName() {
+	public function getModelName() {
 		return $this->_name;
 	}
 	
 	/**
-	 * Is this a named record, or possibly a mix of many sub-records OR was it
-	 * a record found through straight SQL?
-	 */
-	public function isNamed() {
-		return NULL !== $this->_name;
-	}
-	
-	/**
-	 * Dig into the result tables selected.
+	 * $r->__get(string $model_name) <==> $r->$model_name -> mixed
+	 *
+	 * If this is record contains one or more sub-records (models that were
+	 * selected from in the query) then this allows one to access those sub-
+	 * records by their model names. If no sub-record exists for a given model
+	 * name then this function returns NULL.
 	 */
 	public function __get($model_name) {
 		
@@ -58,8 +62,10 @@ class InnerRecord extends Dictionary implements Record {
 	}
 	
 	/**
-	 * Overwrite some of the dictionary methods so that we can isolate new
-	 * information from old information.
+	 * $r->offsetSet(string $key, mixed $val) <==> $r[$key] = $val
+	 *
+	 * Set some "new" data to the record. Whatever is set to the record's
+	 * dictionary after instantiation is isolated as "dirty" data.
 	 */
 	public function offsetSet($key, $val) {
 		$this->_dirty[$key] = $val;
@@ -67,7 +73,10 @@ class InnerRecord extends Dictionary implements Record {
 	}
 	
 	/**
-	 * Get some stored data.
+	 * $r->offsetGet(string $key) <==> $r[$key] -> mixed
+	 *
+	 * Get a data entry from the Record. This first looks in the "dirty" 
+	 * (changed) data, and then in the unchanged data.
 	 */
 	public function offsetGet($key) {
 		if(isset($this->_dirty[$key]))
@@ -77,14 +86,19 @@ class InnerRecord extends Dictionary implements Record {
 	}
 	
 	/**
-	 * Does an offset exist?
+	 * $r->offsetExist($key) <==> isset($r[$key]) -> bool
+	 *
+	 * Check if an entry exists in this record.
 	 */
 	public function offsetExists($key) {
 		return isset($this->_dirty[$key]) || parent::offsetExists($key);
 	}
 	
 	/**
-	 * Unset some data.
+	 * $r->offsetUnset($key) <==> unset($r[$key]) -> void
+	 *
+	 * Unset an entry in the record. This removes it from both the chnaged and
+	 * unchanged data sets.
 	 */
 	public function offsetUnset($key) {
 		unset($this->_dirty[$key]);
@@ -92,15 +106,21 @@ class InnerRecord extends Dictionary implements Record {
 	}
 	
 	/**
-	 * Merge the dirty into the clean, so to speak :P
+	 * $r->toArray(void) -> array
+	 *
+	 * Returns an associative array of the unchanged and changed data together.
 	 */
 	public function toArray() {
 		return array_merge(parent::toArray(), $this->_dirty);
 	}
 	
 	/**
-	 * Set the sub-records for this record, thus making this record
-	 * ambiguous.
+	 * $r->setSubRecords(array &$records) -> void
+	 *
+	 * Set the sub-records for this record. If only one sub record is being
+	 * passed in in the array of records then no action is taken. If greater
+	 * than one record are passed in then this record will lose any model name
+	 * it had (thus becoming ambiguous) and gain an array of sub-records.
 	 */
 	public function setSubRecords(array &$records) {
 		
@@ -114,6 +134,8 @@ class InnerRecord extends Dictionary implements Record {
 
 /**
  * A record holding a record. This allows stacking of records.
+ *
+ * @author Peter Goodman
  */
 abstract class OuterRecord implements Record {
 	
@@ -121,13 +143,17 @@ abstract class OuterRecord implements Record {
 	protected $_inner_record;
 	
 	/**
-	 * Bring in the record to hold.
+	 * OuterRecord(Record)
+	 *
+	 * Store the inner record.
 	 */
 	public function __construct(Record $record) {
 		$this->_inner_record = $record;
 	}
 	
 	/**
+	 * $r->getInnerRecord(void) -> Record
+	 *
 	 * Get the record that this outer record holds.
 	 */
 	final public function getInnerRecord() {
@@ -135,21 +161,36 @@ abstract class OuterRecord implements Record {
 	}
 	
 	/**
-	 * InnerRecord methods.
+	 * @see InnerRecord::offsetGet(...)
 	 */
 	public function offsetGet($key) { 
 		return $this->_inner_record->offsetGet($key); 
 	}
+	
+	/**
+	 * @see InnerRecord::offsetSet(...)
+	 */
 	public function offsetSet($key, $val) { 
 		return $this->_inner_record->offsetSet($key, $val); 
 	}
+	
+	/**
+	 * @see InnerRecord::offsetExists(...)
+	 */
 	public function offsetExists($key) { 
 		return $this->_inner_record->offsetExists($key); 
 	}
+	
+	/**
+	 * @see InnerRecord::offsetUnset(...)
+	 */
 	public function offsetUnset($key) {
 		return $this->_inner_record->offsetUnset($key);
 	}
 	
+	/**
+	 * @see InnerRecord::toArray(...)
+	 */
 	public function toArray() {
 		return $this->_inner_record->toArray();
 	}

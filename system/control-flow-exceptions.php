@@ -56,7 +56,7 @@ class YieldControlException extends PinqException {
  * @see YieldControlException
  * @author Peter Goodman
  */
-class ValidationException extends YieldControlException {
+class FailedValidationException extends YieldControlException {
 	
 	protected $_errors;
 	
