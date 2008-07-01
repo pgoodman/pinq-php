@@ -10,7 +10,7 @@ class IndexController extends PinqController {
 	 */
 	public function ANY_index() {
 		
-		help('ModelDictionary');
+		help('ModelRelations');
 				
 		$db = $this->import('db.blog');
 		

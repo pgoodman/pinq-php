@@ -48,6 +48,7 @@ class ModelDictionary extends Dictionary {
 	 * $d->offsetGet(string $model_name) <==> $d[$model_name] -> ModelDefinition
 	 *
 	 * Lazy loads and returns a model definition for a particulary data source.
+	 *
 	 * @note it uses a model's external name for loading. The model name is
 	 *       case insensitive.
 	 */
