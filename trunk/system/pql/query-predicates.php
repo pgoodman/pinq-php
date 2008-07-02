@@ -4,31 +4,42 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-if(!function_exists('where')) {
-	
-	function where() {
-		$predicates = new QueryPredicates;
-		return $predicates->where();
-	}
-	
-	function limit($start, $offset = NULL) {
-		$predicates = new QueryPredicates;
-		return $predicates->limit($start, $offset);
-	}
-	
-	function order() {
-		$predicates = new QueryPredicates;
-		return $predicates->order();
-	}
-	
-	function group() {
-		$predicates = new QueryPredicates;
-		return $predicates->group();
-	}
+/**
+ * where(void) <==> (new QueryPredicates)->where(void)
+ */
+function where() {
+	$predicates = new QueryPredicates;
+	return $predicates->where();
 }
 
 /**
- * Build up predicates for a PQL query.
+ * limit(int $start[, int $offset]) <==> (new QueryPredicates)->limit($start, $offset)
+ */
+function limit($start, $offset = NULL) {
+	$predicates = new QueryPredicates;
+	return $predicates->limit($start, $offset);
+}
+
+/**
+ * order(void) <==> (new QueryPredicates)->order(void)
+ */
+function order() {
+	$predicates = new QueryPredicates;
+	return $predicates->order();
+}
+
+/**
+ * group(void) <==> (new QueryPredicates)->group(void)
+ */
+function group() {
+	$predicates = new QueryPredicates;
+	return $predicates->group();
+}
+
+/**
+ * Class representing the various types of predicates that a PQL query can
+ * have.
+ *
  * @author Peter Goodman
  */
 class QueryPredicates extends StackOfStacks {
@@ -64,7 +75,8 @@ class QueryPredicates extends StackOfStacks {
 		// pseudo operators that have actual functions
 		'search' => -1, 'with' => -1,
 	);
-		
+	
+	// predicate types
 	const OPERAND = 1,
 	      OPERATOR = 2,
 	      SUBSTITUTE = 4,
@@ -72,7 +84,10 @@ class QueryPredicates extends StackOfStacks {
 	      REFERENCE = 16;
 	
 	/**
-	 * Constructor, set up the default set of predicates.
+	 * QueryPredicates([Query])
+	 *
+	 * Set up the predicate contexts (where, order, group, limit, search) and 
+	 * associate the instance with a Query object (if one is passed in).
 	 */
 	public function __construct(Query $query = NULL) {
 		
@@ -90,7 +105,6 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Destructor.
 	 */
 	public function __destruct() {
 		unset(
@@ -103,13 +117,24 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
+	 * $p->setQuery(Query) -> void
+	 *
 	 * Set/change the current query these predicates work for.
 	 */
 	public function setQuery(Query $query) {
+		
+		// if this is a change in query then this predicates object can no
+		// longer be considered to be compiled (regardless of if it was or 
+		// wasn't)
+		if($this->_query !== NULL)
+			$this->_compiled = FALSE;
+		
 		$this->_query = $query;
 	}
 	
 	/**
+	 * $p->setCompiled(void) -> void
+	 *
 	 * Tell the query that it has been compiled.
 	 */
 	public function setCompiled() {
@@ -117,22 +142,28 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Have these predicates been compiled yet?
+	 * $p->isCompiled(void) -> bool
+	 *
+	 * Check if this query has been compiled.
 	 */
 	public function isCompiled() {
 		return $this->_compiled;
 	}
 	
 	/**
-	 * Get the query that these predicates link to.
+	 * $p->getQuery(void) -> {void, Query}
+	 *
+	 * Get the query that this QueryPredicates instances links to. If this
+	 * instances is not linked to any query then NULL will be returned.
 	 */
 	public function getQuery() {
 		return $this->_query;
 	}
 	
 	/**
-	 * Get the predicates, and make sure to finish off anything still left
-	 * on the stack.
+	 * $p->getContext(string $context) -> array
+	 *
+	 * Return the list (array) of predicates in reverse-polish notation.
 	 */
 	public function getContext($context) {
 		$this->addTrailingOperators();
@@ -140,14 +171,21 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Check if the context is empty.
+	 * $p->contextIsEmpty(void) -> bool
+	 *
+	 * Check if there are zero predicates in the current context. If no context
+	 * is currently set then the result will be TRUE.
 	 */
 	public function contextIsEmpty() {
 		return empty($this->_context);
 	}
 	
 	/**
-	 * Set what part of the query we are modifying.
+	 * $p->setContext(string $context) -> QueryPredicates
+	 *
+	 * Set which context {where, order, limit, group, search} of the query is
+	 * currently being appended to.
+	 *
 	 * @internal
 	 */
 	public function setContext($context) {
@@ -157,8 +195,13 @@ class QueryPredicates extends StackOfStacks {
 		return $this;
 	}
 	
-	/** 
-	 * Add in any operators left on the stack.
+	/**
+	 * $p->addTrailingOperators(void) -> void
+	 *
+	 * Add in any operators left on the context stack into the context's list
+	 * of predicates.
+	 *
+	 * @internal
 	 */
 	public function addTrailingOperators() {
 		while(!$this->isEmpty())
@@ -166,7 +209,12 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Add an operand.
+	 * $p->addOperand(string $key, mixed $value) -> QueryPredicates
+	 *
+	 * Append an operator onto the list of predicates. Operand types that this
+	 * method supports are SUBSTITUTE values (value === _) and OPERAND.
+	 *
+	 * @internal
 	 */
 	protected function addOperand($key, $value) {
 		$this->_compiled = FALSE;
@@ -176,8 +224,12 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Add an operator to the predicates list. Operators are only really for
+	 * $p->addOperator(string $key) -> QueryPredicates
+	 *
+	 * Append an operator to the predicates list. Operators are only really for
 	 * the conditions list.
+	 * 
+	 * @see QueryPredicates::parseOperator(...)
 	 */
 	protected function addOperator($key) {
 		$this->_compiled = FALSE;
@@ -186,27 +238,40 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Add a model/field reference.
+	 * $p->addReference([string $model], string $field) -> QueryPredicates
+	 *
+	 * Add an operand that is a reference to a model's field. The model name
+	 * can be null, in which case the query compiler will usually assume the
+	 * first (and hopefully only) model in the list of sources.
+	 *
+	 * @internal
 	 */
-	protected function addReference($model, $field) {
+	protected function addReference($model = NULL, $field) {
 		$this->_compiled = FALSE;
 		$this->_context[] = array(self::REFERENCE, $model, $field);
 		return $this;
 	}
 	
 	/**
-	 * Add to the limit clause. Limit does not need a context.
+	 * $p->limit(int $limit[, int $offset]) -> QueryPredicates
+	 *
+	 * Set the limit context on the query.
+	 *
+	 * @note Each call to this method overwrites all previous calls.
 	 */
-	public function limit($start, $offset = NULL) {
-		//$array = NULL === $offset ? array($start) : array($start, $offset);
-		
+	public function limit($limit, $offset = NULL) {		
 		$this->_contexts['limit'] = array();
 		$this->setContext('limit');
 		
-		// clear any previous stuff
+		$limit = abs($limit);
 		
+		// the limit is to be substituted
+		if($limit === _) 
+			$this->_(NULL);
 		
-		if($start === _) $this->_(NULL); else $this->imm($start);
+		// immediate value is passed as the limit
+		else 
+			$this->imm((int)$limit);
 		
 		if($offset !== NULL) {
 			$this->addOperand(NULL, 'offset');
@@ -217,31 +282,57 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Change the context.
+	 * $p->order(void) -> QueryPredicates
+	 *
+	 * Change the query context to 'order'.
 	 */
 	public function order() { return $this->setContext('order'); }
+	
+	/**
+	 * $p->where(void) -> QueryPredicates
+	 *
+	 * Change the query context to 'where'.
+	 */
 	public function where() { return $this->setContext('where'); }
+	
+	/**
+	 * $p->group(void) -> QueryPredicates
+	 *
+	 * Change the query context to 'group'.
+	 */
 	public function group() { return $this->setContext('group'); }
 	
 	/**
+	 * $p->search(void) -> QueryPredicates
+	 *
 	 * Special case for searching. There are two search operators that work
 	 * in conjunction. SEARCH <field list> WITH <value>.
+	 *
+	 * @see QueryPredicates::with(...)
 	 */
 	public function search() {
 		$this->setContext('search');
 		$this->addOperator('search');
+		
+		return $this;
 	}
 	
 	/**
-	 * Take us out of the search context and perform a bit of magic :D
+	 * $p->with(mixed $search_term) -> QueryPredicates
+	 *
+	 * Take us out of the search context and perform a bit of magic to build
+	 * a useful search predicate list. This predicate list does not follow the
+	 * usual format that the other contexts do.
+	 *
+	 * @see QueryPredicates::search(...)
 	 */
-	public function with($val) {
+	public function with($search_term) {
 		$this->setContext('where');
 		
 		// add in the special search predicate
 		$this->_context[] = array(self::OPERATOR, 'search', array(
 			'fields' => $this->_contexts['search'],
-			'value' => $val,
+			'value' => $search_term,
 		));
 		
 		// reset the search context
@@ -251,9 +342,15 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Parse for an operator.
+	 * $p->parseOperator(string $op[, array $args]) -> bool
+	 * 
+	 * Attempt to parse $op as an operator. If the string value of $op exists
+	 * as a registered operator then this method uses the Dijkstra's Shunting
+	 * algorithm to add it to the predicates list.
+	 *
+	 * @internal
 	 */
-	public function parseOperator($op, array $args = NULL) {
+	protected function parseOperator($op, array $args = NULL) {
 		$op = strtolower($op);
 		$ops = self::$_operators;
 		
@@ -306,8 +403,14 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Add in predicates. This uses the shunting algorithm for dealing with
-	 * operators.
+	 * $p->__call(string $fn[, array $args]) <==> $d->$fn(...) -> QueryPredicates
+	 *
+	 * This method attempts to add $fn as an operator. If it fails to do so
+	 * them it assumes that it is a model reference, where $fn is the model
+	 * name and $args[0] is the field name.
+	 *
+	 * @see QueryPredicates::parseOperator(...)
+	 * @see QueryPredicates::addReference(...)
 	 */
 	public function __call($fn, array $args = array()) {
 		
@@ -320,8 +423,16 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Add an operand of some sort, this will usually be a keyword of some
-	 * sort such as ASC or DESC.
+	 * $p->__get(string $key) <==> $p->$key -> QueryPredicates
+	 *
+	 * First, check if $key can be parsed as an operator. If not, it looks for
+	 * special cases where $key belongs to {asc, desc, having} and adds one of
+	 * those as a special operator. If $key ends up not being an operator after 
+	 * all then $key is added as the field in a reference with a NULL model.
+	 *
+	 * @note A $key of '_' is handled as a substitute value.
+	 * @see QueryPredicates::parseOperator(...)
+	 * @see QueryPredicates::addReference(...)
 	 */
 	public function __get($key) {
 		if(!$this->parseOperator($key)) {
@@ -346,16 +457,34 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * Special case for a keyed substitute value.
+	 * $p->_([string $key]) -> QueryPredicates
+	 *
+	 * Create a substitute value. If $key is a string then it will act as a
+	 * keyed substitute value.
 	 */
-	public function _($key) {
+	public function _($key = NULL) {
+		
+		// not allowed to do this :P
+		if($key === _) {
+			throw new InvalidArgumentException(
+				"Cannot used substitute value as a keyed substitute."
+			);
+		}
+		
 		$this->_compiled = FALSE;
 		$this->_context[] = array(self::SUBSTITUTE, $key, NULL);
 		return $this;
 	}
 	
 	/**
-	 * Put in an immediate value.
+	 * $p->imm(mixed $val) -> QueryPredicates
+	 *
+	 * Add an immediate constant to the query. Immediate constants belong to
+	 * the set {NULL, int, string, bool}.
+	 *
+	 * @note If a substitute value is passed in then the immediate will be
+	 *       treated as a substitute value instead.
+	 * @see QueryPredicates::_(...)
 	 */
 	public function imm($val) {
 		

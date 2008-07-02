@@ -109,9 +109,13 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			
 			// if we're doing any counting the we need to include these columns
 			// as well
-			foreach($counts as $allias => $column) {
+			foreach($counts as $alias => $column) {
+				
+				if($alias == $column)
+					$alias = "count_{$column}";
+				
 				$select[] = "COUNT({$table_alias}.{$column}) AS ".
-				            "{$model_name}_count_{$column}";
+				            "{$model_name}_{$alias}";
 			}
 		}
 		
@@ -136,7 +140,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
-			$table_name = $this->getAbsoluteModelName($model_name);
+			$table_name = $this->getInternalModelName($model_name);
+			
 			if($model_name == $table_name)
 				$table_name = '';
 			
@@ -197,7 +202,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// this is somewhat of a wild guess that assumes there is only one
 		// model being selected from
-		if($model_alias === NULL)
+		if(empty($model_alias))
 			$model_alias = key($this->query->getContexts());
 		
 		// model name
@@ -229,7 +234,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Compile a substitute value/key.
 	 */
-	protected function compileSubstitute($key) {
+	protected function compileSubstitute($key = NULL) {
 		if($key === NULL)
 			return '?';
 		

@@ -5,8 +5,9 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * And abstract class for something to build a "concrete" thing, such as an SQL
- * statement, out of an abstract query.
+ * Class to compile a PQL query into a form compatible for a datasource. For
+ * example: the database query compiler compiles PQL into SQL.
+ *
  * @author Peter Goodman
  */
 abstract class QueryCompiler implements Compiler {
@@ -24,7 +25,7 @@ abstract class QueryCompiler implements Compiler {
 	          $query_type;
 	
 	/**
-	 * Constructor, bring in the query and models.
+	 * QueryCompiler(ModelDictionary, ModelRelations)
 	 */
 	public function __construct(Dictionary $models, ModelRelations $relations) {
 		$this->models = $models;
@@ -43,7 +44,9 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Set a new query to be used for compilation.
+	 * $c->setQuery(Query) -> void
+	 *
+	 * Set the query to be compiled.
 	 */
 	public function setQuery(Query $query) {
 		$this->query = NULL; // unset the old one
@@ -51,19 +54,23 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Models are all aliased. We allow for the models to also have internal
-	 * names but they aren't required. Thus, this function, given an query
-	 * model alias will try to find the model name (alias), and if the
-	 * associated model has an internal name it will return that otherwise it
-	 * will return the model alias.
+	 * $c->getInternalModelName(string $model_alias) -> string
+	 *
+	 * Get the internal name of a model given either its external name or an
+	 * alias of its external name.
+	 *
 	 * @internal
 	 */
-	protected function getAbsoluteModelName($model_alias) {
-		return $this->getDefinitionByModelAlias($model_alias)->getInternalName();
+	protected function getInternalModelName($model_alias) {
+		$definition = $this->getDefinitionByModelAlias($model_alias);
+		return $definition->getInternalName();
 	}
 	
 	/**
-	 * Get a model given a model alias.
+	 * $c->getDefinitionByModelAlias(string $model_alias) -> ModelDefinition
+	 *
+	 * Get a model definition given its external name or an alias to its
+	 * external name.
 	 */
 	protected function getDefinitionByModelAlias($model_alias) {
 		return $this->models[
@@ -72,8 +79,12 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Predicates compiler. This essentially turns things back into infix from
-	 * postfix.
+	 * $c->compilePredicates(string $context {where,group,limit,order}) -> void
+	 *
+	 * Compile a part of the predicates. Query predicates are stored in reverse
+	 * polish notation (postfix). This calls on various other specific compiling
+	 * functions to build up a final predicates list.
+	 *
 	 * @internal
 	 */
 	public function compilePredicates($context) {
@@ -134,7 +145,10 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Compile relations as predicates in the where context.
+	 * $c->compileRelationsAsPredicates(void) -> void
+	 *
+	 * Compile relations between models into a list of predicates and join them
+	 * into the query.
 	 * 
 	 * TODO: This actually adds to the predicates list of the query. That
 	 *       means that the query should only be used once per request unless
@@ -207,7 +221,10 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Compile a certain type of query.
+	 * $c->compile([int $flags]) -> string
+	 *
+	 * Compile a certain type of query into a string representation of that
+	 * query.
 	 */
 	public function compile($flags = 0) {
 		
@@ -230,7 +247,10 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Compile an operand.
+	 * $c->compileOperand(array) -> string
+	 *
+	 * Compile predicate operand into a string value of itself.
+	 *
 	 * @internal
 	 */
 	protected function compileOperand(array $op) {
@@ -257,8 +277,8 @@ abstract class QueryCompiler implements Compiler {
 	 */
 	
 	// operands
-	abstract protected function compileReference($field, $model = NULL);
-	abstract protected function compileSubstitute($key);
+	abstract protected function compileReference($field, $model_alias = NULL);
+	abstract protected function compileSubstitute($key = NULL);
 	abstract protected function compileLiteral($value);
 	abstract protected function compileImmediate($value);
 	
