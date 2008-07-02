@@ -282,7 +282,7 @@ abstract class ModelGateway implements Gateway {
 				$this->_cached_relations[$record_name] = $query;
 		}
 						
-		return $query;
+		return (string)$query;
 	}
 	
 	/**
