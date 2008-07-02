@@ -33,7 +33,6 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * Destructor, break references.
 	 */
 	public function __destruct() {
 		unset(

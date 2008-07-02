@@ -12,7 +12,11 @@
 
 
 /**
- * Return a new pinq object
+ * from(string $model_name[, $model_alias]) <==> (new Query)->from(...) -> Query
+ *
+ * Start off a new PQL query in the context for $model_alias. If $model_alias
+ * is not set it will default to $model_name.
+ *
  * @author Peter Goodman
  */
 function from($model_name, $model_alias = NULL) {
@@ -21,7 +25,8 @@ function from($model_name, $model_alias = NULL) {
 }
 
 /**
- * Return a new pinq object
+ * in(...) <==> from(...) -> Query
+ *
  * @author Peter Goodman
  */
 function in($model_name, $model_alias = NULL) {
@@ -30,7 +35,8 @@ function in($model_name, $model_alias = NULL) {
 }
 
 /**
- * Return a new pinq object
+ * to(...) <==> from(...) -> Query
+ *
  * @author Peter Goodman
  */
 function to($model_name, $model_alias = NULL) {
@@ -39,7 +45,27 @@ function to($model_name, $model_alias = NULL) {
 }
 
 /**
- * A PQL query to query a hypothetical data structure.
+ * Class that describes queries to hypothetical data structures. Known within
+ * the framework as PQL (PINQ Query Language) queries. The public methods of
+ * this class are chainable.
+ *
+ * @example
+ *     Selecting from a single model. Each query is equivalent:
+ *         from('model_a', 'a')->select(ALL)->where()->a('id')->eq->_;
+ *         from('model_a')->select(ALL)->where()->id->eq->_;
+ *         from('model_a')->select(ALL)->where()->id->eq(_);
+ *     
+ *     Selecting from more than one model without linking:
+ *         from('model_a', 'a')->select(ALL)->from('model_b', 'b')->
+ *         select(ALL)->where()->a('id')->eq->b('id')->and->a('id')->gt(0);
+ *     
+ *     Selecting from more than one model with linking (equivalent to above):
+ *         from('model_a', 'a')->select(ALL)->from('model_b', 'b')->
+ *         select(ALL)->link('a', 'b')->where()->a('id')->gt(0);
+ *
+ * @note Methods {where, limit, order, group} return a new QueryPredicates
+ *       instance.
+ * @see QueryPredicates
  * @author Peter Goodman
  */
 class Query {
@@ -63,7 +89,7 @@ class Query {
 	          $_compiled = FALSE;
 	
 	/** 
-	 * Constructor, very little to set up.
+	 * Query(void)
 	 */
 	public function __construct() {
 		
@@ -73,7 +99,6 @@ class Query {
 	}
 	
 	/**
-	 * Destructor, clear up everything.
 	 */
 	public function __destruct() {
 		unset(
@@ -86,14 +111,20 @@ class Query {
 	}
 	
 	/**
-	 * Clone the query. We need to make sure to change the query id.
+	 * $q->__clone(void) <==> clone $q
+	 *
+	 * Make sure that in a cloned query the internal query id has been changed.
 	 */
 	public function __clone() {
 		$this->_id = self::$query_id++;
 	}
 	
 	/**
-	 * Tell the query that it has been compiled.
+	 * $q->setCompiled(void) -> void
+	 *
+	 * Tell this instance (and its related QueryPredicates instance if exists)
+	 * that it has been compiled. Any future additions/changes to either this
+	 * instance or the related QueryPredicates instance invalidates this state.
 	 */
 	public function setCompiled() {
 		$this->_compiled = TRUE;
@@ -102,7 +133,10 @@ class Query {
 	}
 	
 	/**
-	 * Has this query and its predicates been compiled yet?
+	 * $q->isCompiled(void) -> bool
+	 *
+	 * Check if a query and its related query predicates object have been
+	 * compiled yet or not. This is used in query caching.
 	 */
 	public function isCompiled() {
 		
@@ -113,42 +147,100 @@ class Query {
 	}
 	
 	/**
-	 * Get this query's ID.
+	 * $q->getId() -> int
+	 *
+	 * Get this query's ID. Each query instance has an internal id that is 
+	 * different from every other query instances. When a query is cloned the
+	 * cloned query gets a new ID. This ID is used for caching purposes along
+	 * with Query::isCompiled().
 	 */
 	public function getId() {
 		return $this->_id;
 	}
 	
 	/**
-	 * Set this query's predicates.
+	 * $q->setPredicates(QueryPredicates) -> void
+	 *
+	 * Set/change the predicates object that this query is linked to.
 	 */
 	public function setPredicates(QueryPredicates $predicates) {
+		
+		if($this->_predicates !== NULL)
+			$this->_compiled = FALSE;
+		
 		$this->_predicates = $predicates;
 	}
 	
 	/**
-	 * Get the predicates.
+	 * $q->getPredicates(void) -> QueryPredicates
+	 *
+	 * Get the predicates object that this instance is associated with. If
+	 * this isntance is not associated with a QueryPredicates obeject then
+	 * NULL is returned.
 	 */
-	public function &getPredicates() {
+	public function getPredicates() {
 		return $this->_predicates;
 	}
 	
 	/**
-	 * Get the relations defined in the query.
+	 * &$q->getRelatios(void) -> array
+	 *
+	 * Get the relations defined in the query. This is an associative
+	 * multidimensional array. If, for example, a link is specified in a query
+	 * in the form of:
+	 * ..->link('a', 'b')->link('a', 'c')->link('b', 'c')->...
+	 * then this will return an array formatted like:
+	 * array(
+	 *     'a' => array('b', 'c'),
+	 *     'b' => array('c'),
+	 * )
 	 */
 	public function &getRelations() {
 		return $this->_links;
 	}
 	
 	/**
-	 * Get the pivots defined in the query.
+	 * $q->getPivots(void) -> array
+	 *
+	 * Get the pivots defined in the query. Pivots are similar to relations as
+	 * pivoting is performed on a relation. When linking two models together
+	 * in a query using, for example: ..->link('a', 'b')->.., an optional
+	 * third parameter can be specified. In this third parameter we can, among
+	 * other things, specify a pivot direction. If we were to pivot the
+	 * relation between models 'a' and 'b' to the right, thus on 'b', then the
+	 * relations would be added as usual to the query and a predicate would be
+	 * added (at compile time) to the query on the field in 'b' that (in)directly
+	 * maps to 'a'. The field is set as a keyed substitute of itself.
+	 *
+	 * @example 
+	 *     The following is a PQL query with and without pivoting when
+	 *     compiled to SQL:
+	 * 
+	 *     from('a')->select(ALL)->from('b')->select(ALL)->link('a', 'b');
+	 *
+	 *         SELECT a.*, b.* FROM a INNER JOIN b ON a.id=b.id
+	 *     
+	 *     from('a')->select(ALL)->
+	 *     from('b')->select(ALL)->link('a', 'b', Query::PIVOT_RIGHT);
+	 *
+	 *         SELECT a.*, b.* FROM a INNER JOIN b ON a.id=b.id WHERE b.id=:id
+	 *
+	 * The above example shows that pivoting adds in a condition that restricts
+	 * the results returned form a query. Pivots also take advantage of
+	 * keyed susbtitute values, meaning data for either 'a' or 'b', depending
+	 * on the pivot direction, needs to be supplied to fulfill the conditions.
 	 */
 	public function getPivots() {
 		return $this->_pivots;
 	}
 	
 	/**
-	 * Get the model name given an alias.
+	 * $q->getUnaliasedModelName(string $model_alias) -> string
+	 *
+	 * Given either the alias to an external model name or the external model
+	 * name itself, return the external model name. Model name aliases allows
+	 * for the same model to be used multiple times in different ways in a
+	 * single query and work as expected.
 	 */
 	public function getUnaliasedModelName($model_alias) {
 		if(isset($this->_aliases[$model_alias]))
@@ -157,14 +249,32 @@ class Query {
 	}
 	
 	/**
-	 * Get the aliases.
+	 * &$q->getAliases(void) -> array
+	 *
+	 * Return an associative array mapping model aliases to external model
+	 * names.
+	 *
+	 * @note The external model names are also keys in the aliases array
+	 *       mapping to themselves.
 	 */
 	public function &getAliases() {
 		return $this->_aliases;
 	}
 	
 	/**
-	 * Return a contet from the query.
+	 * $q->getContext(string $model_alias) -> array
+	 *
+	 * Return a context from the query. A query context, unlike a QueryPredicates
+	 * context, is everything defined for a particularly aliased model.
+	 *
+	 * @example 
+	 *     Everything surrounded in { and } belongs to a specific context:
+	 *         {from('a')->select(ALL)}->
+	 *         {from('b')->select(ALL)}->
+	 *         link('a', 'b')->...
+	 *
+	 * Thus, from the above example, everything specific to a single model
+	 * belongs to that model's context within the query.
 	 */
 	public function getContext($model_alias) {
 		if(isset($this->_contexts[$model_alias]))
@@ -174,14 +284,24 @@ class Query {
 	}
 	
 	/**
-	 * Return all contexts.
+	 * $q->getContexts(void) -> array
+	 *
+	 * Return all information specific to individual models that are sources
+	 * within the query.
+	 *
+	 * @see Query::getContext(...)
 	 */
 	public function getContexts() {
 		return $this->_contexts;
 	}
 	
 	/**
-	 * Set the current context. If the context does not exist then create it.
+	 * $q->setContext(string $model_name, string $model_alias) -> void
+	 *
+	 * Set the current context to be a specific sourece. Contexts are identified
+	 * by their model aliases (where model names are the external model names).
+	 * If a context does not exist for a particular model alias then one is
+	 * created.
 	 */
 	protected function setContext($model_name, $model_alias) {
 		
@@ -209,7 +329,10 @@ class Query {
 	}
 	
 	/**
-	 * Set the current context.
+	 * $q->from(string $model_name[, string $model_alias]) -> Query
+	 *
+	 * Set the current context to be the source identified by either
+	 * $model_alias (if given) or $model_name.
 	 */
 	public function from($model_name, $model_alias = NULL) {
 		
@@ -223,14 +346,20 @@ class Query {
 	}
 	
 	/**
-	 * Alias of from().
+	 * $q->in(...) <==> $q->from(...)
 	 */
 	public function in($model_name, $model_alias = NULL) {
 		return $this->from($model_name, $model_alias);
 	}
 	
 	/**
-	 * Select some fields from the current context.
+	 * $q->select([string $field1[, string $field 2[, ...]]]) -> Query
+	 * $q->select([array $fields]) -> Query
+	 *
+	 * Select some fields from the current context (model). If an array is
+	 * passed as the first argument to select then it will be considered to
+	 * have all the field names in it. Passing an array in allows the programmer
+	 * to define custom aliases for fields (not that they are necessary).
 	 */
 	public function select() {
 		$args = func_get_args();
@@ -260,14 +389,21 @@ class Query {
 	}
 	
 	/**
-	 * Create some select count fields.
+	 * $q->count(string $field[, string $alias]) -> Query
+	 *
+	 * Add a COUNT field to the current context. By default the alias of a
+	 * count field is count_$field; however, if an alias is passed in then it
+	 * will be only the $alias.
 	 */
 	public function count($field, $alias = NULL) {
 		
 		$this->_compiled = FALSE;
+		$field = (string)$field;
 		
 		if(NULL === $alias)
 			$alias = $field;
+		else
+			$alias = "count_{$field}";
 		
 		$this->_context['select_counts'] = array_merge(
 			$this->_context['select_counts'],
@@ -278,11 +414,34 @@ class Query {
 	}
 	
 	/**
-	 * Link two models together by their aliases.
+	 * $q->link(string $left_alias, string $right_alias[, int $flags = 0])
+	 * -> Query
+	 *
+	 * Link two models together by their aliases. An optional $flags integer
+	 * can be passed in where various options can be ORed in. Current options
+	 * include pivot directions.
+	 *
+	 * @example
+	 *     Link model 'b' on to 'a':
+	 *         from('a')->select(ALL)->from('b')->select(ALL)->link('a', 'b')
+	 *
+	 *     Link model 'c' on to 'b' and 'b' on to 'a':
+	 *         from('a')->select(ALL)->
+	 *         from('b')->select(ALL)->
+	 *         from('c')->select(ALL)->
+	 *         link('a', 'b')->
+	 *         link('b', 'c')-> ...
+	 *
+	 * @see Query::getPivots(...)
 	 */
 	public function link($left_alias, $right_alias, $flags = 0) {
 		
 		$this->_compiled = FALSE;
+		
+		// boring type casts
+		$flags = (int)$flags;
+		$left_alias = (string)$left_alias;
+		$right_alais = (string)$right_alias;
 		
 		// read the error: you can't link a model to itself using the same two
 		// aliases.
@@ -325,7 +484,16 @@ class Query {
 	}
 	
 	/**
-	 * Set (key,value) pairs, or a single (key,value) pair.
+	 * $q->set({string,array} $key[, mixed $value]) -> Query
+	 *
+	 * Set (key,value) pairs, or a single (key,value) pair to the current
+	 * context. This is used mainly for doing INSERT and UPDATE queries.
+	 *
+	 * @example
+	 *     in('model_name')->set('a', 10)->set(array(
+	 *         'b' => 20,
+	 *         'c' => TRUE,
+	 *     ))->...
 	 */
 	public function set($key, $value = NULL) {
 		

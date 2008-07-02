@@ -10,7 +10,7 @@ class IndexController extends PinqController {
 	 */
 	public function ANY_index() {
 		
-		help('ModelGateway');
+		help('Query');
 				
 		$db = $this->import('db.blog');
 		
@@ -25,7 +25,7 @@ class IndexController extends PinqController {
 		              order()->posts('created')->desc;
 		
 		$post = $db->get($post_query);
-		
+				
 		// set stuff to the view
 		$this->view[] = array(
 			

@@ -111,9 +111,6 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// as well
 			foreach($counts as $alias => $column) {
 				
-				if($alias == $column)
-					$alias = "count_{$column}";
-				
 				$select[] = "COUNT({$table_alias}.{$column}) AS ".
 				            "{$model_name}_{$alias}";
 			}

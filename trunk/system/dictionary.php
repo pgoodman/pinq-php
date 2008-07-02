@@ -59,7 +59,8 @@ class Dictionary implements ArrayAccess {
 	 * 
 	 * Map a key in the dictionary to a specific value.
 	 *
-	 * @note When specifying the key as NULL, val must be an array.
+	 * @note When specifying the key as NULL (thus not at all), val must be an 
+	 *       array.
 	 */
 	public function offsetSet($key, $val) {		
 		if(NULL === $key) {

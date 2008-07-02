@@ -38,7 +38,22 @@ function group() {
 
 /**
  * Class representing the various types of predicates that a PQL query can
- * have.
+ * have. Instances of this class are usually automatically created and returned
+ * by means of Query instances; however, an instance can be created and directly
+ * passed to named model gateways.
+ *
+ * @example
+ *     Instance of Query that creates an instance of QueryPredicates. The
+ *     instanceof QueryPredicates is surrounded in { and } to show where it
+ *     starts and ends:
+ *         from('model_name')->select(ALL)->where(){->id->neq->_};
+ *     
+ *     Instance of QueryPredicates being passed directly into a model gateway:
+ *         Not Valid: $gateway->getAll(limit(10));
+ *         Valid:     $gateway->posts->getAll(limit(10));
+ *         
+ *         Not Valid: $gateway->getAll(where()->created_time->gt->_);
+ *         Valid:     $gateway->posts->getAll(where()->created_time->gt->_);
  *
  * @author Peter Goodman
  */

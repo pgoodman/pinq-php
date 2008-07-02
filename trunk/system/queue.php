@@ -21,8 +21,8 @@ class QueueException extends PinqException {
 class Queue implements Countable, IteratorAggregate {
 	
 	// public for cloning purposes
-	public $_queue = array(),
-		   $_end = -1;
+	protected $_queue = array(),
+	          $_end = -1;
 	
 	/**
 	 * $q->push(mixed $val)
