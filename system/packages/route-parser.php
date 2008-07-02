@@ -5,19 +5,33 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Deal with parsing routes. This class accepts programmer defined route
- * remappings. With these remappings, the router groups them by their longest
- * prefix of terminals (things that won't change such as /'s and words) and
- * then matches against those. When the router can't match against a route
+ * Class that collects and parses routes. Accepts programmer defined route
+ * remappings. The router groups these remappings by their longest prefix of 
+ * terminals (things that won't change such as /'s and words) and then matches 
+ * the URI against those. When the router cannot match the URI against a route
  * in memory, it will simply scan the document tree until it can find a
- * controller. Okay, so, why go to all of the trouble of matching longest
- * prefixes? Routers ought to be simple! Well, this is still simple, but the
- * real benefit is that it means that two similar routes won't overwrite each
- * other. For example, the following won't conflict, even though from the
- * point of a regular expression they would:
+ * controller. 
  *
- * /controller/action/(:word)
- * /controller/action/foo
+ * This router is designed such  that two similar routes won't overwrite each-
+ * other. 
+ *
+ * @example
+ *     The following two routes will not conflict, even though from the point
+ *     of view of a regular expression they would:
+ *         /controller/action/(:word)
+ *         /controller/action/foo
+ *
+ *     When working with the index controller of a project, it can often be
+ *     disirable to have methods other than index that are available. However,
+ *     methods other than *_index of an application index controller are only
+ *     accessible directly, as show:
+ *         /                  -> IndexController::ANY_index
+ *         /index/method      -> IndexController::ANY_method
+ *
+ *     To be able to access /index/method instead as /method, one would add
+ *     the following route re-mapping in the /application/config/package.route
+ *     -parser.php configuration file:
+ *         $routes['/method'] = '/index/method';
  * 
  * @author Peter Goodman
  */
@@ -28,13 +42,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			  $macro_vals = array(), // array_keys and array_values
 			  $path = array();	 // information about the current path
 	
-	// so that it will fit nicely into CodeIgniter / Kohana
-	protected $allowed_chars = "a-zA-Z0-9_-",
-			  $arguments = array(), // arguments passed through the route
-			  $directory, // the directory where the controller is
-			  $partial_directory,
-			  $controller, // the controller class to instantiate
-			  $method, // the method of the controller to call
+	protected $allowed_chars = "a-zA-Z0-9_+-",
 			  $default_controller = 'index',
 			  $default_method = 'index';
 	
@@ -43,9 +51,18 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			  $ext;
 	
 	/**
-	 * Configure this package for the PackageLoader.
+	 * PinqRouteParser::configure(PackageLoader, ConfigLoader, array $args) 
+	 * -> {Package, void}
+	 *
+	 * Configure this package for the PackageLoader and return a new instance
+	 * of the route parser.
+	 *
+	 * @note When extending this class, there is no need to change this method
+	 *       as the class bane to be instantiated is passed in.
 	 */
-	static public function configure(Loader $loader, Loader $config, array $args) {
+	static public function configure(Loader $loader, 
+	                                 Loader $config, 
+	                                  array $args) {
 		
 		extract($args);
 		
@@ -68,9 +85,9 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	}
 
 	/**
-	 * Constructor, build up some default macros.
+	 * PinqRouteParser(string $base_dir, string $php_file_extension)
 	 */
-	final public function __construct($base_dir, $extension) {
+	final public function __construct($base_dir, $php_file_extension) {
 		$this->addMacro('alpha',	'[a-zA-Z]+');
 		$this->addMacro('num',		'[0-9]+');
 		$this->addMacro('alphanum', '[a-zA-Z0-9]+');
@@ -84,32 +101,46 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 									'{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}');
 		
 		$this->base_dir = $base_dir;
-		$this->ext = $extension;
+		$this->ext = $php_file_extension;
 		
 		$this->__init__(); // hook
 	}
 
 	/**
-	 * Destructor.
 	 */
 	final public function __destruct() {
 		$this->__del__(); // hook
 	}
 	
 	/**
-	 * Get the path info from the route.
+	 * $r->defaultPathInfo(void) -> array
+	 *
+	 * Get the default path info. This, similar to parse(), returns an array
+	 * structured as such:
+     *
+	 * 1) absolute path to controller file's containing directory
+	 * 2) path to controller file's contraining directory starting from the
+	 *    root of the controller's directory.
+	 * 3) the controller file name, formatted throuhg function_name()
+	 * 4) the action name, formatted through function_name()
+	 * 5) an array of arguments to pass to the controller action
+	 *
+	 * @see function_name(...)
+	 * @see PinqRouteParser::parse(...)
 	 */
-	public function getPathInfo() {
+	protected function defaultPathInfo() {
 		return array(
-			$this->directory,
-			$this->partial_directory,
-			$this->controller,
-			$this->method,
-			$this->arguments,
+			$this->base_dir .'/',
+			'/',
+			$this->default_controller,
+			$this->default_method,
+			array()
 		);
 	}
 	
 	/**
+	 * $r->addMacro(string $id, string $regex) -> void
+	 *
 	 * Add a macro that should be expanded into a regular expression.
 	 */
 	public function addMacro($id, $regex) {
@@ -118,6 +149,8 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	}
 	
 	/**
+	 * $r->cleanPath(string $route) -> string
+	 *
 	 * Clean up the route a bit: take away useless spaces and /'s.
 	 */
 	protected function cleanPath($route) {
@@ -125,6 +158,8 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	}
 	
 	/**
+	 * $r->calculateLongestPrefix(string $route) -> string
+	 *
 	 * Get the longest prefix of terminals for a given route added through
 	 * addRoute.
 	 */
@@ -140,8 +175,10 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	}
 	
 	/**
-	 * Given all of the prefixes, find the longest matching one for a given
-	 * route.
+	 * $r->getLongestMatchingPrefix(string $route) -> string
+	 *
+	 * Incrementally check each route part of $route against the existing
+	 * route prefixes and return the longest one.
 	 */
 	protected function getLongestMatchingPrefix($route) {
 		
@@ -160,6 +197,8 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	}
 	
 	/**
+	 * $r->addRoute(string $route, string $maps_to) -> void
+	 *
 	 * Add a route for parsing. Remapping has two uses. First, we might be
 	 * mapping a route to itself so that we can properly sanitize the
 	 * incoming data, or we might be remapping a route, that is: creating a
@@ -194,6 +233,8 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	}
 	
 	/**
+	 * $r->parse(string $route) -> array
+	 *
 	 * Parse a route into several segments. We make one central assumption:
 	 * that the only routes with ordered arguments are ones that have been
 	 * added in memory. Otherwise, we will just take anything after the 
@@ -206,13 +247,15 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$route = $path = trim($this->cleanPath($route), '/');
 		
 		// set up the defaults
-		$this->controller = $this->default_controller;
-		$this->method = $this->default_method;
-		$this->directory = $this->base_dir;
+		$controller = $this->default_controller;
+		$method = $this->default_method;
+		$directory = $this->base_dir;
+		$partial_directory = '/';
+		$arguments = array();
 		
 		// route is empty, we're at the base controller and method
 		if(empty($route))
-			return $this->controllerFileExists();
+			return $this->defaultPathInfo();
 		
 		// calculate the prefix
 		$prefix = $this->getLongestMatchingPrefix($route);
@@ -247,7 +290,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 					continue;
 				
 				// make sure we get the arguments in the right order
-				$this->reorderArguments($maps_to, $matches);
+				$arguments = $this->parseArguments($maps_to, $matches);
 				$path = trim($maps_to, '/');
 				break;
 			}
@@ -260,60 +303,64 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$path_parts = explode('/', ltrim($path, '/') .'///');
 		
 		$i = -1;
-		$base = $this->directory;
-		$partial = '';
 		
 		// build up the directory to the controller, making sure to ignore
 		// empty sub-directories
-		while(isset($path_parts[++$i]) &&  is_dir($base .'/'. $path_parts[$i])) {
-			$base .= '/'. $path_parts[$i];
-			$partial .= '/'. $path_parts[$i];
+		while(isset($path_parts[++$i]) && is_dir($directory .'/'. $path_parts[$i])) {
+			$directory .= '/'. $path_parts[$i];
+			$partial_directory .= '/'. $path_parts[$i];
 		}
-		
-		$this->partial_directory = $partial;
-		$this->directory = $base;
 
 		// we might have found what we're looking for ;)
 		if(!empty($path_parts[$i]))
-			$this->controller = $path_parts[$i++];
+			$controller = $path_parts[$i++];
 		
-		$first_arg = isset($this->arguments[0]) ? $this->arguments[0] : NULL;
+		$first_arg = isset($arguments[0]) ? $arguments[0] : NULL;
 		if(!empty($path_parts[$i]) && $path_parts[$i] != $first_arg)
-			$this->method = $path_parts[$i];
+			$method = $path_parts[$i];
+		
+		// make it applicable as a file name
+		$controller = function_name($controller);
+		$method = function_name($method);
 		
 		// does the controller file exist?
-		return $this->controllerFileExists();
-	}
-
-	/**
-	 * Does the file associated with the controller exist?
-	 */
-	function controllerFileExists() {
-		return file_exists("{$this->directory}/{$this->controller}{$this->ext}");
+		if(!file_exists("{$directory}/{$controller}{$this->ext}"))
+			return FALSE;
+		
+		// return path info
+		return array(
+			$directory,
+			$partial_directory,
+			$controller,
+			$method,
+			$arguments,
+		);
 	}
 	
 	/**
+	 * $r->parseArguments(string $route, array $sub) -> array
+	 *
 	 * It's possible that in the mapped route the arguments are in a different
 	 * order than they are in the actual route, and thus need to be sent to
-	 * the controller in a corrected order.
+	 * the controller in a corrected order. Figure out the corrected order of
+	 * the arguments and return them.
+	 *
+	 * @note This method does not do argument concatenation
 	 */
-	protected function reorderArguments($route, array &$sub) {		
-		  
-		// make sure we end up with the right number of arguments. It doesn't
-		// matter if we count too many, eg: $$1 counting as 2 instead of 1.
-		$num_args = substr_count($route, '$');
-		if($num_args > 0)
-			$this->arguments = array_fill(0, $num_args, NULL);
+	protected function parseArguments($route, array $sub) {
 		
 		// find all the variables within the route (in order)
 		$matches = array();
 		if(!preg_match_all('~\$([0-9]+)~', $route, $matches))
-			return;
+			return array();
 		
 		// the controller expects a certain number of arguments, we might not
 		// actually get that many though, but that's no longer an issue
-		$count = count($this->arguments);
+		$count = count(array_unique($matches[1]));
 		$i = -1;
+		
+		// fill up the arguments array
+		$arguments = array_fill(0, $count, NULL);
 		
 		// iterate over the found variables
 		while(isset($matches[1][++$i])) {
@@ -327,20 +374,32 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 				continue;
 			
 			// put the argument in order.
-			$this->arguments[$i] = $sub[$index];
+			$arguments[$i] = $sub[$index];
 		}
+		
+		return $arguments;
 	}
 	
 	/**
-	 * Convenient way to add a route.
+	 * $r->offsetSet(...) <==> $r->addRoute(...) <==> $r[$route] = $maps_to
+	 *
+	 * Convenient way to add a route, especially from config files.
 	 */
 	final public function offsetSet($route, $maps_to) {
 		$this->addRoute($route, $maps_to);
 	}
 
 	/**
-	 * Hooks.
+	 * $c->__init__(void) -> void
+	 *
+	 * Hook called right after class construction.
 	 */
 	protected function __init__() { }
+	
+	/**
+	 * $c->__del__(void) -> void
+	 *
+	 * Hook called before class resources are released.
+	 */
 	protected function __del__() { }
 }
