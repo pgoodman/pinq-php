@@ -5,7 +5,10 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * Represents a request to a certain subset of events.
+ * Represents a request to a certain subset of available events. Events are
+ * represented by public methods prefixed with either a specific request type
+ * (in uppercase) or ANY, followed by an underscore. For example: ANY_index().
+ *
  * @author Peter Goodman
  */
 abstract class PinqController implements Package {
@@ -20,9 +23,7 @@ abstract class PinqController implements Package {
 	       $layout_file = 'default';
 	
 	/**
-	 * Constructor. Constructor is final because I want to encourage people to
-	 * use the __init__() hook instead so that they don't forget to bring in
-	 * the package loader dependency.
+	 * PinqController(Loader $packages, View $layout, View $page)
 	 */
 	final public function __construct(Loader $packages, View $layout, View $page) {
 		
@@ -40,7 +41,6 @@ abstract class PinqController implements Package {
 	}
 	
 	/**
-	 * Destructor, call a hook.
 	 */
 	final public function __destruct() {		
 		$this->__del__(); // hook
@@ -52,19 +52,24 @@ abstract class PinqController implements Package {
 	}
 	
 	/**
-	 * Try to call a method of this controller.
+	 * $c->act(string $request_method, string $action[, array $arguments])
+	 * -> void
+	 *
+	 * Call a specific controller action. This first looks for a method named
+	 * {$request_method}_{$action} and then ANY_{$action}. If neither exists
+	 * a 405 Method Doesn't Exist error is yielded.
 	 */
-	final public function act($request_method, $method, array $arguments) {
+	final public function act($request_method, $action, array $arguments) {
 		
 		// we're working with a valid controller, are we working with
 		// a valid method?
-		if(is_callable(array($this, "{$request_method}_{$method}")))
-			$method = "{$request_method}_{$method}";
+		if(is_callable(array($this, "{$request_method}_{$action}")))
+			$action = "{$request_method}_{$action}";
 		
 		// method to handle any unsupported / or just all request
 		// methods at once
-		else if(is_callable(array($this, "ANY_{$method}")))
-			$method = "ANY_{$method}";		
+		else if(is_callable(array($this, "ANY_{$action}")))
+			$action = "ANY_{$action}";		
 		
 		// no available action method exists
 		else
@@ -73,15 +78,27 @@ abstract class PinqController implements Package {
 		// call the controller's action
 		$this->beforeAction();
 		call_user_func_array(
-			array($this, $method), 
+			array($this, $action), 
 			$arguments
 		);
 		$this->afterAction();
 	}
 	
 	/**
-	 * Import services. This function will deal with the configuration and
-	 * caching of those services as well.
+	 * $c->import(string $package) -> {Package, void}
+	 * $c->import([string $package1[, string $package2[, ...]]]) -> Package[]
+	 *
+	 * Import packages. This function will deal with the configuration and
+	 * caching of those packages as well.
+	 * 
+	 * @example
+	 *     $db = $this->import('db.blog');
+	 *
+	 *     list($db->cache, $db) = $this->import('cache', 'db.blog');
+	 *
+	 *     list($cache, $db) = $this->import('cache', 'db.blog');
+	 *
+	 * @see PackageLoader::load(...)
 	 */
 	public function import() {
 		
@@ -106,6 +123,8 @@ abstract class PinqController implements Package {
 	}
 	
 	/**
+	 * $c->importAs(string $package_name, string $alias) -> {Package, void}
+	 *
 	 * Import a package but store it with a different name. This takes
 	 * advantage of the fact that the package loader is a dictionary.
 	 */
@@ -121,13 +140,44 @@ abstract class PinqController implements Package {
 	}
 	
 	/**
-	 * Hooks.
+	 * $c->beforeAction(void) -> void
+	 *
+	 * Hook called before a controller's action is called.
 	 */
-	public function beforeAction() { }
-	public function afterAction() { }
-	public function beforeImport() { }
-	public function afterImport() { }
+	protected function beforeAction() { }
 	
+	/**
+	 * $c->afterAction(void) -> void
+	 *
+	 * Hook called after a controller's action is called.
+	 */
+	protected function afterAction() { }
+	
+	/**
+	 * $c->beforeImport(void) -> void
+	 *
+	 * Hook called before packages are imported.
+	 */
+	protected function beforeImport() { }
+	
+	/**
+	 * $c->afterImport(void) -> void
+	 *
+	 * Hook called after packages are imported.
+	 */
+	protected function afterImport() { }
+	
+	/**
+	 * $c->__init__(void) -> void
+	 *
+	 * Hook called right after class construction.
+	 */
 	protected function __init__() { }
+	
+	/**
+	 * $c->__del__(void) -> void
+	 *
+	 * Hook called before class resources are released.
+	 */
 	protected function __del__() { }
 }
