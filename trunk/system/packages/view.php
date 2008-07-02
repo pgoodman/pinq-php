@@ -5,37 +5,41 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
+ * element_view(string $id) -> View
+ *
  * Create a new element view element.
+ *
  * @author Peter Goodman
  */
 function element_view($id) {
-	$view = View::factory();
-	$view->setFile($id, View::ELEMENT);
-	return $view;
+	return  View::factory()->setFile((string)$id, View::ELEMENT);
 }
 
 /**
+ * page_view(string $id) -> View
+ *
  * Create a new page view element.
+ *
  * @author Peter Goodman
  */
 function page_view($id) {
-	$view = View::factory();
-	$view->setFile($id, View::PAGE);
-	return $view;
+	return View::factory()->setFile((string)$id, View::PAGE);
 }
 
 /**
+ * layout_view(string $id) -> View
+ *
  * Create a new layout view element.
+ *
  * @author Peter Goodman
  */
 function layout_view($id) {
-	$view = View::factory();
-	$view->setFile($id, View::LAYOUT);
-	return $view;
+	return View::factory()->setFile((string)$id, View::LAYOUT);
 }
 
 /**
- * A view.
+ * An abstract view.
+ *
  * @author Peter Goodman
  */
 abstract class View extends Dictionary implements ConfigurablePackage {
@@ -50,16 +54,20 @@ abstract class View extends Dictionary implements ConfigurablePackage {
 	static public $class;
 	
 	/**
+	 * View::configure(PackageLoader, ConfigLoader, array) -> void
+	 *
 	 * Configure the view.. this is sort of a hack to make extending views
 	 * right.
 	 *
 	 * TODO: find a way around this hack.
 	 */
-	static public function configure(Loader $a, Loader $b, array $args) {
+	static public function configure(Loader $p, Loader $c, array $args) {
 		self::$class = $args['class'];
 	}
 	
 	/**
+	 * View::factory(void) -> View
+	 *
 	 * Factory method to return a new view instance.
 	 */
 	static public function factory() {
@@ -67,8 +75,15 @@ abstract class View extends Dictionary implements ConfigurablePackage {
 		return call_user_class_array(self::$class, $args);
 	}
 	
-	abstract public function render(StackOfDictionaries $view);
-	abstract public function setFile($file, $category);
+	/**
+	 * $v->render(StackOfDictionaries) -> void
+	 */
+	abstract public function render(StackOfDictionaries $scope);
+	
+	/**
+	 * $v->setFile(string $file, int $type) -> View
+	 */
+	abstract public function setFile($file, $type);
 }
 
 /**
@@ -80,6 +95,8 @@ class PinqView extends View {
 	protected $file;
 	
 	/**
+	 * $v->setFile(string $file, int $type) -> View
+	 *
 	 * Set a file to the view. This is not part of the constructor so that
 	 * the views can be bound to a file after they've been created.
 	 */
@@ -87,14 +104,16 @@ class PinqView extends View {
 				
 		$file = DIR_APPLICATION ."/views/{$type}/{$file}.html";
 				
-		// uh oh, we will fail silently
-		if(!is_readable($file))
-			return;
+		// only set the file if it exists
+		if(is_readable($file))
+			$this->file = $file;
 		
-		$this->file = $file;
+		return $this;
 	}
 	
 	/**
+	 * $v->render(StackOfDictionaries[, {array, Record} $vars]) -> void
+	 *
 	 * Render a view. This also allows for easier applying of vars through
 	 * the secodn parameter.
 	 */

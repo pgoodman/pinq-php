@@ -23,7 +23,7 @@ abstract class PinqController implements Package {
 	       $layout_file = 'default';
 	
 	/**
-	 * PinqController(Loader $packages, View $layout, View $page)
+	 * PinqController(PackageLoader, View $layout, View $page)
 	 */
 	final public function __construct(Loader $packages, View $layout, View $page) {
 		
