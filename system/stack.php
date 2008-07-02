@@ -20,9 +20,8 @@ class StackException extends PinqException {
  */
 class Stack implements Countable, IteratorAggregate {
 	
-	// pubic for cloning purposes
-	public $_stack = array(),
-		   $_top = -1;
+	protected $_stack = array(),
+	          $_top = -1;
 	
 	/**
 	 * Stack([array $default])
