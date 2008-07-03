@@ -13,3 +13,10 @@ class UsersDefinition extends DatabaseModelDefinition {
 		$this->id->mapsTo('posts', 'user_id');
 	}
 }
+
+class UsersRecord extends InnerRecord {
+	public function __init__() {
+		$this['display_id'] = base36_encode($this['id']);
+		$this['perma_link'] = url('users', 'view', $this['display_id']);
+	}
+}

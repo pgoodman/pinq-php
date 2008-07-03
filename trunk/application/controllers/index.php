@@ -10,12 +10,8 @@ class IndexController extends PinqController {
 	 */
 	public function ANY_index() {
 		
-		help('Query');
-				
 		$db = $this->import('db.blog');
-		
-		out('num rows:', (int)$db->getValue(from('posts')->count('id')));
-		
+				
 		// this query is used twice, yay! find the current published posts
 		// ordered by their created time (descending)
 		$post_query = from('posts')->select(ALL)->
@@ -25,7 +21,7 @@ class IndexController extends PinqController {
 		              order()->posts('created')->desc;
 		
 		$post = $db->get($post_query);
-				
+						
 		// set stuff to the view
 		$this->view[] = array(
 			

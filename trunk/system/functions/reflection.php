@@ -327,8 +327,9 @@ function __doc_format_class($class_name) {
 		$reflector->isAbstract() ? 'abstract class' : 'class'
 	);
 	
-	$str = "<b>{$final}{$type} {$class_name}</b>\n";
-	$str .= __doc_format_section($doc_block, $line_prefix);
+	$str = "<b>{$final}{$type} {$class_name}</b>";
+	if(!empty($doc_block))
+		$str .= "\n". __doc_format_section($doc_block, $line_prefix);
 	
 	// show the class constants
 	$constants = $reflector->getConstants();

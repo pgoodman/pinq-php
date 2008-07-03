@@ -31,12 +31,15 @@ class Dictionary implements ArrayAccess {
 	public function __construct(array &$vals = NULL) {
 		if(!empty($vals))
 			$this->_dict = &$vals;
+		
+		$this->__init__();
 	}
 	
 	/**
 	 * Destructor, clear the stored values.
 	 */
 	public function __destruct() {
+		$this->__del__();
 		unset($this->_dict);
 	}
 	
@@ -111,6 +114,20 @@ class Dictionary implements ArrayAccess {
 	public function toArray() {
 		return $this->_dict;
 	}
+	
+	/**
+	 * $c->__init__(void) -> void
+	 *
+	 * Hook called right after class construction.
+	 */
+	protected function __init__() { }
+	
+	/**
+	 * $c->__del__(void) -> void
+	 *
+	 * Hook called before class resources are released.
+	 */
+	protected function __del__() { }
 }
 
 /**
