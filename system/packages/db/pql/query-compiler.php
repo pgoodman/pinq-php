@@ -132,6 +132,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$sql = '';
 		$comma = '';
 		$query = $this->query;
+		$dependent_table_name = $query->getUnaliasedModelName(
+			$dependent_model_name
+		);
 		
 		foreach($graph as $model_name => $dependencies) {
 			
@@ -168,8 +171,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				// cached when we generated the graph so this function is
 				// essentially free	
 				$relation = $this->relations->getPath(
-					$query->getUnaliasedModelName($dependent_model_name),
-					$query->getUnaliasedModelName($model_name),
+					$dependent_table_name,
+					$table_name,
 					$this->models
 				);
 				

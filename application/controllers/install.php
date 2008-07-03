@@ -21,7 +21,7 @@ class InstallController extends AppController {
 				continue;
 			
 			out('<pre>', $query, '</pre>');
-			$db->post($query);
+			$this->db->post($query);
 		}
 		
 		// add in our first post

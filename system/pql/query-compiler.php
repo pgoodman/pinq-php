@@ -218,6 +218,12 @@ abstract class QueryCompiler implements Compiler {
 			
 			foreach($related_aliases as $right_alias) {
 				
+				// if we're doing a self-join of sorts using the same alias it
+				// means joining would be useless, and possibly give unexpected
+				// results (eg: self.parent_id->self.id).
+				if($left_alias === $right_alias)
+					continue;
+				
 				$right_name = $query->getUnaliasedModelName($right_alias);
 				
 				// find a path between two models	

@@ -1,3 +1,10 @@
 <?=element_view('post_full')->render($scope, array('post' => $post));?>
 
+<? if($tags): ?>
+<h4>Tags</h4>
+<? endif; ?>
+
+<? if($comments): ?>
 <h4>Comments</h4>
+
+<? endif; ?>
