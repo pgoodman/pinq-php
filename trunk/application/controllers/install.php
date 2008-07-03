@@ -37,6 +37,17 @@ class InstallController extends PinqController {
 			'published' => TRUE,
 		)));
 		
+		// add in our first post
+		$db->post(to('posts')->set(array(
+			'id' => NULL,
+			'title' => 'Second blog post',
+			'nice_title' => 'second-blog-post',
+			'body' => str_repeat('This is the second blog post. ', 25),
+			'user_id' => 1,
+			'created' => time(),
+			'published' => TRUE,
+		)));
+		
 		// add in our first user
 		$db->post(to('users')->set(array(
 			'id' => NULL,

@@ -12,7 +12,7 @@ class IndexController extends PinqController {
 		
 		$db = $this->import('db.blog');
 		$post = $db->posts->getNewest();
-		
+				
 		// set stuff to the view
 		$this->view[] = array(
 			

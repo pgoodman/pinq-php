@@ -47,7 +47,7 @@ class PostsGateway extends DatabaseModelGateway {
      * Return the newest blog post.
      */
     public function getNewest() {
-        return parent::get($this->getPartialQuery());
+        return $this->get($this->getPartialQuery());
     }
     
     /**

@@ -593,7 +593,7 @@ abstract class ModelGateway implements Gateway {
 		if($query instanceof Query || $query instanceof QueryPredicates)
 			$query = $this->getQuery($query, QueryCompiler::INSERT);
 		
-		return (bool)$this->_ds->update($stmt, $args);
+		return (bool)$this->_ds->update($query, $args);
 	}
 	
 	/**
