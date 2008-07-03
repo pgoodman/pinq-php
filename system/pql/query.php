@@ -310,6 +310,7 @@ class Query {
 		
 		// create a new context
 		if(!isset($this->_contexts[$model_alias])) {
+			
 			$this->_contexts[$model_alias] = array(
 				'alias' => $model_alias,
 				'name' => $model_name,
@@ -322,7 +323,9 @@ class Query {
 			// a given alias
 			$this->_aliases[$model_alias] = $model_name;
 			$this->_aliases[$model_name] = $model_name;
-			$this->_links[$model_alias] = array();
+			
+			if(!isset($this->_links[$model_alias]))
+				$this->_links[$model_alias] = array();
 		}
 		
 		// set the current context
@@ -461,10 +464,10 @@ class Query {
 		
 		// make sure that the two linked aliases exist.
 		if(!isset($this->_contexts[$left_alias]))
-			throw new UnexpectedValueException(sptrintf($error, $left_alias));
+			throw new UnexpectedValueException(sprintf($error, $left_alias));
 		
 		else if(!isset($this->_contexts[$right_alias]))
-			throw new UnexpectedValueException(sptrintf($error, $right_alias));
+			throw new UnexpectedValueException(sprintf($error, $right_alias));
 		
 		// create the relationships array and add in the link
 		if(!isset($this->_links[$left_alias]))

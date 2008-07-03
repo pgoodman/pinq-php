@@ -316,97 +316,41 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	}
 	
 	/**
-	 * Rebuild pivots. Pivots are when we link two tables together in a query
-	 * and then want to add an extra predicate so that we can specify a value
-	 * to "pivot" the join tables on.
-	 *
-	 * Note: this function is called within rebuildPredicates() as it usually
-	 *       modifies the predicates array significantly.
-	 * 
-	 * @internal
-	 */
-	protected function createPivots() {
-		
-		$query = $this->query;
-		$pivots = $query->getPivots();
-		
-		// no pivoting needed
-		if(empty($pivots))
-			return;
-		
-		// set the predicates context and figure out if we need to begin by
-		// joining with an AND or not
-		($predicates = $query->getPredicates())
-		 and ($predicates = $predicates->where())
-		 or ($predicates = where());
-				
-		$join_with_and = !$predicates->contextIsEmpty();
-		
-		// add in the pivots
-		foreach($pivots as $left_alias => $rights) {
-			
-			$left_name = $query->getUnaliasedModelName($left_alias);
-			
-			foreach($rights as $right_alias => $pivot_type) {
-				
-				// find a path between the two models
-				$path = $this->relations->getPath(
-					$left_name, 
-					$query->getUnaliasedModelName($right_alias),
-					$this->models
-				);
-								
-				// no path, ignore this pivot
-				if(empty($path))
-					continue;
-				
-				// join onto the end of the predicates array
-				if($join_with_and)
-					$predicates->and;
-				
-				// figure out which side of the path to pivot on. $model_alias
-				// is set because we need to make sure we're pivoting on the
-				// model *alais* and not the model name.
-				if($pivot_type & Query::PIVOT_LEFT) {
-					$path = current($path);
-					$model_alias = $left_alias;
-				} else {
-					$path = end($path);
-					$model_alias = $right_alias;
-				}
-				
-				// add in the pivot using a keyed substitute
-				$predicates->$model_alias($path[1])->eq->_($path[1]);
-				
-				// every other pivot after this needs to be joined with an AND
-				$join_with_and = TRUE;
-			}
-		}
-		
-		// make sure that the predicates are set to the query if they weren't
-		// already
-		$query->setPredicates($predicates);
-	}
-	
-	/**
 	 * Compile a PQL query into a SQL SELECT statement.
 	 * @internal
 	 */
 	protected function compileSelect() {
 		
+		$pivots = $this->query->getPivots();
+		
 		// add in what we want to select
 		$sql = 'SELECT '. $this->compileFields();
 		
-		// add in the tables to get data from and build up the join statements
-		// (if any)
-		$aliases = &$this->query->getAliases();
-		$relations = &$this->query->getRelations();
+		// this will do a similar thing to graphing out the query, but it will
+		// also flatten that graph and change all the joins to be query
+		// predicates
+		if(!empty($pivots)) {
+			$this->compileRelationsAsPredicates();
+			
+			$contexts = $this->query->getContexts();
+
+			// a bit of a hack
+			$graph = array_combine(
+				array_keys($contexts),
+				array_fill(0, count($contexts), array())
+			);
 		
-		$graph = $this->relations->getRelationDependencies(
-			$aliases,
-			$relations,
-			$this->models
-		);
+		// create a graph of the query sources and relations
+		} else {
+			$aliases = &$this->query->getAliases();
+			$relations = &$this->query->getRelations();
+		
+			$graph = $this->relations->getRelationDependencies(
+				$aliases,
+				$relations,
+				$this->models
+			);
+		}
 		
 		if(!empty($graph)) {
 			$joins = $this->recursiveJoin(NULL, $graph, '');
@@ -414,7 +358,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		}
 		
 		// get parts of the query
-		$this->createPivots();
+		$this->compilePivots();
 		
 		$where = $this->compilePredicates('where');
 		$order = $this->compilePredicates('order');
@@ -484,9 +428,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * Build up a fields list.
 	 */
 	protected function buildFieldsList(array $context, 
-		                               ModelDefinition $definition, 
-		                               $prefix) {
-		
+	                         ModelDefinition $definition, 
+	                                         $prefix) {
+
 		$fields = array();
 		
 		// validate all of the fields. this is more of a step where the

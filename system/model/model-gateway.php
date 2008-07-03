@@ -213,7 +213,7 @@ abstract class ModelGateway implements Gateway {
 				// record possible
 				$query->from($model_name)->link(
 					$this->_model_name, 
-					$record_name, 
+					$model_name, 
 					Query::PIVOT_RIGHT
 				);
 			

@@ -3,16 +3,23 @@
 /**
  * Index controller.
  */
-class IndexController extends PinqController {
+class IndexController extends AppController {
 	
 	/**
 	 * Main function for the index controller.
 	 */
 	public function ANY_index() {
 		
-		$db = $this->import('db.blog');
-		$post = $db->posts->getNewest();
-				
+		$post = $this->db->posts->getNewest();
+		/*
+		$this->db->get(
+			"SELECT tags.id AS tags_id, tags.name AS tags_name
+			FROM tags, post_tags t1, posts 
+			WHERE t1.post_id=posts.id
+			AND tags.id=t1.tag_id 
+			AND (posts.id = 1)"
+		);*/
+		
 		// set stuff to the view
 		$this->view[] = array(
 			
@@ -24,7 +31,7 @@ class IndexController extends PinqController {
 			'posts' => (
 				$post === NULL
 					? array()
-					: $db->posts->getAll(limit(10, 1))
+					: $this->db->posts->getAll(limit(10, 1))
 			),
 		);
 	}

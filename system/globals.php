@@ -26,19 +26,19 @@ $server = array_merge($_SERVER, array(
 	'REQUEST_METHOD' => get_request_method(),
 ));
 
-// only put what we want into the super-globals array, and remove redundancies
-// such as the $GLOBALS' recursive reference to itself.
-$super_globals = array(
-	'_SERVER' => $server,
-	'_GET' => new ReadOnlyDictionary($_GET),
-	'_POST' => new ReadOnlyDictionary($_POST),
-	//'_ENV' => new ReadOnlyDictionary($_ENV),
-	'_FILES' => new ReadOnlyDictionary($_FILES),
-	'_REQUEST' => NULL,
-);
-
 // overwrite the $GLOBALS array, then extract the new super globals by
 // reference into the current scope, overwriting the shorthand to the
 // normal superglobals.
-$GLOBALS = new ReadOnlyDictionary($super_globals);
-extract($super_globals, EXTR_OVERWRITE | EXTR_REFS);
+$GLOBALS = NULL;
+unset($GLOBALS);
+
+extract(
+	array(
+		'_SERVER' => $server,
+		'_GET' => new ReadOnlyDictionary($_GET),
+		'_POST' => new ReadOnlyDictionary($_POST),
+		'_FILES' => new ReadOnlyDictionary($_FILES),
+		'_REQUEST' => NULL,
+	), 
+	EXTR_OVERWRITE | EXTR_REFS
+);
