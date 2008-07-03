@@ -325,34 +325,27 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// add in what we want to select
 		$sql = 'SELECT '. $this->compileFields();
-		
-		// this will do a similar thing to graphing out the query, but it will
-		// also flatten that graph and change all the joins to be query
-		// predicates
-		if(!empty($pivots)) {
-			$this->compileRelationsAsPredicates();
-			
-			$contexts = $this->query->getContexts();
 
-			// a bit of a hack
-			$graph = array_combine(
-				array_keys($contexts),
-				array_fill(0, count($contexts), array())
-			);
+		$aliases = &$this->query->getAliases();
+		$relations = &$this->query->getRelations();
 		
-		// create a graph of the query sources and relations
-		} else {
-			$aliases = &$this->query->getAliases();
-			$relations = &$this->query->getRelations();
-		
-			$graph = $this->relations->getRelationDependencies(
-				$aliases,
-				$relations,
-				$this->models
-			);
-		}
+		// create a graph of the 
+		$graph = $this->relations->getRelationDependencies(
+			$aliases,
+			$relations,
+			$this->models
+		);
 		
 		if(!empty($graph)) {
+			
+			// pivots are being used, flatten the graph and translate the
+			// nested joins into a flat set of inner joins with the conditions
+			// in the WHERE clause
+			if(!empty($pivots) && !empty($relations)) {
+				$graph = $this->flattenRelationsGraph($graph);
+				$this->compileRelationsAsPredicates();
+			}
+			
 			$joins = $this->recursiveJoin(NULL, $graph, '');
 			$sql .= ' FROM '. trim($joins, ' ()');
 		}
