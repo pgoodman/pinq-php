@@ -86,7 +86,7 @@ abstract class QueryCompiler implements Compiler {
 	 *
 	 * @internal
 	 */
-	public function compilePredicates($context) {
+	protected function compilePredicates($context) {
 		
 		if(NULL === ($predicates = $this->query->getPredicates()))
 			return NULL;
@@ -144,33 +144,16 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * $c->compileRelationsAsPredicates(void) -> void
+	 * $c->flattenRelationsGraph(array) -> array
 	 *
-	 * Compile relations between models into a list of predicates and join them
-	 * into the query. This dramatically changes the way the query works.
+	 * Flatten the relations graph into the query.
 	 */
-	public function compileRelationsAsPredicates() {
-		
-		$query = $this->query;
-		//$num_sources = count($query->getContexts());
-		//$relations = $query->getRelations();
-				
-		// get the graph of the joins that need to be made
-		$aliases = &$this->query->getAliases();
-		$relations = &$this->query->getRelations();
-		
-		// no relations, don't do anything useless
-		if(empty($relations))
-			return;
-		
-		// get a graph of relations
-		$graph = $this->relations->getRelationDependencies(
-			$aliases,
-			$relations,
-			$this->models
-		);
+	protected function flattenRelationsGraph(array $graph) {
 		
 		// flatten the graph
+		$query = $this->query;
+		$aliases = &$query->getAliases();
+		
 		$stack = new Stack;
 		$stack->push($graph);
 		$from_fields = array();
@@ -190,8 +173,29 @@ abstract class QueryCompiler implements Compiler {
 			}
 		}
 		
-		// add in the predicates
+		return $from_fields;
+	}
+	
+	/**
+	 * $c->compileRelationsAsPredicates(void) -> void
+	 *
+	 * Compile relations between models into a list of predicates and join them
+	 * into the query. This dramatically changes the way the query works.
+	 *
+	 * @note This assumes the relations have been flattened beforehand.
+	 */
+	protected function compileRelationsAsPredicates() {
 		
+		$query = $this->query;
+				
+		// get the graph of the joins that need to be made
+		$aliases = &$this->query->getAliases();
+		$relations = &$this->query->getRelations();
+		
+		// no relations, don't do anything useless
+		if(empty($relations))
+			return;
+				
 		// get the predicates and set the context or create a new set of
 		// predicates if the original predicates were null
 		($predicates = $query->getPredicates())
@@ -223,16 +227,12 @@ abstract class QueryCompiler implements Compiler {
 					$this->models
 				);
 				
-				// only allow direct relationships, skip ones with more
-				if(2 < ($count = count($path)))
-					continue;
-				
-				//if($count > 2) {
-				//	throw new DomainException(
-				//		"PQL modify query only allows direct relationships ".
-				//		"to be satisfied."
-				//	);
-				//}
+				if(2 < ($count = count($path))) {
+					throw new DomainException(
+						"PQL modify query only allows direct relationships ".
+						"to be satisfied."
+					);
+				}
 				
 				// put on a prefixing and
 				if($join_with_and) $predicates->and;
