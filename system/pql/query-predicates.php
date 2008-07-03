@@ -510,4 +510,42 @@ class QueryPredicates extends StackOfStacks {
 		$this->_context[] = array(self::IMMEDIATE, NULL, $val);
 		return $this;
 	}
+	
+	/**
+	 * $p->merge([QueryPredicates]) -> QueryPredicates
+	 *
+	 * Merge another QueryPredicates object into this one.
+	 */
+	public function merge(QueryPredicates $predicates = NULL) {
+		
+		if($predicates === NULL)
+			return $this;
+		
+		// go over each context and either merge the foreign predicate context
+		// in (where) or replace with the foreign context data (everything
+		// else).
+		foreach($this->_contexts as $context => &$data) {
+			$foreign_data = $predicates->getContext($context);
+			
+			// skip. no point
+			if(empty($foreign_data))
+				continue;
+			
+			// incoming data is appended onto existing data
+			if($context == 'where') {
+				$this->setContext($context);
+				
+				if(!empty($data))
+					$this->parseOperator('and');
+				
+				$data = array_merge($data, $foreign_data);
+				
+			// all other existing is replaced by incoming data
+			} else
+				$data = $foreign_data;
+				
+		}
+		
+		return $this;
+	}
 }

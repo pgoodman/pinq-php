@@ -11,17 +11,8 @@ class IndexController extends PinqController {
 	public function ANY_index() {
 		
 		$db = $this->import('db.blog');
-				
-		// this query is used twice, yay! find the current published posts
-		// ordered by their created time (descending)
-		$post_query = from('posts')->select(ALL)->
-		              from('users')->select(ALL)->
-		              link('posts', 'users')->
-		              where()->posts('published')->is(TRUE)->
-		              order()->posts('created')->desc;
+		$post = $db->posts->getNewest();
 		
-		$post = $db->get($post_query);
-						
 		// set stuff to the view
 		$this->view[] = array(
 			
@@ -30,9 +21,10 @@ class IndexController extends PinqController {
 			
 			// the next few older posts after the most recent, offset by 1
 			// only look for other posts if we have a first one
-			'posts' => ($post === NULL
-				? array()
-				: $db->getAll($post_query->limit(10, 1))
+			'posts' => (
+				$post === NULL
+					? array()
+					: $db->posts->getAllRecent(limit(10, 1))
 			),
 		);
 	}

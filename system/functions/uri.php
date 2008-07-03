@@ -84,6 +84,28 @@ function get_url() {
 }
 
 /**
+ * get_base_url(void) -> string
+ *
+ * Get the base URL, sans the route.
+ *
+ * @author Peter Goodman
+ */
+function get_base_url() {
+	static $url;
+	
+	if(NULL !== $url)
+		return $url;
+	
+	// remove any query parameters and anchors from the end of the url
+	$url = preg_replace('~(\?|#).*$~', '', get_url());
+	
+	// remove the route from the end of the url
+	$url = preg_replace('~'. preg_quote(get_route()) .'$~', '', $url);
+	
+	return $url;
+}
+
+/**
  * url([string $part1[, string $part2[, ...]]]) -> string
  *
  * Rebuild the current url with a specific uri. Each argument to this function
@@ -93,8 +115,5 @@ function get_url() {
  */
 function url() {
 	$route_parts = func_get_args();
-	$route = implode('/', $route_parts);
-	$path = str_replace(rtrim(get_route(), '/'), '', get_uri());
-	$uri = trim($path, '/') .'/'. $route;
-	return get_http_scheme() .'://'. get_http_host() .'/'. $uri;
+	return get_base_url() .'/'. implode('/', $route_parts);
 }
