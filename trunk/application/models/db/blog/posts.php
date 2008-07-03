@@ -2,7 +2,13 @@
 
 !defined('DIR_APPLICATION') && exit();
 
+/**
+ * Class describing the fields of the 'posts' table in the database.
+ *
+ * @author Peter Goodman
+ */
 class PostsDefinition extends DatabaseModelDefinition {
+	
     public function describe() {
         
         $this->id = int(10); // sqlite's own row id
@@ -19,31 +25,49 @@ class PostsDefinition extends DatabaseModelDefinition {
     }
 }
 
+/**
+ * Class representing a single 'post' record from the database.
+ *
+ * @author Peter Goodman
+ */
 class PostsRecord extends DatabaseRecord {
-    public function __init__() {
-        $this['display_id'] = base36_encode($this['id']);
-        $this['perma_link'] = url(date(
-			"Y/m/d", 
-			$this['created']), 
+	
+	/**
+	 * Constructor hook.
+	 */
+	public function __init__() {
+
+		// make a readable representation of this post id
+		$this['display_id'] = base36_encode($this['id']);
+		
+		// create a nice url to access this post
+		$this['perma_link'] = url(
+			date("Y/m/d", $this['created']), 
 			$this['nice_title']
 		);
     }
 }
 
+/**
+ * Class representing a way to directly access records from the 'posts' table
+ * in the database.
+ *
+ * @author Peter Goodman
+ */
 class PostsGateway extends DatabaseModelGateway {
     
     /**
      * Extend the partial query of the model gateway. This lets us do some
      * awesome magic.
      */
-    public function getPartialQuery() {
-        return (
-            parent::getPartialQuery()->
-            from('users')->select(ALL)->
-            link('posts', 'users')->
-            order()->posts('created')->desc->
-            where()->posts('published')->is(TRUE)
-        );
+	public function getPartialQuery() {
+		return (
+			parent::getPartialQuery()->
+			from('users')->select(ALL)->
+			link('posts', 'users')->
+			order()->posts('created')->desc->
+			where()->posts('published')->is(TRUE)
+		);
     }
     
     /**
@@ -51,7 +75,7 @@ class PostsGateway extends DatabaseModelGateway {
      *
      * Return the newest blog post.
      */
-    public function getNewest() {
-        return $this->get($this->getPartialQuery());
-    }
+	public function getNewest() {
+		return $this->get($this->getPartialQuery());
+	}
 }

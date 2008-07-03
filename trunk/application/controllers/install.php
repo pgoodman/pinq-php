@@ -3,14 +3,12 @@
 /**
  * Install controller.
  */
-class InstallController extends PinqController {
+class InstallController extends AppController {
 	
 	/**
 	 * Install the database tables.
 	 */
 	public function GET_index() {
-		
-		$db = $this->import('db.blog');
 		
 		// get the db tables from the schema file
 		$schema = file_get_contents(DIR_APPLICATION .'/sqlite/blog.schema');
@@ -27,7 +25,7 @@ class InstallController extends PinqController {
 		}
 		
 		// add in our first post
-		$db->post(to('posts')->set(array(
+		$this->db->post(to('posts')->set(array(
 			'id' => NULL,
 			'title' => 'First blog post',
 			'nice_title' => 'first-blog-post',
@@ -38,7 +36,7 @@ class InstallController extends PinqController {
 		)));
 		
 		// add in our first post
-		$db->post(to('posts')->set(array(
+		$this->db->post(to('posts')->set(array(
 			'id' => NULL,
 			'title' => 'Second blog post',
 			'nice_title' => 'second-blog-post',
@@ -49,7 +47,7 @@ class InstallController extends PinqController {
 		)));
 		
 		// add in our first user
-		$db->post(to('users')->set(array(
+		$this->db->post(to('users')->set(array(
 			'id' => NULL,
 			'email' => 'peter.goodman@gmail.com',
 			'display_name' => 'Peter Goodman',

@@ -360,10 +360,9 @@ class ModelRelations {
 						// because some of these are intermediate join tables
 						// we don't wan't to assume that thay're not being
 						// used elsewhere in the query so we alias them
-						$name = $i & 1 && $i < $count-1 ? 't'. $t++
-						                                : $path[$i][0];
+						$name = ($i & 1) && $i < $count-1 ? 't'. $t++
+						                                  : $path[$i][0];
 						
-						// add the joining table into the link
 						$relations[$last][] = $name;
 						$entry_points[$name] = NULL;
 						
@@ -390,7 +389,7 @@ class ModelRelations {
 				$entry_points[$right] = NULL;
 			}
 		}
-				
+						
 		// go over the relations and build up the dependency graph. the graph
 		// is structured as a multi-dimensional associative array. the keys on
 		// the first level are the base things that we're trying to get that

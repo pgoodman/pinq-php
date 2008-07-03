@@ -3,7 +3,7 @@
 /**
  * Admin post controller.
  */
-class AdminPostController extends PinqController {
+class AdminPostController extends AppController {
 	
 	public function ANY_index() {
 		out('nothing to see here...');

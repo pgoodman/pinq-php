@@ -147,21 +147,50 @@ abstract class QueryCompiler implements Compiler {
 	 * $c->compileRelationsAsPredicates(void) -> void
 	 *
 	 * Compile relations between models into a list of predicates and join them
-	 * into the query.
-	 * 
-	 * TODO: This actually adds to the predicates list of the query. That
-	 *       means that the query should only be used once per request unless
-	 *       it is properly used with substitute values and aliases.
+	 * into the query. This dramatically changes the way the query works.
 	 */
 	public function compileRelationsAsPredicates() {
 		
 		$query = $this->query;
-		$num_sources = count($query->getContexts());
-		$relations = $query->getRelations();
+		//$num_sources = count($query->getContexts());
+		//$relations = $query->getRelations();
+				
+		// get the graph of the joins that need to be made
+		$aliases = &$this->query->getAliases();
+		$relations = &$this->query->getRelations();
 		
 		// no relations, don't do anything useless
 		if(empty($relations))
 			return;
+		
+		// get a graph of relations
+		$graph = $this->relations->getRelationDependencies(
+			$aliases,
+			$relations,
+			$this->models
+		);
+		
+		// flatten the graph
+		$stack = new Stack;
+		$stack->push($graph);
+		$from_fields = array();
+		
+		while(!$stack->isEmpty()) {
+			$models = $stack->pop();
+			
+			foreach($models as $model_alias => $dependencies) {
+				
+				// add in the from field to the query
+				$from_fields[$model_alias] = array();
+				$query->from($aliases[$model_alias], $model_alias);
+				
+				// flatting out the sub-dependencies
+				if(!empty($dependencies))
+					$stack->push($dependencies);
+			}
+		}
+		
+		// add in the predicates
 		
 		// get the predicates and set the context or create a new set of
 		// predicates if the original predicates were null
@@ -180,23 +209,30 @@ abstract class QueryCompiler implements Compiler {
 			
 			$left_name = $query->getUnaliasedModelName($left_alias);
 			
+			if(empty($related_aliases))
+				continue;
+			
 			foreach($related_aliases as $right_alias) {
+				
+				$right_name = $query->getUnaliasedModelName($right_alias);
 				
 				// find a path between two models	
 				$path = $this->relations->getPath(
 					$left_name, 
-					$query->getUnaliasedModelName($right_alias),
+					$right_name,
 					$this->models
 				);
 				
-				// only allow direct relationships
-				$count = count($path);
-				if($count > 2) {
-					throw new DomainException(
-						"PQL modify query only allows direct relationships ".
-						"to be satisfied."
-					);
-				}
+				// only allow direct relationships, skip ones with more
+				if(2 < ($count = count($path)))
+					continue;
+				
+				//if($count > 2) {
+				//	throw new DomainException(
+				//		"PQL modify query only allows direct relationships ".
+				//		"to be satisfied."
+				//	);
+				//}
 				
 				// put on a prefixing and
 				if($join_with_and) $predicates->and;
@@ -216,6 +252,88 @@ abstract class QueryCompiler implements Compiler {
 		$predicates->out;
 		
 		// set the predicates to the query if they were empty/changed
+		$query->setPredicates($predicates);
+		
+		// remove all relations from the query, they are no longer needed and
+		// should be ignored. this will make it such that future calls to this
+		// method to no add to the changes that we've made
+		$relations = array();
+	}
+	
+	/**
+	 * $c->compilePivots(void) -> void
+	 *
+	 * Rebuild pivots. Pivots are when we link two tables together in a query
+	 * and then want to add an extra predicate so that we can specify a value
+	 * to "pivot" the join tables on.
+	 *
+	 * Note: this function is called within rebuildPredicates() as it usually
+	 *       modifies the predicates array significantly.
+	 * 
+	 * @internal
+	 */
+	protected function compilePivots() {
+		
+		$query = $this->query;
+		$pivots = $query->getPivots();
+		
+		// no pivoting needed
+		if(empty($pivots))
+			return;
+		
+		// set the predicates context and figure out if we need to begin by
+		// joining with an AND or not
+		($predicates = $query->getPredicates())
+		 and ($predicates = $predicates->where())
+		 or ($predicates = where());
+				
+		$join_with_and = !$predicates->contextIsEmpty();
+		
+		// add in the pivots
+		foreach($pivots as $left_alias => $rights) {
+			
+			$left_name = $query->getUnaliasedModelName($left_alias);
+			
+			foreach($rights as $right_alias => $pivot_type) {
+				
+				$right_name = $query->getUnaliasedModelName($right_alias);
+				
+				// find a path between the two models
+				$path = $this->relations->getPath(
+					$left_name, 
+					$right_name,
+					$this->models
+				);
+								
+				// no path, ignore this pivot
+				if(empty($path))
+					continue;
+				
+				// join onto the end of the predicates array
+				if($join_with_and)
+					$predicates->and;
+				
+				// figure out which side of the path to pivot on. $model_alias
+				// is set because we need to make sure we're pivoting on the
+				// model *alais* and not the model name.
+				if($pivot_type & Query::PIVOT_LEFT) {
+					$path = current($path);
+					$model_alias = $left_alias;
+				} else {
+					$path = end($path);
+					$model_alias = $right_alias;
+				}
+				
+				// add in the pivot using a keyed substitute
+				$predicates->$model_alias($path[1])->eq->_($path[1]);
+				
+				// every other pivot after this needs to be joined with an AND
+				$join_with_and = TRUE;
+			}
+		}
+		
+		// make sure that the predicates are set to the query if they weren't
+		// already
 		$query->setPredicates($predicates);
 	}
 	
