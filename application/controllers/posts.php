@@ -13,6 +13,6 @@ class PostsController extends PinqController {
 		if(!($post = $db->posts->getBy('nice_title', $nice_title)))
 			yield(ERROR_404);
 		
-		
+		$this->view['post'] = $post;
 	}
 }

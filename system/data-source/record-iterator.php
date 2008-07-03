@@ -87,7 +87,7 @@ abstract class InnerRecordIterator implements RecordIterator {
  *
  * @author Peter Goodman
  */
-abstract class OuterRecordIterator extends IteratorIterator implements RecordIterator {
+class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 		
 	/**
 	 * OuterRecordIterator(RecordIterator)
@@ -107,17 +107,6 @@ abstract class OuterRecordIterator extends IteratorIterator implements RecordIte
 	 */
 	public function getRecordIterator() {
 		return $this->getInnerIterator();
-	}
-	
-	/**
-	 * $i->current(void) -> Record
-	 *
-	 * Return the current record from the inner record iterator. This is a bit
-	 * of a WTF because it should work automatically through IteratorIterator
-	 * yet for some reason it doesn't (at least for SQLite).
-	 */
-	public function current() {
-		return $this->getInnerIterator()->current();
 	}
 	
 	/**

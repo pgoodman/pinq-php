@@ -27,13 +27,14 @@ class DatabaseModelGateway extends ModelGateway {
 		if(0 === count($record_iterator))
 			return NULL;
 		
+		$record_iterator->rewind();
 		return $record_iterator->current();
 	}
 	
 	/**
 	 * Get a record iterator.
 	 */
-	protected function getRecordIterator($result_resource) {
+	protected function getRecordIterator($result_resource) {		
 		return new DatabaseRecordIterator(
 			$this->_ds->getRecordIterator($result_resource), 
 			$this->_models

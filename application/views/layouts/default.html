@@ -3,8 +3,12 @@
 	<title>I/O Reader<?=isset($title)?" : {$title}":'';?></title>
 </head>
 <body>
-	<h3>I/O Reader</h3>
+	<h3><a href="<?=url()?>" title="I/O Reader">I/O Reader</a></h3>
 	<hr />
 	<?=$page_view->render($scope);?>
+	<hr />
+	<center>
+		&copy; Copyright 2006-<?=year()?> Peter Goodman, all rights reserved.
+	</center>
 </body>
 </html>
