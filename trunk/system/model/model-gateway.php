@@ -228,60 +228,73 @@ abstract class ModelGateway implements Gateway {
 		if(is_string($query))
 			return $query;
 			
-		// the query is an object
-		else if(is_object($query)) {
+		// the query object actually returns a predicates object at once
+		// point so we need to get it out of the predicates object
+		if($query instanceof QueryPredicates) {
 			
-			// the query object actually returns a predicates object at once
-			// point so we need to get it out of the predicates object
-			if($query instanceof QueryPredicates) {
-			
+			if(NULL === $query->getQuery()) {
+				
 				// set the partial query to this query predicates object
-				if(NULL !== $this->_partial_query)
-					$query->setQuery($this->getPartialQuery());
-			
-				// try to get a query object out of this oredicates object
-				if(NULL === ($query = $query->getQuery())) {
-					throw new InvalidArgumentException(
-						"Argument passed to RecordGateway method is not ".
-						"string PQL query."
-					);
+				if(NULL !== $this->_partial_query) {
+					$partial_query = $this->getPartialQuery();
+					$predicates = $partial_query->getPredicates();
+					
+					// the partial query has no predicates, this is easy
+					if(NULL == $predicates)
+						$query->setQuery($partial_query);
+					
+					// the partial query has predicates, merge $query into the
+					// predicates of the partial query
+					else {
+						$predicates->merge($query);
+						unset($query);
+						$query = $predicates;
+					}
 				}
 			}
-				
-			// if we were given or derived an abstract query object then we
-			// need to compile it.
-			if($query instanceof Query) {
-				
-				$query_id = $query->getId();
-				
-				// the query has already been compiled and cached, use it. This
-				// is a double test because if the query (query or predicates)
-				// are ever changed then those changes need to invalidate the
-				// cache
-				if($query->isCompiled() && isset($this->_cached_queries[$query_id]))
-					return $this->_cached_queries[$query_id ];
-
-				// nope, we need to compile the query
-				$stmt = $this->compileQuery(
-					$query, 
-					$type
+		
+			// try to get a query object out of this oredicates object
+			if(NULL === ($query = $query->getQuery())) {
+				throw new InvalidArgumentException(
+					"Argument passed to RecordGateway method is not ".
+					"string PQL query."
 				);
-				
-				// tell the query and its predicates that it has been compiled
-				// it is done after the query has been compiled because the
-				// query compiler might add in predicates.
-				$query->setCompiled();
-				
-				$this->_cached_queries[$query_id] = $stmt;
-				$query = $stmt;
 			}
-			
-			// cache this relation, this is when we're in a sub-model gateway
-			// and a Record object is passed to one of the query functions.
-			if(NULL !== $record_name)
-				$this->_cached_relations[$record_name] = $query;
 		}
-						
+			
+		// if we were given or derived an abstract query object then we
+		// need to compile it.
+		if($query instanceof Query) {
+			
+			$query_id = $query->getId();
+			
+			// the query has already been compiled and cached, use it. This
+			// is a double test because if the query (query or predicates)
+			// are ever changed then those changes need to invalidate the
+			// cache
+			if($query->isCompiled() && isset($this->_cached_queries[$query_id]))
+				return $this->_cached_queries[$query_id ];
+
+			// nope, we need to compile the query
+			$stmt = $this->compileQuery(
+				$query, 
+				$type
+			);
+			
+			// tell the query and its predicates that it has been compiled
+			// it is done after the query has been compiled because the
+			// query compiler might add in predicates.
+			$query->setCompiled();
+			
+			$this->_cached_queries[$query_id] = $stmt;
+			$query = $stmt;
+		}
+		
+		// cache this relation, this is when we're in a sub-model gateway
+		// and a Record object is passed to one of the query functions.
+		if(NULL !== $record_name)
+			$this->_cached_relations[$record_name] = $query;
+					
 		return (string)$query;
 	}
 	
@@ -384,7 +397,7 @@ abstract class ModelGateway implements Gateway {
 		
 		// add in a limit to the query to speed up the query given that we
 		// are actually going through findAll
-		if($query instanceof QueryPredicates)
+		if($query instanceof QueryPredicates || $query instanceof Query)
 			$query->limit(1);
 		
 		// find all results
@@ -525,7 +538,7 @@ abstract class ModelGateway implements Gateway {
 		
 		// create the PQL query and coerce the value that's going into the
 		// query
-		return where()->$field->eq(
+		return where()->{$this->_model_name}($field)->eq(
 			$definition->coerceValueForField($field, $value)
 		);
 	}

@@ -5,6 +5,17 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
+ * __sort_routes(array $a, array $b) -> int
+ *
+ * Sort a route into descending order of pattern length.
+ *
+ * @author Peter Goodman
+ */
+function __sort_routes(array $a, array $b) {
+	return strlen($a[0]) > strlen($b[0]) ? -1 : 1;
+}
+
+/**
  * Class that collects and parses routes. Accepts programmer defined route
  * remappings. The router groups these remappings by their longest prefix of 
  * terminals (things that won't change such as /'s and words) and then matches 
@@ -184,15 +195,14 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		
 		$parts = preg_split('~/~', $route, -1, PREG_SPLIT_NO_EMPTY);
 		
-		// we break the route up into segments
-		if(0 == count($parts))
-			return '';
-		
 		// go find the longest matching prefix
 		$prefix = '';
 		while(!empty($parts) && isset($this[$prefix .'/'. $parts[0]]))
 			$prefix .= '/'. array_shift($parts);
-				
+		
+		if($prefix == '')
+			$prefix = '/';
+		
 		return $prefix;
 	}
 	
@@ -259,7 +269,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		
 		// calculate the prefix
 		$prefix = $this->getLongestMatchingPrefix($route);
-		
+
 		// this will hold intermediate arguments
 		$dynamic = array();
 		
@@ -274,12 +284,18 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			// find what we're looking for in here, so we'll work with a
 			// temporary copy of the route
 			$temp = substr($route, strlen($prefix)-1);
+			$routes = &$this->_dict[$prefix];
 			$matches = array();
+			
+			// sort the routes in descending order of pattern length to 
+			// hopefully maximize our changes of matching the right route
+			// early
+			usort($routes, '__sort_routes');
 			
 			// lets see if we have this route in memory, if not we will fall
 			// through this if and assume that the route points directly to
 			// a controller and an action.
-			foreach($this[$prefix] as $suffix) {
+			foreach($routes as $suffix) {
 				
 				// remember, we store the route and what it maps to
 				list($pattern, $maps_to) = $suffix;
