@@ -83,3 +83,18 @@ function get_url() {
 	return get_http_scheme() .'://'. get_http_host() . get_uri();
 }
 
+/**
+ * url([string $part1[, string $part2[, ...]]]) -> string
+ *
+ * Rebuild the current url with a specific uri. Each argument to this function
+ * is a path part of the uri.
+ *
+ * @author Peter Goodman
+ */
+function url() {
+	$route_parts = func_get_args();
+	$route = implode('/', $route_parts);
+	$path = str_replace(rtrim(get_route(), '/'), '', get_uri());
+	$uri = trim($path, '/') .'/'. $route;
+	return get_http_scheme() .'://'. get_http_host() .'/'. $uri;
+}

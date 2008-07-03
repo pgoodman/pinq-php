@@ -6,6 +6,9 @@
 !defined('E_RECOVERABLE_ERROR') && define('E_RECOVERABLE_ERROR', 4096);
 error_reporting(E_ALL | E_STRICT | E_RECOVERABLE_ERROR);
 
+// default timezone, GMT
+date_default_timezone_set('GMT');
+
 // no need for this stuff
 ini_set('register_argc_argv', 0);
 ini_set('session.use_only_cookies', 1);
@@ -146,21 +149,22 @@ function pinq($script_file, $app_dir) {
 			try {
 			
 				// parse the URI, if it can't be parsed a 404 error will occur.
-				if(!$router->parse($route))
+				if(!($path_info = $router->parse($route)))
 					yield(ERROR_404);
-			
+								
 				// get the controller, method, and arguments form the route
 				// parser
-				$path_info = $router->getPathInfo();
 				list($dir, $pdir, $controller, $method, $arguments) = $path_info;
 				
 				// bring in the controller file, we know it exists because the 
 				// route parser figured that out.
+				if(!file_exists($dir .'/'. $controller . EXT))
+					yield(ERROR_404);
+				
 				require_once $dir .'/'. $controller . EXT;
 
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} controller");
-				$method = function_name($method);
 				$request_method = $_SERVER['REQUEST_METHOD'];
 
 				// if we're not working with a valid controller then error

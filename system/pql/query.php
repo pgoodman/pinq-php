@@ -111,7 +111,7 @@ class Query {
 	}
 	
 	/**
-	 * $q->__clone(void) <==> clone $q
+	 * clone $q -> $q->__clone(void)
 	 *
 	 * Make sure that in a cloned query the internal query id has been changed.
 	 */
@@ -183,7 +183,7 @@ class Query {
 	}
 	
 	/**
-	 * &$q->getRelatios(void) -> array
+	 * $q->getRelatios(void) -> &array
 	 *
 	 * Get the relations defined in the query. This is an associative
 	 * multidimensional array. If, for example, a link is specified in a query
@@ -203,14 +203,15 @@ class Query {
 	 * $q->getPivots(void) -> array
 	 *
 	 * Get the pivots defined in the query. Pivots are similar to relations as
-	 * pivoting is performed on a relation. When linking two models together
-	 * in a query using, for example: ..->link('a', 'b')->.., an optional
-	 * third parameter can be specified. In this third parameter we can, among
+	 * pivoting is performed on a relation. In linking two models together in
+	 * a query, for example: ..->link('a', 'b')->.., one can specify an optional
+	 * third parameter for linking flags. In this third parameter one can, among
 	 * other things, specify a pivot direction. If we were to pivot the
-	 * relation between models 'a' and 'b' to the right, thus on 'b', then the
-	 * relations would be added as usual to the query and a predicate would be
-	 * added (at compile time) to the query on the field in 'b' that (in)directly
-	 * maps to 'a'. The field is set as a keyed substitute of itself.
+	 * relation between models 'a' and 'b' to the right, thus around 'b', then
+	 * the relations would be added as usual to the query and a predicate would
+	 * be added (at compile time) to the query on the field in 'b' that 
+	 * (in)directly maps to 'a'. The field is set as a keyed substitute of
+	 * itself.
 	 *
 	 * @example 
 	 *     The following is a PQL query with and without pivoting when
@@ -227,8 +228,8 @@ class Query {
 	 *
 	 * The above example shows that pivoting adds in a condition that restricts
 	 * the results returned form a query. Pivots also take advantage of
-	 * keyed susbtitute values, meaning data for either 'a' or 'b', depending
-	 * on the pivot direction, needs to be supplied to fulfill the conditions.
+	 * keyed susbtitute values, meaning data from either 'a' or 'b' (depending
+	 * on the pivot direction) needs to be supplied to fulfill the conditions.
 	 */
 	public function getPivots() {
 		return $this->_pivots;
@@ -249,7 +250,7 @@ class Query {
 	}
 	
 	/**
-	 * &$q->getAliases(void) -> array
+	 * $q->getAliases(void) -> &array
 	 *
 	 * Return an associative array mapping model aliases to external model
 	 * names.
@@ -510,20 +511,33 @@ class Query {
 	}
 	
 	/**
-	 * Predicate functions.
+	 * $q->where(void) <==> (new QueryPredicates)->where() -> QueryPredicates
 	 */
 	public function where() {
 		$this->_predicates = new QueryPredicates($this);
 		return $this->_predicates->where();
 	}
+	
+	/**
+	 * $q->group(void) <==> (new QueryPredicates)->group() -> QueryPredicates
+	 */
 	public function group() {
 		$this->_predicates = new QueryPredicates($this);
 		return $this->_predicates->group();
 	}
+	
+	/**
+	 * $q->order(void) <==> (new QueryPredicates)->order() -> QueryPredicates
+	 */
 	public function order() {
 		$this->_predicates = new QueryPredicates($this);
 		return $this->_predicates->order();
 	}
+	
+	/**
+	 * $q->limit(int $start[, int $offset]) 
+	 * <==> (new QueryPredicates)->limit(...) -> QueryPredicates
+	 */
 	public function limit($start, $offset = NULL) {
 		$this->_predicates = new QueryPredicates($this);
 		return $this->_predicates->limit($start, $offset);

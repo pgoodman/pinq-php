@@ -77,3 +77,22 @@ function call_user_class_array($class_name, array $args = array()) {
     return $reflector->newInstanceArgs($args);
 }
 
+/**
+ * base36_encode(int) -> string
+ *
+ * Convert a base 10 number to base 36.
+ *
+ * @author Peter Goodman
+ */
+function base36_encode($num) {
+	return strtolower(base_convert((string)(int)$num, 10, 36));
+}
+
+/**
+ * base36_decode(string) -> int
+ *
+ * Convert a base 36 number to base 10.
+ */
+function base36_decode($num) {
+	return (int)base_convert((string)$num, 36, 10);
+}

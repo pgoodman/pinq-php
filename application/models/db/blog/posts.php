@@ -18,3 +18,10 @@ class PostsDefinition extends DatabaseModelDefinition {
 		$this->relatesTo('tags', through('post_tags'));
 	}
 }
+
+class PostsRecord extends InnerRecord {
+	public function __init__() {
+		$this['display_id'] = base36_encode($this['id']);
+		$this['perma_link'] = url(date("Y/m/d"), $this['nice_title']);
+	}
+}

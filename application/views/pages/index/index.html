@@ -1,13 +1,11 @@
 <? if(!empty($post)): ?>
-	<?=element_view('post')->render($scope, $post);?>
-	
-	<hr />
-	
+	<?=element_view('post_full')->render($scope, array('post' => $post));?>
+	<hr />	
 	<? if(!empty($posts)): ?>
 	<ul>
 		<? foreach($posts as $post): ?>
 		<li>
-			
+			<?=element_view('post_overview')->render($scope, array('post' => $post));?>
 		</li>
 		<? endforeach; ?>
 	</ul>
