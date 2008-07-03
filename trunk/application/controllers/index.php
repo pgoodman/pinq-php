@@ -24,7 +24,7 @@ class IndexController extends PinqController {
 			'posts' => (
 				$post === NULL
 					? array()
-					: $db->posts->getAllRecent(limit(10, 1))
+					: $db->posts->getAll(limit(10, 1))
 			),
 		);
 	}

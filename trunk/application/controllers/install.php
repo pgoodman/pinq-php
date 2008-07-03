@@ -33,7 +33,7 @@ class InstallController extends PinqController {
 			'nice_title' => 'first-blog-post',
 			'body' => str_repeat('This is the first blog post. ', 50),
 			'user_id' => 1,
-			'created' => time(),
+			'created' => time()-(60*60*24*7),
 			'published' => TRUE,
 		)));
 		

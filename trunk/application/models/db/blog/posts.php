@@ -22,7 +22,11 @@ class PostsDefinition extends DatabaseModelDefinition {
 class PostsRecord extends DatabaseRecord {
     public function __init__() {
         $this['display_id'] = base36_encode($this['id']);
-        $this['perma_link'] = url(date("Y/m/d"), $this['nice_title']);
+        $this['perma_link'] = url(date(
+			"Y/m/d", 
+			$this['created']), 
+			$this['nice_title']
+		);
     }
 }
 
@@ -37,6 +41,7 @@ class PostsGateway extends DatabaseModelGateway {
             parent::getPartialQuery()->
             from('users')->select(ALL)->
             link('posts', 'users')->
+            order()->posts('created')->desc->
             where()->posts('published')->is(TRUE)
         );
     }
@@ -48,14 +53,5 @@ class PostsGateway extends DatabaseModelGateway {
      */
     public function getNewest() {
         return $this->get($this->getPartialQuery());
-    }
-    
-    /**
-     * $p->getRecent([QueryPredicates]) -> RecordIterator
-     *
-     * Get recent blog posts.
-     */
-    public function getAllRecent(QueryPredicates $predicates = NULL) {
-        return $this->getAll(order()->posts('id')->desc->merge($predicates));
     }
 }
