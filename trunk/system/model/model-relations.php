@@ -93,7 +93,7 @@ class ModelRelations {
 	 * @see ModelRelation::addRelation(...), ModelRelation::addDirectPath(...)
 	 */
 	public function addMapping($this_model, $this_field, 
-		                       $that_model, $that_field) {
+	                           $that_model, $that_field) {
 		
 		// model aliases are case insensitive
 		$this_model = strtolower($this_model);
@@ -131,7 +131,7 @@ class ModelRelations {
 	 * @internal
 	 */
 	protected function addDirectPath($this_model, $this_field, 
-		                             $that_model, $that_field) {
+	                                 $that_model, $that_field) {
 		
 		$this->paths[$this_model][$that_model] = array(
 			array($this_model, $this_field),
@@ -152,14 +152,12 @@ class ModelRelations {
 	 * array is returned.
 	 */
 	public function getPath($from_alias, $to_alias, ModelDictionary $models) {
-		
+
 		$path = array();
-		
-		$current = $from_alias;
-		
+		$current = $from_alias;		
 		$relations = &$this->relations; // short-circuit :P
 		$mappings = &$this->mappings;
-		
+
 		// yes, given the while loop condition this is a bit redundant, but
 		// the while loop is variable, of course.
 		
@@ -179,17 +177,20 @@ class ModelRelations {
 			// shift the next model to look at off the queue
 			$next = $next_models->shift();
 			
+			if(empty($next))
+				continue;
+			
 			// sort of a hack to make sure that they're loaded, this is the
 			// only drawback of storing relations separately: when we want
 			// to fill in the missing links between models, there's no guarantee
-			// that any of the models being crossed have been loaded
+			// that any of the models being crossed have been loaded			
 			$models[$current];
 			$models[$next];
 			
 			// relationship cannot be satisfied
 			if(!isset($relations[$current][$next]) || 
 			   !isset($relations[$next][$current])) {
-				
+
 				// cache the failed attempt
 				$this->paths[$from_alias][$to_alias] = array();
 				return $this->paths[$to_alias][$from_alias] = array();
@@ -225,6 +226,7 @@ class ModelRelations {
 								
 				// a relationship could not be satisfied
 				else {
+
 					// cache the failed attempt
 					$this->paths[$from_alias][$to_alias] = array();
 					return $this->paths[$to_alias][$from_alias] = array();
@@ -269,7 +271,7 @@ class ModelRelations {
 				$next_models->extend($old_nexts);
 			}
 		}
-		
+
 		// cache it for possible later use
 		$this->path[$from_alias][$to_alias] = &$path;
 		$this->path[$to_alias][$from_alias] = array_reverse($path);
@@ -362,7 +364,7 @@ class ModelRelations {
 						// used elsewhere in the query so we alias them
 						$name = ($i & 1) && $i < $count-1 ? 't'. $t++
 						                                  : $path[$i][0];
-						
+
 						$relations[$last][] = $name;
 						$entry_points[$name] = NULL;
 						
@@ -420,6 +422,12 @@ class ModelRelations {
 				continue;
 			
 			foreach($rights as $right) {
+				
+				// special case, we're linking to ourself, avoid recursion
+				if($left == $right) {
+					$entry_points[$left][$right] = array();
+					continue;
+				}
 				
 				// make sure we don't overwrite anything already done
 				if(!isset($entry_points[$left][$right]))

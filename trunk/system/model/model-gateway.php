@@ -209,6 +209,9 @@ abstract class ModelGateway implements Gateway {
 				// clone it so that we can use it again if necessary
 				$query = $this->getPartialQuery();
 				
+				if($query instanceof QueryPredicates)
+					$query = $query->getQuery();
+				
 				// add in the predicates to make linking and pivoting to the
 				// record possible
 				$query->from($model_name)->link(

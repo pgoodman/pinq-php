@@ -16,6 +16,7 @@ CREATE TABLE posts (
 	nice_title varchar(100),
 	created integer,
 	published integer,
+	parent_id integer,
 	
 	UNIQUE(nice_title)
 );

@@ -18,8 +18,10 @@ class PostsDefinition extends DatabaseModelDefinition {
         $this->nice_title = string(100);
         $this->created = int(10);
         $this->published = bool();
+		$this->parent_id = int(10);
         
         $this->user_id->mapsTo('users', 'id');
+		$this->parent_id->mapsTo('posts', 'id');
         
         $this->relatesTo('tags', through('post_tags'));
     }

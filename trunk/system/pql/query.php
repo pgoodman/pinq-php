@@ -449,6 +449,7 @@ class Query {
 		
 		// read the error: you can't link a model to itself using the same two
 		// aliases.
+		/*
 		if($left_alias === $right_alias) {
 			throw new UnexpectedValueException(
 				"PQL Query Error: Cannot link a model to itself using the ".
@@ -456,7 +457,7 @@ class Query {
 				"that the uses of the model in the query have different ".
 				"aliases."
 			);
-		}
+		}*/
 		
 		// common error
 		$error = "The model [%s] has does not exist (yet?) in the PQL query ".
