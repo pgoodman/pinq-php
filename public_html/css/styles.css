@@ -4,8 +4,8 @@ body, input, textarea {
 	font-size: 0.85em;
 	line-height: 1.7em;
 	font-stretch: expanded;
-	background-color: #0f0f0f;
-	color: #D3D3D3;
+	background-color: #f0f0f0;
+	color: #2c2c2c;
 	cursor: default;
 }
 
@@ -13,33 +13,33 @@ body, input, textarea {
 
 /** Links */
 a { text-decoration: none; }
-a:link { color: #FB854A; }
-a:visited { color: #795852; }
+a:link { color: #47ab5; }
+a:visited { color: #86a7ad; }
 
 /** Definition lists */
 dl { margin: 0; padding: 0; }
-dt a, dt a:active, dt a:visited { color: #078383 !important; }
-dt { font-variant: small-caps; float: left; color: #078383; padding-right: 0.5em; }
+dt a, dt a:active, dt a:visited { color: #f87c7c !important; }
+dt { font-variant: small-caps; float: left; color: #f87c7c; padding-right: 0.5em; }
 dd { margin: 0; }
-dt:after { content: ": "; color: #7A9297; }
+dt:after { content: ": "; color: #856d68; }
 dd + dt { clear: left; }
-pre { margin: 0; padding: 0.85em; margin: 0.85em; border: 1px solid #292828; background: #f7f7f7; line-height: 1.1em; color:#000; }
-pre.code { background: #181515; }
+pre { margin: 0; padding: 0.85em; margin: 0.85em; border: 1px solid #d6d7d7; background: #80808; line-height: 1.1em; color:#ffffff; }
+pre.code { background: #e7eaea; }
 
 /** Fieldsets */
-fieldset { display: block; margin: 0 0 0.85em 0; border: 0 solid #0f0f0f; border-top: 1px solid #94FE9A; padding: 0 0.85em 0.85em 0.85em; }
+fieldset { display: block; margin: 0 0 0.85em 0; border: 0 solid #f0f0f0; border-top: 1px solid #6b0165; padding: 0 0.85em 0.85em 0.85em; }
 
 /** Other */
 #copy { margin: 1.7em 0 1.7em 0; font-size: 0.7em; }
 #view_source { float: right; display: block !important;}
-#view_source a:active, #view_source a:visited { background: #000; color: #795852; }
+#view_source a:active, #view_source a:visited { background: #ffffff; color: #86a7ad; }
 
 /** Headers */
-h1 a:active, h1 a:visited { color: #ccc; }
-h2 a:active, h2 a:visited { color: #FB854A; }
-h3 a:visited { color: #436A6A; }
-h1, h2 { font-size: 1.7em; margin: 0.85em 0 0.85em 0;color: #795852; }
-h3 { color: #94FE9A; font-size: 1em; padding-bottom: 0.85em; margin: 0.85em 0 0.85em 0; border-bottom: 1px solid #94FE9A;}
+h1 a:active, h1 a:visited { color: #333333; }
+h2 a:active, h2 a:visited { color: #47ab5; }
+h3 a:visited { color: #bc9595; }
+h1, h2 { font-size: 1.7em; margin: 0.85em 0 0.85em 0;color: #86a7ad; }
+h3 { color: #6b0165; font-size: 1em; padding-bottom: 0.85em; margin: 0.85em 0 0.85em 0; border-bottom: 1px solid #6b0165;}
 
 /** Layout */
 #layout { width: 90%; margin-left: 5%; }
@@ -47,29 +47,29 @@ h3 { color: #94FE9A; font-size: 1em; padding-bottom: 0.85em; margin: 0.85em 0 0.
 .columns > .col_left { float: left; width: 49%; }
 .columns > .col_right { margin-left: 50%; }
 .columns > .col_right + br { clear: both; line-height: 0; font-size: 0; }
-.menu { background: #000; padding: 0.85em; }
+.menu { background: #ffffff; padding: 0.85em; }
 
 /** Tag list */
-.popular_tags:after { content: "";/* color: #7A9297;*/}
+.popular_tags:after { content: "";/* color: #856d68;*/}
 .tag_list dt { float: left; }
 .tag_list dd { float: left; }
-.tag_list dd:before { content: ", "; color: #7A9297; }
+.tag_list dd:before { content: ", "; color: #856d68; }
 .tag_list dt + dd:before { content: "";}
 .tag_list + * { clear: both; }
 
 /** Forms */
 form { margin: 0; padding: 0; display: inline; }
-input, textarea { background-color: #292828; border: 0; padding: 0.2em; margin: 0; }
+input, textarea { background-color: #d6d7d7; border: 0; padding: 0.2em; margin: 0; }
 textarea { width: 99% !important; }
-input[type="submit"], input[type="reset"] { background: #645756; }
+input[type="submit"], input[type="reset"] { background: #9ba8a9; }
 form dt { width: 8em; }
 
 /** Tabbed lists */
 .tab_nav { margin: 0; padding: 0; list-style: none; }
 .tab_nav li { display: inline; list-style: none; }
-.tab_nav li:before { content: " | "; color: #292828; }
+.tab_nav li:before { content: " | "; color: #d6d7d7; }
 .tab_nav li:first-child:before { content: ""; }
 
 /** Posts */
-.active_post { background: #000; padding: 0.85em; margin-bottom: 0.85em; }
+.active_post { background: #ffffff; padding: 0.85em; margin-bottom: 0.85em; }
 .post * { padding: 0; margin: 0; border: 0; }
