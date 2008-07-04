@@ -42,6 +42,7 @@ class PostsRecord extends DatabaseRecord {
 
 		// make a readable representation of this post id
 		$this['display_id'] = base36_encode($this['id']);
+		$this['display_created'] = date("F j, Y, g:ia", $this['created']);
 		
 		// create a nice url to access this post
 		$this['perma_link'] = url(
