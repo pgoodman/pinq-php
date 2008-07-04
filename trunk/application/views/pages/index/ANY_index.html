@@ -1,0 +1,23 @@
+<? if(!empty($post)): ?>
+	<?=element_view('post_full')->render(
+		$scope, 
+		array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
+	))?>
+	<hr />	
+	<? if(!empty($posts)): ?>
+	<ul>
+		<? foreach($posts as $post): ?>
+		<li>
+			<?=element_view('post_overview')->render(
+				$scope, 
+				array('post' => $post->posts, 'user' => $post->users,
+			))?>
+		</li>
+		<? endforeach; ?>
+	</ul>
+	<? endif; ?>
+<? else: ?>
+<div>
+	No posts here!
+</div>
+<? endif; ?>

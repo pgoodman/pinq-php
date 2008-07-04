@@ -9,6 +9,7 @@ class UsersDefinition extends DatabaseModelDefinition {
 		$this->email = string(150);
 		$this->display_name = string(50);
 		$this->password = string(32);
+		$this->login_key = string(32);
 		
 		$this->id->mapsTo('posts', 'user_id');
 	}
@@ -17,6 +18,6 @@ class UsersDefinition extends DatabaseModelDefinition {
 class UsersRecord extends InnerRecord {
 	public function __init__() {
 		$this['display_id'] = base36_encode($this['id']);
-		$this['perma_link'] = url('users', 'view', $this['display_id']);
+		$this['perma_link'] = url('users', $this['display_id']);
 	}
 }

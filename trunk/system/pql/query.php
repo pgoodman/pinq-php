@@ -405,8 +405,6 @@ class Query {
 		$field = (string)$field;
 		
 		if(NULL === $alias)
-			$alias = $field;
-		else
 			$alias = "count_{$field}";
 		
 		$this->_context['select_counts'] = array_merge(
@@ -446,18 +444,6 @@ class Query {
 		$flags = (int)$flags;
 		$left_alias = (string)$left_alias;
 		$right_alais = (string)$right_alias;
-		
-		// read the error: you can't link a model to itself using the same two
-		// aliases.
-		/*
-		if($left_alias === $right_alias) {
-			throw new UnexpectedValueException(
-				"PQL Query Error: Cannot link a model to itself using the ".
-				"same model aliases. To link a model to itself, make sure ".
-				"that the uses of the model in the query have different ".
-				"aliases."
-			);
-		}*/
 		
 		// common error
 		$error = "The model [%s] has does not exist (yet?) in the PQL query ".

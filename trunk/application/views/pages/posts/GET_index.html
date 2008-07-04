@@ -1,0 +1,13 @@
+<?=element_view('post_full')->render(
+	$scope, 
+	array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
+))?>
+<? if(count($tags)): ?>
+<h4>Tags</h4>
+
+<? endif; ?>
+
+<? if(count($comments)): ?>
+<h4>Comments</h4>
+
+<? endif; ?>

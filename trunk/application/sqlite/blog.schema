@@ -17,6 +17,7 @@ CREATE TABLE posts (
 	created integer,
 	published integer,
 	parent_id integer,
+	num_children integer,
 	
 	UNIQUE(nice_title)
 );
@@ -24,6 +25,7 @@ CREATE TABLE posts (
 CREATE TABLE tags (
 	id integer primary key,
 	name varchar(20),
+	num_posts integer,
 	UNIQUE(name)
 );
 
@@ -32,6 +34,7 @@ CREATE TABLE users (
 	email varchar(150),
 	display_name varchar(50),
 	password varchar(32),
+	login_key varchar(32),
 	
 	UNIQUE(email)
 );

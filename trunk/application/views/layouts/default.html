@@ -3,7 +3,20 @@
 	<title>I/O Reader<?=isset($title)?" : {$title}":'';?></title>
 </head>
 <body>
+	<div style="float:right;">
+		<?if(isset($original_route)):?>
+		<a href="<?=url($original_route)?>" title="View the page that this source represents">view original</a>
+		<?else:?>
+		<a href="<?=url('view-source').'?route='.get_route()?>" title="View this page's PHP source">view source</a>
+		<?endif;?>
+	</div>
 	<h3><a href="<?=url()?>" title="I/O Reader">I/O Reader</a></h3>
+	<?if(count($tags)):?>
+	<dl>
+		<dt>Popular Tags</dt>
+		<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
+	</dl>
+	<?endif;?>
 	<hr />
 	<?=$page_view->render($scope);?>
 	<hr />

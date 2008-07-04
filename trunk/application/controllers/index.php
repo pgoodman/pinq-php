@@ -11,28 +11,41 @@ class IndexController extends AppController {
 	public function ANY_index() {
 		
 		$post = $this->db->posts->getNewest();
-		/*
-		$this->db->get(
-			"SELECT tags.id AS tags_id, tags.name AS tags_name
-			FROM tags, post_tags t1, posts 
-			WHERE t1.post_id=posts.id
-			AND tags.id=t1.tag_id 
-			AND (posts.id = 1)"
-		);*/
 		
-		// set stuff to the view
-		$this->view[] = array(
-			
-			// get the most recent blog post
-			'post' => $post,
-			
+		$view = array(
+			'post' => NULL,
+			'posts' => NULL,
+			'tags' => NULL,
+		);
+		
+		if($post) {
+			$view['post'] = $post;
 			// the next few older posts after the most recent, offset by 1
 			// only look for other posts if we have a first one
-			'posts' => (
-				$post === NULL
-					? array()
-					: $this->db->posts->getAll(limit(10, 1))
-			),
+			$view['posts'] = $this->db->posts->getAll(limit(10, 1));
+			$view['tags'] = $this->db->tags->getAll($post->posts);
+		}
+		
+		$this->view[] = $view;
+	}
+	
+	/**
+	 * View the source for a particular route's controller.
+	 */
+	public function ANY_source() {
+		$router = $this->import('route-parser');
+		
+		// make sure a route was passed and if so parse it
+		if(!isset($_GET['route']) || !($path = $router->parse($_GET['route'])))
+			yield(ERROR_404);
+		
+		// highlight the file
+		$this->view['source'] = highlight_file(
+			$path[0] .'/'. $path[2] . EXT, 
+			TRUE
 		);
+		
+		// send the original route to the layout view
+		$this->layout['original_route'] = $_GET['route'];
 	}
 }

@@ -25,7 +25,7 @@ class SqliteQueryCompiler extends DatabaseQueryCompiler {
 	 * @internal
 	 */
 	protected function buildFieldValueList(array $context, 
-		                                    ModelDefinition $definition) {
+	                             ModelDefinition $definition) {
 		
 		$fields = array();
 		
@@ -45,16 +45,23 @@ class SqliteQueryCompiler extends DatabaseQueryCompiler {
 				continue;
 			
 			// typecast the field's value
-			$value = $definition->coerceValueForField(
-				$column, 
-				$value
-			);
+			if($value !== _) {
+				
+				// coerce the value of the field
+				$value = $definition->coerceValueForField(
+					$column, 
+					$value
+				);
 			
-			// make sure to quote it for insertion as a string
-			if(is_string($value))
-				$value = "'". $this->db->quote($value) ."'";
-			else if(NULL === $value)
-				$value = 'NULL';
+				// make sure to quote it for insertion as a string
+				if(is_string($value))
+					$value = "'". $this->db->quote($value) ."'";
+				else if(NULL === $value)
+					$value = 'NULL';
+			
+			// substitiute value
+			} else
+				$value = '?';
 			
 			$fields[] = $value;
 		}
