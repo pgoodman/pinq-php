@@ -30,7 +30,7 @@ class PostsController extends AppController {
 	}
 	
 	/**
-	 * Add a new post.
+	 * Add a new comment.
 	 */
 	public function POST_index($parent_id = 0) {
 		

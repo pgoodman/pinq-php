@@ -20,8 +20,6 @@ class IndexController extends AppController {
 		
 		if($post) {
 			$view['post'] = $post;
-			// the next few older posts after the most recent, offset by 1
-			// only look for other posts if we have a first one
 			$view['posts'] = $this->db->posts->getAll(limit(10, 1));
 			$view['tags'] = $this->db->tags->getAll($post->posts);
 		}

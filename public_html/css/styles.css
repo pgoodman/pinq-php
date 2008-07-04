@@ -1,0 +1,54 @@
+/** General */
+hr {
+	border-color: #fff;
+	margin: 0;
+	padding: 0;
+}
+
+/** Layout */
+#layout {
+	width: 70%;
+	margin-left: 15%;
+}
+.columns { }
+.columns .col_left {
+	float: left;
+}
+.columns .col_right {
+	float: right;
+}
+.columns .col_right + br {
+	clear: both;
+}
+
+/**
+ * Tag list
+ */
+.tag_list dt {
+	float: left;
+}
+.tag_list dd {
+	float: left;
+}
+.tag_list dd:before {
+	content: ", ";
+}
+.tag_list dt + dd:before {
+	content: ": ";
+}
+.tag_list + * {
+	clear: both;
+}
+
+/** Forms */
+form dt:after {
+	content: ": ";
+}
+form dt {
+	float: left;
+	width: 5em;
+}
+
+form dd {
+	margin: 0 0 1em 0;
+}
