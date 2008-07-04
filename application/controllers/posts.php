@@ -22,6 +22,7 @@ class PostsController extends AppController {
 			$comments = $this->db->posts->getAll($post->posts);
 		
 		// set data to the view
+		$this->layout['title'] = $post['title'];
 		$this->view[] = array(
 			'post' => $post,
 			'tags' => $this->db->tags->getAll($post->posts),
