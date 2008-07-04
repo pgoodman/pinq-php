@@ -40,7 +40,7 @@ class IndexController extends AppController {
 		
 		// highlight the file
 		$this->view['source'] = highlight_file(
-			$path[0] .'/'. $path[2] . EXT, 
+			$path[0] .'/'. $path[2] . EXT,
 			TRUE
 		);
 		

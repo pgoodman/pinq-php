@@ -3,19 +3,24 @@
 		$scope, 
 		array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
 	))?>
-		
-	<? if(!empty($posts)): ?>
-	<ul>
-		<? foreach($posts as $post): ?>
-		<li>
-			<?=element_view('post_overview')->render(
-				$scope, 
-				array('post' => $post->posts, 'user' => $post->users,
-			))?>
-		</li>
-		<? endforeach; ?>
-	</ul>
-	<? endif; ?>
+	
+	<div class="columns">
+		<div class="col_left">
+			<? if(!empty($posts)): ?>
+			<h3>Older Posts</h3>
+			<? foreach($posts as $post): ?>
+				<?=element_view('post_overview')->render(
+					$scope, 
+					array('post' => $post->posts, 'user' => $post->users,
+				))?>
+			<? endforeach; ?>
+			<? endif; ?>
+		</div>
+		<div class="col_right">
+			
+		</div>
+		<br />
+	</div>
 <? else: ?>
 <div>
 	No posts here!

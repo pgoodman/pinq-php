@@ -3,10 +3,10 @@
 	array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
 ))?>
 
-<h4>Post Comment</h4>
+<h2>Post Comment</h4>
 <?=element_view('post_form')->render($scope, array('post'=>$post->posts))?>
 
 <? if(count($comments)): ?>
-<h4>Comments</h4>
+<h2>Comments</h4>
 
 <? endif; ?>
