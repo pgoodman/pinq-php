@@ -115,5 +115,10 @@ function get_base_url() {
  */
 function url() {
 	$route_parts = func_get_args();
-	return get_base_url() .'/'. implode('/', $route_parts);
+	
+	return rtrim(get_base_url() .'/'. preg_replace(
+		'~/+~', 
+		'/', 
+		implode('/', $route_parts)
+	), '/');
 }

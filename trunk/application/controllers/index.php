@@ -19,10 +19,9 @@ class IndexController extends AppController {
 		);
 		
 		if(count($posts)) {
-			$post = $posts->shift();
-			$view['post'] = $post;
+			$view['post'] = $posts->shift();
 			$view['posts'] = $posts;
-			$view['tags'] = $this->db->tags->getAll($post->posts);
+			$view['tags'] = $this->db->tags->getAll($view['post']->posts);
 		}
 		
 		$this->view[] = $view;

@@ -25,6 +25,9 @@ dd + dt { clear: left; }
 pre { margin: 0; padding: 0.85em; margin: 0.85em; border: 1px solid #292828; background: #f7f7f7; line-height: 1.1em; color:#000; }
 pre.code { background: #181515; }
 
+/** Fieldsets */
+fieldset { display: block; margin: 0 0 0.85em 0; border: 0 solid #0f0f0f; border-top: 1px solid #94FE9A; padding: 0 0.85em 0.85em 0.85em; }
+
 /** Other */
 #copy { margin: 1.7em 0 1.7em 0; font-size: 0.7em; }
 #view_source { float: right; display: block !important;}
@@ -32,8 +35,9 @@ pre.code { background: #181515; }
 
 /** Headers */
 h1 a:active, h1 a:visited { color: #ccc; }
+h2 a:active, h2 a:visited { color: #FB854A; }
 h3 a:visited { color: #436A6A; }
-h1, h2 { font-size: 1.7em; padding-bottom: 0.85em; margin: 0.85em 0 0.85em 0; border-bottom: 1px solid #94FE9A; }
+h1, h2 { font-size: 1.7em; margin: 0.85em 0 0.85em 0;color: #795852; }
 h3 { color: #94FE9A; font-size: 1em; padding-bottom: 0.85em; margin: 0.85em 0 0.85em 0; border-bottom: 1px solid #94FE9A;}
 
 /** Layout */

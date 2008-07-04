@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-class ErrorController extends PinqController {	
+class ErrorController extends AppController {	
 	
 	//public $layout_file = 'error';
 	

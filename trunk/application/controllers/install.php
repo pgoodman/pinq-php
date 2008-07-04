@@ -72,6 +72,19 @@ class InstallController extends AppController {
 		$this->db->insert($tag_link, array(2, 2));
 		$this->db->insert($tag_link, array(2, 10));
 		
+		$this->db->insert(to('posts')->set(array(
+			'id' => NULL,
+			'title' => 'Third blog post',
+			'nice_title' => 'third-blog-post',
+			'body' => str_repeat('lorum ipsum dolor sit amet. ', 25),
+			'user_id' => 1,
+			'created' => time(),
+			'published' => TRUE,
+		)));
+		
+		$this->db->insert($tag_link, array(3, 2));
+		$this->db->insert($tag_link, array(3, 10));
+		
 		// add in our first user
 		$this->db->insert(to('users')->set(array(
 			'id' => NULL,
