@@ -6,26 +6,52 @@
 </head>
 <body>
 <div id="layout">
-	<div style="float:right;">
-		<?if(isset($original_route)):?>
-		<a href="<?=url($original_route)?>" title="View the page that this source represents">view original</a>
-		<?else:?>
-		<a href="<?=url('view-source').'?route='.get_route()?>" title="View this page's PHP source">view source</a>
-		<?endif;?>
+	
+	<!-- Header -->
+	<h1><a href="<?=url()?>" title="I/O Reader">I/O Reader</a></h1>
+	
+	<!-- / Header -->
+	
+	<!-- Menu -->
+	<div class="columns menu">
+		<div class="col_left">
+			<?if(isset($tags) && count($tags)):?>
+			<dl class="tag_list popular_tags">
+				<dt><a href="<?=url('about')?>" title="Who is Peter Goodman?">Peter Goodman</a> On</dt>
+				<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
+				<dd><a href="<?=url('tags')?>" title="View All Tags">...</a></dd>
+			</dl>
+			<?endif;?>
+		</div>
+		<div class="col_right align_right">
+			<ul class="tab_nav">
+				<li><a href="<?=url('archive')?>" title="View Post Archives">archives</a></li>
+				<li>
+					<?if(isset($original_route)):?>
+					<a href="<?=url($original_route)?>" title="View the page that this source represents">view normal</a>
+					<?else:?>
+					<a href="<?=url('view-source').'?route='.get_route()?>" title="View this page's PHP source">view source</a>
+					<?endif;?>
+				</li>
+				<li>
+					<form action="<?=url('search')?>" method="get">
+					<input type="text" name="for" value="" />
+					<input type="submit" value="Search" />
+					</form>
+				</li>
+			</ul>
+		</div>
+		<br style="display:none;" />
 	</div>
-	<h1><a href="<?=url()?>" title="I/O Reader">I/O Reader</a></h3>
-	<?if(isset($tags) && count($tags)):?>
-	<dl class="tag_list popular_tags">
-		<dt>Popular Tags</dt>
-		<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
-	</dl>
-	<?endif;?>
+	<!-- / Menu -->
 	
 	<?=$page_view->render($scope);?>
 	
+	<!-- Copy -->
 	<center id="copy">
 		&copy; Copyright 2006-<?=year()?> Peter Goodman, all rights reserved.
 	</center>
+	<!-- / Copy -->
 </div>
 </body>
 </html>
