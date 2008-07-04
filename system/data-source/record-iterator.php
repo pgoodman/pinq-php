@@ -157,7 +157,6 @@ class PinqIteratorIterator implements OuterIterator {
 	}
 }
 
-
 /**
  * Class to handle stacking iterators on top of a RecordIterator.
  *

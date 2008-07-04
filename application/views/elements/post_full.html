@@ -1,7 +1,8 @@
 <h4><a href="<?=$post['perma_link']?>"><?=$post['title']?></a></h4>
-<p>
+<p class="active_content">
 	<?=$post['body']?>
 </p>
+
 <dl class="tag_list">
 	<dt>Tags</dt>
 	<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
