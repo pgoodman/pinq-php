@@ -19,7 +19,7 @@ class TagsGateway extends DatabaseModelGateway {
 		return $this->getAll(
 			$this->getPartialQuery()->
 			       order()->num_posts->desc->
-			       limit(10)
+			       limit(6)
 		);
 	}
 }
