@@ -3,22 +3,36 @@
 		$scope, 
 		array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
 	))?>
-	
 	<div class="columns">
 		<div class="col_left">
-			<? if(!empty($posts)): ?>
 			<h2>Older Posts</h2>
+			<? if(!empty($posts)): ?>
 			<? foreach($posts as $post): ?>
 				<?=element_view('post_overview')->render(
 					$scope, 
 					array('post' => $post->posts, 'user' => $post->users,
 				))?>
 			<? endforeach; ?>
+			<? else: ?>
+			<p>
+				There are none!
+			</p>
 			<? endif; ?>
 		</div>
 		<div class="col_right">
-			<h2>Currently Reading</h2>
-			
+			<h2>Recent Comments</h2>
+			<? if(!empty($comments)): ?>
+			<? foreach($comments as $comment): ?>
+				<?=element_view('comment')->render(
+					$scope, 
+					array('post' => $comment->posts, 'user' => $comment->users,
+				))?>
+			<? endforeach; ?>
+			<? else: ?>
+			<p>
+				There are none!
+			</p>
+			<? endif; ?>
 		</div>
 		<br />
 	</div>
