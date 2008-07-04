@@ -2,10 +2,6 @@
 	$scope, 
 	array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
 ))?>
-<? if(count($tags)): ?>
-<h4>Tags</h4>
-
-<? endif; ?>
 
 <h4>Post Comment</h4>
 <?=element_view('post_form')->render($scope, array('post'=>$post->posts))?>
