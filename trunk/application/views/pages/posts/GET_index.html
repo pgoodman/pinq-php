@@ -7,6 +7,9 @@
 
 <? endif; ?>
 
+<h4>Post Comment</h4>
+<?=element_view('post_form')->render($scope, array('post'=>$post->posts))?>
+
 <? if(count($comments)): ?>
 <h4>Comments</h4>
 

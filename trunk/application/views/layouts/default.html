@@ -1,8 +1,11 @@
 <html>
 <head>
 	<title>I/O Reader<?=isset($title)?" : {$title}":'';?></title>
+	<link rel="stylesheet" href="<?=url('css','reset.css')?>" />
+	<link rel="stylesheet" href="<?=url('css','styles.css')?>" />
 </head>
 <body>
+<div id="layout">
 	<div style="float:right;">
 		<?if(isset($original_route)):?>
 		<a href="<?=url($original_route)?>" title="View the page that this source represents">view original</a>
@@ -12,7 +15,7 @@
 	</div>
 	<h3><a href="<?=url()?>" title="I/O Reader">I/O Reader</a></h3>
 	<?if(count($tags)):?>
-	<dl>
+	<dl class="tag_list">
 		<dt>Popular Tags</dt>
 		<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
 	</dl>
@@ -23,5 +26,6 @@
 	<center>
 		&copy; Copyright 2006-<?=year()?> Peter Goodman, all rights reserved.
 	</center>
+</div>
 </body>
 </html>
