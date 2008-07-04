@@ -38,8 +38,11 @@ class MysqlRecordIterator extends InnerRecordIterator {
 	 * Seek to an arbitrary place in the mysql result set.
 	 */
 	public function seek($key) {
+		$curr_key = $this->key();
 		parent::seek($key);
-		mysql_data_seek($this->result, $key);
+		
+		if($curr_key != $key)
+			mysql_data_seek($this->result, $key);
 	}
 	
 	/**

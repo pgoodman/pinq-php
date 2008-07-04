@@ -22,6 +22,10 @@ class DatabaseRecordIterator extends OuterRecordIterator {
 	 */
 	public function current() {
 		$data = parent::current();
+		
+		if(FALSE === $data)
+			return;
+		
 		$record = NULL;
 		
 		// from a PQL query

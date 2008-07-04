@@ -9,7 +9,20 @@ class AppController extends PinqController {
 	 */
 	protected function __init__() {
 		$this->db = $this->import('db.blog');
-		$this->layout['tags'] = $this->db->tags->getPopular();
+		
+		$tags = $this->db->tags->getPopular();
+		
+		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
+		foreach($tags as $tag)
+			$keywords[] = $tag['name'];
+		
+		$this->layout[] = array(
+			'blog_name' => 'I/O Reader',
+			'blog_description' => '',
+			'blog_keywords' => $keywords,
+			'blog_author' => 'Peter Goodman',
+			'tags' => $tags,
+		);
 	}
 	
 	/**

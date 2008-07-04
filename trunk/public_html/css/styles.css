@@ -1,8 +1,9 @@
 /** General */
 body, input, textarea {
-	font-family: 'Lucida Grande', Verdana, Arial, sans-serif;
+	font-family: helvetica, 'Lucida Grande', verdana, arial, sans-serif;
 	font-size: 0.85em;
 	line-height: 1.7em;
+	font-stretch: expanded;
 	background-color: #0f0f0f;
 	color: #D3D3D3;
 	cursor: default;
@@ -17,8 +18,8 @@ a:visited { color: #795852; }
 
 /** Definition lists */
 dl { margin: 0; padding: 0; }
-dt a, dt a:active, dt a:visited { color: #04B3B3 !important; }
-dt { float: left; color: #04B3B3; padding-right: 0.5em; }
+dt a, dt a:active, dt a:visited { color: #078383 !important; }
+dt { font-variant: small-caps; float: left; color: #078383; padding-right: 0.5em; }
 dd { margin: 0; }
 dt:after { content: ": "; color: #7A9297; }
 dd + dt { clear: left; }
@@ -43,7 +44,7 @@ h3 { color: #94FE9A; font-size: 1em; padding-bottom: 0.85em; margin: 0.85em 0 0.
 /** Layout */
 #layout { width: 90%; margin-left: 5%; }
 .columns { }
-.columns > .col_left { float: left; width: 50%; }
+.columns > .col_left { float: left; width: 49%; }
 .columns > .col_right { margin-left: 50%; }
 .columns > .col_right + br { clear: both; line-height: 0; font-size: 0; }
 .menu { background: #000; padding: 0.85em; }
@@ -61,6 +62,7 @@ form { margin: 0; padding: 0; display: inline; }
 input, textarea { background-color: #292828; border: 0; padding: 0.2em; margin: 0; }
 textarea { width: 99% !important; }
 input[type="submit"], input[type="reset"] { background: #645756; }
+form dt { width: 8em; }
 
 /** Tabbed lists */
 .tab_nav { margin: 0; padding: 0; list-style: none; }

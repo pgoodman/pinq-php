@@ -1,28 +1,41 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<title>I/O Reader<?=isset($title)?" : {$title}":'';?></title>
 	<link rel="stylesheet" href="<?=url('css','reset.css')?>" media="screen" />
 	<link rel="stylesheet" href="<?=url('css','styles.css')?>" media="screen" />
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	
+	<meta name="descriptiob" content="<?=$blog_description?>" />
+	<meta name="keywords" content="<?=implode(',', $blog_keywords)?>" />
+	<meta name="author" content="<?=$blog_author?>" />
+	<meta name="copyright" content="Copyright 2006-<?=year()?> <?=$blog_author?>, all rights reserved" />
 </head>
 <body>
 <div id="layout">
 	
 	<!-- Header -->
-	<h1><a href="<?=url()?>" title="I/O Reader">I/O Reader</a></h1>
-	
+	<h1><a href="<?=url()?>" title="<?=$blog_name?>"><?=$blog_name?></a></h1>
 	<!-- / Header -->
 	
 	<!-- Menu -->
 	<div class="columns menu">
+		
+		<!-- Popular Tags List -->
 		<div class="col_left">
 			<?if(isset($tags) && count($tags)):?>
 			<dl class="tag_list popular_tags">
-				<dt><a href="<?=url('about')?>" title="Who is Peter Goodman?">Peter Goodman</a> On</dt>
-				<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
+				<dt><a href="<?=url('about')?>" title="Who is <?=$blog_author?>?"><?=$blog_author?></a> On</dt>
+				<?=element_view('tag_list')->render($scope, array('tags'=>$tags))?>
 				<dd><a href="<?=url('tags')?>" title="View All Tags">...</a></dd>
 			</dl>
 			<?endif;?>
 		</div>
+		<!-- / Popular Tags List -->
+		
+		<!-- Menu Items and Search -->
 		<div class="col_right align_right">
 			<ul class="tab_nav">
 				<li><a href="<?=url('archive')?>" title="View Post Archives">archives</a></li>
@@ -41,15 +54,18 @@
 				</li>
 			</ul>
 		</div>
+		<!-- / Menu Items and Search -->
 		<br style="display:none;" />
 	</div>
 	<!-- / Menu -->
 	
-	<?=$page_view->render($scope);?>
+	<!-- Page -->
+	<?=$page_view->render($scope)?>
+	<!-- / Page -->
 	
 	<!-- Copy -->
 	<center id="copy">
-		&copy; Copyright 2006-<?=year()?> Peter Goodman, all rights reserved.
+		&copy; Copyright 2006-<?=year()?> <?=$blog_author?>, all rights reserved.
 	</center>
 	<!-- / Copy -->
 </div>

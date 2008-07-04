@@ -39,9 +39,10 @@ class SqliteRecordIterator extends InnerRecordIterator {
 	 * Seek to an arbitrary place in the mysql result set.
 	 */
 	public function seek($key) {
+		$curr_key = $this->key();
 		parent::seek($key);
 		
-		if($key != $this->key())
+		if($key != $curr_key)
 			$this->_result->seek($key);
 	}
 	

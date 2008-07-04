@@ -1,31 +1,23 @@
 <form method="post" action="<?=url('posts',isset($post)?$post['id']:0)?>">
-<div class="columns">
-	<div class="col_left">
-		<dl>
-			<?if($scope['logged_in']):?>
-	
-			<?else:?>
-			<dt>Email</dt>
-			<dd><input type="text" name="email" maxlength="150" />
-	
-			<dt>Password</dt>
-			<dd><input type="password" name="password" />
-	
-			<dt>Name</dt>
-			<dd><input type="text" name="display_name" maxlength="50" />
-			<?endif;?>
-		</dl>
-	</div>
-	<div class="col_right">
-		<dl>
-			<dt>Body</dt>
-			<dd><textarea name="body" rows="15"></textarea></dd>
-		</dl>
-	</div>
-	<br />
-	<center>
-		<input type="submit" value="Leave Comment" />
-		<input type="reset" value="Reset" />
-	</center>
-</div>
+<dl>
+	<?if($scope['logged_in']):?>
+
+	<?else:?>
+	<dt>Email</dt>
+	<dd><input type="text" name="email" maxlength="150" />
+
+	<dt>Password</dt>
+	<dd><input type="password" name="password" />
+
+	<dt>Name</dt>
+	<dd><input type="text" name="display_name" maxlength="50" />
+	<?endif;?>
+
+	<dt>Body</dt>
+	<dd><textarea name="body" rows="10"></textarea></dd>
+</dl>
+<center>
+	<input type="submit" value="Leave Comment" />
+	<input type="reset" value="Reset" />
+</center>
 </form>
