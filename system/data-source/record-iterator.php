@@ -5,7 +5,7 @@
 !defined('DIR_SYSTEM') && exit();
 
 interface RecordIterator extends Countable, SeekableIterator {
-	
+	public function shift();
 }
 
 /**
@@ -15,13 +15,34 @@ interface RecordIterator extends Countable, SeekableIterator {
  */
 abstract class InnerRecordIterator implements RecordIterator {
 	
-	protected $_key;
+	protected $_key,
+	          $_offset;
 	
 	/**
 	 * InnerRecordIterator(void)
 	 */
 	public function __construct() {
-		$this->_key = 0;
+		$this->_key = $this->_offset = 0;
+	}
+	
+	/**
+	 * $i->shift(void) -> mixed
+	 *
+	 * Shift off and return the first record from the record iterator. If there
+	 * is no record to shift off this will return NULL.
+	 */
+	public function shift() {
+		$this->rewind();
+
+		if(!$this->valid())
+			return NULL;
+		
+		$ret = $this->current();
+		
+		$this->_offset++;
+		$this->_key++;
+		
+		return $ret;
 	}
 	
 	/**
@@ -58,8 +79,8 @@ abstract class InnerRecordIterator implements RecordIterator {
 	 * Rewind the record iterator to start at row zero.
 	 */
 	public function rewind() {
-		if($this->_key > 0)
-			$this->seek(0);
+		if($this->_key > $this->_offset)
+			$this->seek($this->_offset);
 	}
 	
 	/**
@@ -69,7 +90,7 @@ abstract class InnerRecordIterator implements RecordIterator {
 	 * id exists. If it doesn't this will return FALSE.
 	 */
 	public function valid() {
-		return $this->_key < $this->count();
+		return ($this->_key < $this->count()) && ($this->_key >= $this->_offset);
 	}
 	
 	/**
@@ -83,12 +104,69 @@ abstract class InnerRecordIterator implements RecordIterator {
 }
 
 /**
+ * The same as IteratorIterator.. oddly there were issues with IteratorIterator
+ * and re-implementing it fixes those issued... WTF.
+ *
+ * @author PHP
+ */
+class PinqIteratorIterator implements OuterIterator {
+	
+	protected $_iterator;
+	
+	function __construct(Traversable $iterator) {
+	
+		if($iterator instanceof IteratorAggregate)
+			$iterator = $iterator->getIterator();
+
+		if ($iterator instanceof Iterator)
+			$this->_iterator = $iterator;
+		else {
+			throw new Exception(
+				"Classes that only implement Traversable can be wrapped only ".
+				"after converting class IteratorIterator into c code"
+			);
+		}
+	}
+
+	function getInnerIterator() {
+		return $this->_iterator;
+	}
+
+	function valid() {
+		return $this->_iterator->valid();
+	}
+
+	function key() {
+		return $this->_iterator->key();
+	}
+
+	function current() {
+		return $this->_iterator->current();
+	}
+
+	function next() {
+		return $this->_iterator->next();
+	}
+
+	function rewind() {
+		return $this->_iterator->rewind();
+	}
+
+	function __call($func, $params) {
+		return call_user_func_array(array($this->_iterator, $func), $params);
+	}
+}
+
+
+/**
  * Class to handle stacking iterators on top of a RecordIterator.
  *
  * @author Peter Goodman
  */
-class OuterRecordIterator extends IteratorIterator implements RecordIterator {
-		
+class OuterRecordIterator extends PinqIteratorIterator implements RecordIterator {
+	
+	protected $_offset;
+	
 	/**
 	 * OuterRecordIterator(RecordIterator)
 	 *
@@ -97,6 +175,7 @@ class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 	 */
 	public function __construct(RecordIterator $it) {
 		parent::__construct($it);
+		$this->_offset = 0;
 	}
 	
 	/**
@@ -106,7 +185,38 @@ class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 	 * Get the inner record iterator.
 	 */
 	public function getRecordIterator() {
-		return $this->getInnerIterator();
+		return $this->_iterator;
+	}
+	
+	/**
+	 * $i->shift() -> mixed
+	 *
+	 * Shift off the first record in the iterator.
+	 */
+	public function shift() {
+		$this->rewind();
+		$current = $this->current();
+		
+		$this->_offset++;
+		$this->next();
+		
+		return $current;
+	}
+	
+	/**
+	 * $i->rewind(void) -> void
+	 */
+	public function rewind() {
+		if($this->key() > $this->_offset) {
+			$this->seek($this->_offset);
+		}
+	}
+	
+	/**
+	 * $i->valid(void) -> bool
+	 */
+	public function valid() {
+		return parent::valid() && ($this->key() >= $this->_offset);
 	}
 	
 	/**
@@ -115,7 +225,7 @@ class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 	 * Seek the inner record iterator to a specific row.
 	 */
 	public function seek($offset) {
-		return $this->getInnerIterator()->seek($offset);
+		return $this->_iterator->seek($offset);
 	}
 	
 	/**
@@ -124,7 +234,7 @@ class OuterRecordIterator extends IteratorIterator implements RecordIterator {
 	 * Return the number of records in the inner record iterator.
 	 */
 	public function count() {
-		return $this->getInnerIterator()->count();
+		return $this->_iterator->count();
 	}
 }
 

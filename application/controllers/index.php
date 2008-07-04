@@ -10,7 +10,7 @@ class IndexController extends AppController {
 	 */
 	public function ANY_index() {
 		
-		$post = $this->db->posts->getNewest();
+		$posts = $this->db->posts->getAll(limit(11));
 		
 		$view = array(
 			'post' => NULL,
@@ -18,9 +18,10 @@ class IndexController extends AppController {
 			'tags' => NULL,
 		);
 		
-		if($post) {
+		if(count($posts)) {
+			$post = $posts->shift();
 			$view['post'] = $post;
-			$view['posts'] = $this->db->posts->getAll(limit(10, 1));
+			$view['posts'] = $posts;
 			$view['tags'] = $this->db->tags->getAll($post->posts);
 		}
 		

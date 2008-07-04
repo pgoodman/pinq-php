@@ -40,7 +40,9 @@ class SqliteRecordIterator extends InnerRecordIterator {
 	 */
 	public function seek($key) {
 		parent::seek($key);
-		$this->_result->seek($key);
+		
+		if($key != $this->key())
+			$this->_result->seek($key);
 	}
 	
 	/**
