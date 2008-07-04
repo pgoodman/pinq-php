@@ -21,11 +21,30 @@ class InstallController extends AppController {
 				continue;
 			
 			out('<pre>', $query, '</pre>');
-			$this->db->post($query);
+			$this->db->insert($query);
 		}
 		
+		$new_tag = to('tags')->set(array(
+			'id' => NULL,
+			'name' => _,
+			'num_posts' => _,
+		));
+		$tag_link = to('post_tags')->set('post_id', _)->set('tag_id', _);
+		
+		$this->db->insert($new_tag, array('php', 2));
+		$this->db->insert($new_tag, array('pinq', 2));
+		$this->db->insert($new_tag, array('javascript', 0));
+		$this->db->insert($new_tag, array('c', 0));
+		$this->db->insert($new_tag, array('lisp', 0));
+		$this->db->insert($new_tag, array('css', 0));
+		$this->db->insert($new_tag, array('html', 0));
+		$this->db->insert($new_tag, array('actionscript', 0));
+		$this->db->insert($new_tag, array('flash', 0));
+		$this->db->insert($new_tag, array('dev', 1));
+		$this->db->insert($new_tag, array('code', 1));
+		
 		// add in our first post
-		$this->db->post(to('posts')->set(array(
+		$this->db->insert(to('posts')->set(array(
 			'id' => NULL,
 			'title' => 'First blog post',
 			'nice_title' => 'first-blog-post',
@@ -34,9 +53,12 @@ class InstallController extends AppController {
 			'created' => time()-(60*60*24*7),
 			'published' => TRUE,
 		)));
+		$this->db->insert($tag_link, array(1, 1));
+		$this->db->insert($tag_link, array(1, 2));
+		$this->db->insert($tag_link, array(1, 11));
 		
 		// add in our first post
-		$this->db->post(to('posts')->set(array(
+		$this->db->insert(to('posts')->set(array(
 			'id' => NULL,
 			'title' => 'Second blog post',
 			'nice_title' => 'second-blog-post',
@@ -46,8 +68,12 @@ class InstallController extends AppController {
 			'published' => TRUE,
 		)));
 		
+		$this->db->insert($tag_link, array(2, 1));
+		$this->db->insert($tag_link, array(2, 2));
+		$this->db->insert($tag_link, array(2, 10));
+		
 		// add in our first user
-		$this->db->post(to('users')->set(array(
+		$this->db->insert(to('users')->set(array(
 			'id' => NULL,
 			'email' => 'peter.goodman@gmail.com',
 			'display_name' => 'Peter Goodman',

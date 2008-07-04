@@ -210,8 +210,23 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		
 		// if we're dealing with a query-defined alias that's different than
 		// the model name
-		if($model_alias !== $model_name)
+		if($model_alias !== $model_name) {
+			$context = $this->query->getContext($model_alias);
+			
+			// special case for COUNT columns
+			if(!empty($context['select_counts'])) {
+				if(isset($context['select_counts'][$field]))
+					return "{$model_name}_{$field}";
+			}
+			
+			// special case for aliases SELECT fields
+			if(!empty($context['select_fields']) && isset($context['select_fields'][$field])) {
+				if($context['select_fields'][$field] != $field)
+					return "{$model_name}_{$field}";
+			}
+			
 			return "{$model_alias}.{$field}";
+		}
 		
 		// we need to distinguish between models that are being selected from,
 		// and therefore their columns will be prefixed, or models that are
@@ -349,8 +364,11 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				$this->compileRelationsAsPredicates();
 			}
 			
-			$joins = $this->recursiveJoin(NULL, $graph, '');
-			$sql .= ' FROM '. trim($joins, ' ()');
+			$joins = trim($this->recursiveJoin(NULL, $graph, ''));
+			if($joins[0] == '(') {
+				$joins = substr($joins, 1, -1);
+			}
+			$sql .= ' FROM '. $joins;
 		}
 		
 		// get parts of the query
@@ -444,17 +462,23 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			if(!$definition->hasField($column))
 				continue;
 			
-			// typecast the field's value
-			$value = $definition->coerceValueForField(
-				$column, 
-				$value
-			);
+			if($value !== _) {
+				
+				// typecast the field's value
+				$value = $definition->coerceValueForField(
+					$column, 
+					$value
+				);
 			
-			// make sure to quote it for insertion as a string
-			if(is_string($value))
-				$value = "'". $this->db->quote($value) ."'";
-			else if(NULL === $value)
-				$value = 'NULL';
+				// make sure to quote it for insertion as a string
+				if(is_string($value))
+					$value = "'". $this->db->quote($value) ."'";
+				else if(NULL === $value)
+					$value = 'NULL';
+			
+			// substitute value
+			} else
+				$value = '?';
 			
 			$fields[] = "{$prefix}{$column}={$value}";
 		}

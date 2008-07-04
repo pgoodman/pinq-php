@@ -88,7 +88,7 @@ abstract class ModelDefinition implements Object {
 	 * @note To report validation errors, throw a FailedValidationException.
 	 * @note Type coercion is automatically done after field validation.
 	 */
-	public function validateFields(array &$fields, $query_type) {
+	public function validateFields(array $fields, $query_type) {
 		return array_intersect_key($fields, $this->_fields);
 	}
 	

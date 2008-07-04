@@ -9,6 +9,7 @@ class AppController extends PinqController {
 	 */
 	protected function __init__() {
 		$this->db = $this->import('db.blog');
+		$this->layout['tags'] = $this->db->tags->getPopular();
 	}
 	
 	/**

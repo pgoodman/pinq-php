@@ -11,8 +11,9 @@
  */
 class ErrorController extends PinqController {	
 	
-	public $layout_file = 'error';
+	//public $layout_file = 'error';
 	
+	public function ANY_401() { set_http_status(401); }
 	public function ANY_403() { set_http_status(403); }
 	public function ANY_404() { set_http_status(404); }
 	public function ANY_405() { set_http_status(405); }

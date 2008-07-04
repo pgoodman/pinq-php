@@ -213,6 +213,7 @@ abstract class QueryCompiler implements Compiler {
 			
 			$left_name = $query->getUnaliasedModelName($left_alias);
 			
+			// skip, we don't need to do anything
 			if(empty($related_aliases))
 				continue;
 			

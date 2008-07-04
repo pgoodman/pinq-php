@@ -1,7 +1,11 @@
-<h4><a href="<?=$post->posts['perma_link']?>"><?=$post['title']?></a></h4>
+<h4><a href="<?=$post['perma_link']?>"><?=$post['title']?></a></h4>
 <p>
 	<?=$post['body']?>
 </p>
-<span>
-	by: <a href="<?=$post->users['perma_link']?>" title="view <?=$post->users['display_name']?>'s profile"><?=$post->users['display_name']?></a>
-</span>
+<dl>
+	<dt>Tags</dt>
+	<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
+	<dt>Posted On</dt><dd><?=date("F j, Y, g:ia", $post['created'])?></dd>
+	<dt>Posted By</dt><dd><a href="<?=$user['perma_link']?>" title="view <?=$user['display_name']?>'s profile"><?=$user['display_name']?></a></dd>
+	<dt>Number of Comments</dt><dd><?=(int)$post['num_children']?></dd>
+</dl>

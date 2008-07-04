@@ -45,6 +45,7 @@ define('RAW_POST_DATA', 'php://input');
 define('PHP_IS_BEING_DUMB', (bool)get_magic_quotes_gpc());
 
 // some of the error controllers
+define('ERROR_401', '/error/401');
 define('ERROR_403', '/error/403');
 define('ERROR_404', '/error/404');
 define('ERROR_405', '/error/405');
@@ -166,7 +167,7 @@ function pinq($script_file, $app_dir) {
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} controller");
 				$request_method = $_SERVER['REQUEST_METHOD'];
-
+				
 				// if we're not working with a valid controller then error
 				if(!is_subclass_of($class, 'PinqController'))
 					yield(ERROR_404);
@@ -174,9 +175,7 @@ function pinq($script_file, $app_dir) {
 				// create the page and layout views
 				$packages->load('view');
 				$layout_view = View::factory();
-				$layout_view['page_view'] = page_view(
-					"{$pdir}/{$controller}/{$method}"
-				);
+				$layout_view['page_view'] = View::factory();
 				
 				// insantiate the controller and call its action
 				$event = new $class(
@@ -185,7 +184,13 @@ function pinq($script_file, $app_dir) {
 					$layout_view['page_view']
 				);
 				
-				$event->act($request_method, $method, $arguments);
+				// call the action and figure out which method was called
+				$event->act(
+					$request_method, 
+					$method, 
+					$arguments, 
+					"{$pdir}/{$controller}/"
+				);
 				
 				// get some view info before we finish with the controller
 				// stuff

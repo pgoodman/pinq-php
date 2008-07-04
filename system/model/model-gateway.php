@@ -579,7 +579,7 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * $g->post(mixed $query[, array $args]) -> bool
+	 * $g->insert(mixed $query[, array $args]) -> bool
 	 *
 	 * Create a new record and return the created record. This accepts a
 	 * named record, a PQL query, or a SQL query.
@@ -590,7 +590,7 @@ abstract class ModelGateway implements Gateway {
 	 * @todo Make sure that the query hasn't already been compiled as another
 	 *       type of query else there will be problems.
 	 */
-	public function post($query, array $args = array()) {
+	public function insert($query, array $args = array()) {
 		
 		// compile the query
 		if($query instanceof Query || $query instanceof QueryPredicates)

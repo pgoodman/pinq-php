@@ -35,7 +35,7 @@ abstract class PinqController implements Package {
 		$this->view = $page;
 		$this->layout = $layout;
 		$layout->setFile($this->layout_file, 'layouts');
-		
+				
 		// hook
 		$this->__init__();
 	}
@@ -52,28 +52,34 @@ abstract class PinqController implements Package {
 	}
 	
 	/**
-	 * $c->act(string $request_method, string $action[, array $arguments])
-	 * -> void
+	 * $c->act(string $request_method, string $action[, array $arguments], 
+	 * string $view_dir) -> void
 	 *
 	 * Call a specific controller action. This first looks for a method named
 	 * {$request_method}_{$action} and then ANY_{$action}. If neither exists
 	 * a 405 Method Doesn't Exist error is yielded.
 	 */
-	final public function act($request_method, $action, array $arguments) {
-		
+	final public function act($request_method, 
+	                          $action, 
+	                    array $arguments = array(),
+	                          $view_dir) {
+				
 		// we're working with a valid controller, are we working with
 		// a valid method?
-		if(is_callable(array($this, "{$request_method}_{$action}")))
+		if(is_callable(array($this, "{$request_method}_{$action}"))) {
 			$action = "{$request_method}_{$action}";
 		
 		// method to handle any unsupported / or just all request
 		// methods at once
-		else if(is_callable(array($this, "ANY_{$action}")))
+		} else if(is_callable(array($this, "ANY_{$action}")))
 			$action = "ANY_{$action}";		
 		
 		// no available action method exists
 		else
 			yield(ERROR_405);
+		
+		// set the page view
+		$this->view->setFile("{$view_dir}{$action}", View::PAGE);
 		
 		// call the controller's action
 		$this->beforeAction();
@@ -82,6 +88,8 @@ abstract class PinqController implements Package {
 			$arguments
 		);
 		$this->afterAction();
+		
+		return $action;
 	}
 	
 	/**

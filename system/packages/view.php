@@ -101,7 +101,7 @@ class PinqView extends View {
 	 * the views can be bound to a file after they've been created.
 	 */
 	public function setFile($file, $type) {
-				
+		
 		$file = DIR_APPLICATION ."/views/{$type}/{$file}.html";
 				
 		// only set the file if it exists

@@ -194,7 +194,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	protected function getLongestMatchingPrefix($route) {
 		
 		$parts = preg_split('~/~', $route, -1, PREG_SPLIT_NO_EMPTY);
-		
+				
 		// go find the longest matching prefix
 		$prefix = '';
 		while(!empty($parts) && isset($this[$prefix .'/'. $parts[0]]))
