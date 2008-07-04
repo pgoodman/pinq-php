@@ -55,7 +55,7 @@ abstract class InnerRecordIterator implements RecordIterator {
 	public function seek($key) {
 		
 		// make sure the key is in the right place
-		if($key < 0 || $key >= $this->count()) {
+		if($key < $this->_offset || $key >= $this->count()) {
 			throw new OutOfBoundsException(
 				"Could not access row [{$key}] of record set."
 			);
