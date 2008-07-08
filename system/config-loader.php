@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-class ConfigurationException extends PinqException {
+class ConfigurationException extends InternalErrorException {
 	
 }
 
@@ -68,6 +68,7 @@ class ConfigLoader extends Loader {
 		
 		// store and return the config info
 		$this[$key] = $__config;
+		
 		return $__config;
 	}
 	

@@ -193,16 +193,21 @@ class StackOfDictionaries extends Dictionary {
 	 * Push an array onto the stack of dictionaries.
 	 */
 	public function push(array &$vars) {
-		$this->_stack[] = &$this->_dict;
+		$this->_stack[] = $this->_dict;
 		$this->_dict = $vars;
 	}
 	
 	/**
 	 * $d->pop(void) -> void
 	 *
-	 * Pop an array off the stack of dictionaries.
+	 * Pop an array off the stack of dictionaries. If an array cannot be popped
+	 * an StackException is thrown.
 	 */
 	public function pop() {
+		
+		if(empty($this->_stack))
+			throw new StackException("Nothing to pop off stack.");
+		
 		$this->_dict = array_pop($this->_stack);
 	}
 	

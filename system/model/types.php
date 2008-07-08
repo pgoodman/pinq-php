@@ -5,58 +5,66 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * int(int $length) -> array
+ * Class that returns different model field types.
+ *
+ * @author Peter Goodman
  */
-function int($length = 0) {
-	return array(ModelDefinition::TYPE_INT, $length, NULL);
-}
+final class FieldType {
+	
+	/**
+	 * Type::int(int $length) -> array
+	 */
+	static public function int($length = 0) {
+		return array(ModelDefinition::TYPE_INT, $length, NULL);
+	}
 
-/**
- * float([int $length]) -> array
- */
-function float($length = 0) {
-	return array(ModelDefinition::TYPE_FLOAT, $length, NULL);
-}
+	/**
+	 * Type::float([int $length]) -> array
+	 */
+	static public function float($length = 0) {
+		return array(ModelDefinition::TYPE_FLOAT, $length, NULL);
+	}
 
-/**
- * bool([bool $default]) -> array
- */
-function bool($default = FALSE) {
-	return array(ModelDefinition::TYPE_BOOLEAN, 1, (bool)$default);
-}
+	/**
+	 * Type::bool([bool $default]) -> array
+	 */
+	static public function bool($default = FALSE) {
+		return array(ModelDefinition::TYPE_BOOLEAN, 1, (bool)$default);
+	}
 
-/**
- * string([int $length[, string $default]]) -> array
- */
-function string($length = 0, $default = NULL) {
-	return array(ModelDefinition::TYPE_STRING, $length, $default);
-}
+	/**
+	 * Type::string([int $length[, string $default]]) -> array
+	 */
+	static public function string($length = 0, $default = NULL) {
+		return array(ModelDefinition::TYPE_STRING, $length, $default);
+	}
 
-/**
- * text(void) -> array
- */
-function text() {
-	return array(ModelDefinition::TYPE_STRING, 0, NULL);
-}
+	/**
+	 * Type::text(void) -> array
+	 */
+	static public function text() {
+		return array(ModelDefinition::TYPE_STRING, 0, NULL);
+	}
 
-/**
- * enum([mixed $val1[, mixed $val2[, ...]]]) -> array
- */
-function enum() {
-	$default = func_get_args();
-	return array(ModelDefinition::TYPE_ENUM, 0, $default);
-}
+	/**
+	 * Type::enum([mixed $val1[, mixed $val2[, ...]]]) -> array
+	 */
+	static public function enum() {
+		$default = func_get_args();
+		return array(ModelDefinition::TYPE_ENUM, 0, $default);
+	}
 
-/**
- * blob(void) <==> binary(void) -> array
- */
-function blob() {
-	return array(ModelDefinition::TYPE_BINARY, 0, NULL);
-}
+	/**
+	 * Type::blob(void) <==> binary(void) -> array
+	 */
+	static public function blob() {
+		return array(ModelDefinition::TYPE_BINARY, 0, NULL);
+	}
 
-/**
- * binary(void) <==> blob(void) -> array
- */
-function binary() {
-	return array(ModelDefinition::TYPE_BINARY, 0, NULL);
+	/**
+	 * Type::binary(void) <==> blob(void) -> array
+	 */
+	static public function binary() {
+		return array(ModelDefinition::TYPE_BINARY, 0, NULL);
+	}
 }

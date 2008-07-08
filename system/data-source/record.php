@@ -9,6 +9,7 @@
  */
 interface Record extends ArrayAccess {
 	public function toArray();
+	public function isSaved();
 }
 
 /**
@@ -42,6 +43,15 @@ class InnerRecord extends Dictionary implements Record {
 	}
 	
 	/**
+	 * $r->isSaved(void) -> bool
+	 *
+	 * Check if a record is saved.
+	 */
+	public function isSaved() {
+		return empty($this->_dirty);
+	}
+	
+	/**
 	 * $r->__get(string $model_name) <==> $r->$model_name -> mixed
 	 *
 	 * If this is record contains one or more sub-records (models that were
@@ -68,8 +78,20 @@ class InnerRecord extends Dictionary implements Record {
 	 * dictionary after instantiation is isolated as "dirty" data.
 	 */
 	public function offsetSet($key, $val) {
-		$this->_dirty[$key] = $val;
-		parent::offsetUnset($key);
+		if(NULL === $key) {
+			
+			if(!is_array($val)) {
+				throw new InvalidArgumentException(
+					"Record::offsetSet expected value to be array when ".
+					"offset is NULL."
+				);
+			}
+			
+			$this->_dirty = array_merge($this->_dirty, $val);
+		} else {
+			$this->_dirty[$key] = $val;
+			parent::offsetUnset($key);
+		}
 	}
 	
 	/**
@@ -152,11 +174,11 @@ abstract class OuterRecord implements Record {
 	}
 	
 	/**
-	 * $r->getInnerRecord(void) -> Record
+	 * $r->getRecord(void) -> Record
 	 *
 	 * Get the record that this outer record holds.
 	 */
-	final public function getInnerRecord() {
+	final public function getRecord() {
 		return $this->_inner_record;
 	}
 	
@@ -193,5 +215,20 @@ abstract class OuterRecord implements Record {
 	 */
 	public function toArray() {
 		return $this->_inner_record->toArray();
+	}
+	
+	/**
+	 * @see InnerRecord::toArray(...)
+	 */
+	public function isSaved() {
+		return $this->_inner_record->isSaved();
+	}
+	
+	public function __call($fn, array $args = array()) {
+		$ref = array($this->_inner_record, $fn);
+		if(is_callable($ref) || method_exists($this->_inner_record, '__call'))
+			return call_user_func_array($ref, $args);
+		
+		return NULL;
 	}
 }

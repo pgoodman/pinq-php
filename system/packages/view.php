@@ -38,6 +38,36 @@ function layout_view($id) {
 }
 
 /**
+ * Scope stack. Allows variables to be found from parent scopes.
+ *
+ * @author Peter Goodman
+ */
+class ScopeStack extends StackOfDictionaries {
+	
+	/**
+	 * $s->offsetGet(string $key) <==> $s[$key] -> mixed
+	 *
+	 * Get a value from the current scope or a parent one.
+	 */
+	public function offsetGet($key) {
+		
+		if(isset($this->_dict[$key]))
+			return $this->_dict[$key];
+		
+		$i = count($this->_stack) - 1;
+		
+		while(isset($this->_stack[$i])) {
+			if(isset($this->_stack[$i][$key]))
+				return $this->_stack[$i][$key];
+			
+			$i--;
+		}
+		
+		return NULL;
+	}
+}
+
+/**
  * An abstract view.
  *
  * @author Peter Goodman
@@ -122,18 +152,20 @@ class PinqView extends View {
 		if(NULL === $this->file)
 			return;
 		
+		
+		
 		// set the immediate vars
 		$immediate_vars = array_merge(
 			$this->toArray(),
 			($vars instanceof Record) ? $vars->toArray() : (array)$vars
 		);
 		
-		// push the immediate variables onto the scope stack
-		$scope->push($immediate_vars);
-		
 		// don't allow hijacking of either the scope or $this
 		unset($immediate_vars['scope'], $immediate_vars['this']);
 		
+		// push the immediate variables onto the scope stack
+		$scope->push($immediate_vars);
+
 		// extract the immediate variables into the current scope
 		extract($scope->top(), EXTR_REFS | EXTR_OVERWRITE);
 		

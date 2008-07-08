@@ -279,6 +279,10 @@ abstract class ModelDefinition implements Object {
 				return (float)$value;
 			
 			case self::TYPE_STRING:
+				
+				if(is_object($value) || is_array($value))
+					$value = serialize($value);
+			
 				$ret = (string)$value;
 				if($context['length'] > 0)
 					$ret = substr($ret, 0, $context['length']);

@@ -25,39 +25,19 @@ interface Printer {
 }
 
 /**
- * Interface for a package.
- *
- * @author Peter Goodman
- */
-interface Package {
-	
-}
-
-/**
- * Interface for a configurable package.
- *
- * @see Package
- * @author Peter Goodman
- */
-interface ConfigurablePackage extends Package {
-	
-	/**
-	 * Package::configure(Loader $loader, Loader $config, array $args) -> mixed
-	 *
-	 * Statically configure a package. Dependening on the implementation, this
-	 * function will usually return a new instance of a package.
-	 */
-	static public function configure(Loader $loader, Loader $config, array $args);
-}
-
-/**
  * Interface for a gateway to a data source. A gateway is what brings together
  * models and data sources.
  *
  * @author Peter Goodman
  */
 interface Gateway {
-	
+	public function get($query, array $args = array());
+	public function delete($what, array $args = array());
+	public function insert($query, array $args = array());
+	public function update($query, array $args = array());
+	public function createRecord(array $data = array());
+	public function __get($model_name);
+	public function __call($model_name, array $select = array(ALL));
 }
 
 /**

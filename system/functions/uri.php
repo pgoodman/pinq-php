@@ -116,7 +116,7 @@ function get_base_url() {
 function url() {
 	$route_parts = func_get_args();
 	
-	return rtrim(get_base_url() .'/'. preg_replace(
+	return trim(get_base_url(), '/') .'/'. trim(preg_replace(
 		'~/+~', 
 		'/', 
 		implode('/', $route_parts)

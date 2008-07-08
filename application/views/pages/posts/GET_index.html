@@ -2,11 +2,19 @@
 	$scope, 
 	array('post' => $post->posts, 'user' => $post->users, 'tags' => $tags,
 ))?>
-
-<h2>Post Comment</h2>
-<?=element_view('post_form')->render($scope, array('post'=>$post->posts))?>
-
-<? if(count($comments)): ?>
-<h2>Comments</h2>
-
-<? endif; ?>
+<div class="columns">
+	<div class="col_left">
+		<h2>Discussions</h2>
+		<? if(count($comments)): ?>
+		<? else: ?>
+		<p>
+			There are none! Why don't you add one?
+		</p>
+		<? endif; ?>
+	</div>
+	<div class="col_right">
+		<h2>Leave a Reply</h2>
+		<?=element_view('post_form')->render($scope, array('post'=>$post->posts))?>
+	</div>
+	<br />
+</div>

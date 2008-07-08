@@ -2,6 +2,9 @@
 
 !defined('DIR_APPLICATION') && exit();
 
+$routes['/about'] = '/index/about';
+$routes['/view-source'] = '/index/source';
+
 $routes['/users/(:alphanum)'] = '/users/index/$1';
 
 // archives
@@ -14,5 +17,3 @@ $routes['/tags/(:alphanum)'] = '/tags/index/$1';
 
 // viewing single post
 $routes['/(:year)/(:month)/(:day)/([a-zA-Z0-9-]*)'] = '/posts/index/$4';
-
-$routes['/view-source'] = '/index/source';

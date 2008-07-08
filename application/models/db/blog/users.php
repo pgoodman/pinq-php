@@ -5,11 +5,12 @@
 class UsersDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
-		$this->id = int(10); // sqlite's own row id
-		$this->email = string(150);
-		$this->display_name = string(50);
-		$this->password = string(32);
-		$this->login_key = string(32);
+		$this->id = FieldType::int(10); // sqlite's own row id
+		$this->email = FieldType::string(150);
+		$this->display_name = FieldType::string(50);
+		$this->url = FieldType::string(50);
+		$this->password = FieldType::string(32);
+		$this->login_key = FieldType::string(32);
 		
 		$this->id->mapsTo('posts', 'user_id');
 	}

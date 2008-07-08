@@ -4,7 +4,48 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-class InvalidPackageException extends PinqException {
+/**
+ * Interface for a package.
+ *
+ * @author Peter Goodman
+ */
+interface Package {
+	
+}
+
+/**
+ * Interface for a configurable package.
+ *
+ * @see Package
+ * @author Peter Goodman
+ */
+interface ConfigurablePackage extends Package {
+	
+	/**
+	 * Package::configure(Loader $loader, Loader $config, array $args) -> mixed
+	 *
+	 * Statically configure a package. Dependening on the implementation, this
+	 * function will usually return a new instance of a package.
+	 */
+	static public function configure(Loader $loader, Loader $config, array $args);
+}
+
+/**
+ * Interface for a package that can be instantiated without configuration.
+ *
+ * @author Peter Goodman
+ */
+interface InstantiablePackage extends Package {
+	
+}
+
+/**
+ * Exception thrown when a package load operation or package is somehow 
+ * invalid.
+ *
+ * @author Peter Goodman
+ */
+class InvalidPackageException extends InternalErrorException {
 	
 }
 
@@ -135,10 +176,18 @@ class PackageLoader extends Loader {
 		
 		// if the package configures itself it might change this
 		$package = NULL;
-
-		// the package might be a self-configuring class. see if it has a
-		// configure function.
-		if(method_exists($class, 'configure')) {
+		
+		// the interfaces that this class implements
+		$interfaces = class_implements($class, FALSE);
+		if(FALSE === $interfaces || !in_array('Package', $interfaces)) {
+			throw new InvalidPackageException(
+				"Class [{$class}] must implement interface [Package] or one ".
+				"of its extending interfaces."
+			);
+		}
+		
+		// the package has a configuration function. Call it.
+		if(in_array('ConfigurablePackage', $interfaces)) {
 			
 			// package info. the class name is especially important if the
 			// subclass of a system package is being used
@@ -157,7 +206,10 @@ class PackageLoader extends Loader {
 				$this->config, 
 				array_merge($package_info, $context)
 			);
-		}
+		
+		// the package is directly instantiatied
+		} else if(in_array('InstantiablePackage', $interfaces))
+			$package = new $class;
 		 
 		$this->offsetSet($key, $package);
 		

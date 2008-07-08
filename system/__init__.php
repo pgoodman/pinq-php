@@ -6,13 +6,12 @@
 !defined('E_RECOVERABLE_ERROR') && define('E_RECOVERABLE_ERROR', 4096);
 error_reporting(E_ALL | E_STRICT | E_RECOVERABLE_ERROR);
 
-// default timezone, GMT
+// time and locale settings
 date_default_timezone_set('GMT');
+setlocale(LC_CTYPE, 'C');
 
 // no need for this stuff
 ini_set('register_argc_argv', 0);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.use_trans_sid', 0);
 
 // hide php
 header("Server: Sparta", TRUE);
@@ -51,10 +50,6 @@ define('ERROR_404', '/error/404');
 define('ERROR_405', '/error/405');
 define('ERROR_500', '/error/500');
 
-// start the session and regenerate the id
-session_start();
-//session_regenerate_id(FALSE);
-
 // exceptions
 require_once DIR_SYSTEM .'/general-exceptions.php';
 require_once DIR_SYSTEM .'/control-flow-exceptions.php';
@@ -69,7 +64,8 @@ require_once DIR_SYSTEM .'/dictionary.php';
 require_once DIR_SYSTEM .'/loader.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 
-// bring in the model stuff
+// bring in the core stuff that's used everywhere
+require_once DIR_SYSTEM .'/spl/__init__.php';
 require_once DIR_SYSTEM .'/pql/__init__.php';
 require_once DIR_SYSTEM .'/model/__init__.php';
 require_once DIR_SYSTEM .'/data-source/__init__.php';
@@ -138,6 +134,9 @@ function pinq($script_file, $app_dir) {
 			'file_extension' => EXT,
 		));
 		
+		// bring in the session
+		$_SESSION = $packages->load('session');
+		
 		// the starting route, taken from the url, it's outside of the
 		// do-while loop because if any controllers yield to another
 		// controller then the route to go to is passed in through the yield-
@@ -204,7 +203,7 @@ function pinq($script_file, $app_dir) {
 					break;
 				
 				// render and output the layout view
-				$layout_view->render(new StackOfDictionaries);
+				$layout_view->render(new ScopeStack);
 				
 				// layout view no longer needed
 				unset($layout_view);

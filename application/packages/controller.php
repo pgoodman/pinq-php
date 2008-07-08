@@ -7,14 +7,24 @@ class AppController extends PinqController {
 	/**
 	 * Constructor hook.
 	 */
-	protected function __init__() {
+	protected function __init__() {		
 		$this->db = $this->import('db.blog');
 		
-		$tags = $this->db->tags->getPopular();
 		
 		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
-		foreach($tags as $tag)
-			$keywords[] = $tag['name'];
+		$logged_in = FALSE;
+		
+		try {
+			
+			// get the popular tags and add them as keywords for the HTML meta
+			// tag
+			$tags = $this->db->tags->getPopular();
+			foreach($tags as $tag)
+				$keywords[] = $tag['name'];
+			
+			// figure out if this user is logged in / auto log them in
+		
+		} catch(Exception $e) { }
 		
 		$this->layout[] = array(
 			'blog_name' => 'I/O Reader',
@@ -22,6 +32,7 @@ class AppController extends PinqController {
 			'blog_keywords' => $keywords,
 			'blog_author' => 'Peter Goodman',
 			'tags' => $tags,
+			'logged_in' => $logged_in,
 		);
 	}
 	
