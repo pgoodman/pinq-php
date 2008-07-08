@@ -1,23 +1,39 @@
-<form method="post" action="<?=url('posts',isset($post)?$post['id']:0)?>">
-<dl>
-	<?if($scope['logged_in']):?>
+<? $i = 1; ?>
+<div class="section">
+	<form method="post" action="<?=url('posts',isset($post)?$post['id']:0)?>">
+		<dl>		
+			<?if(!$scope['logged_in']):?>
+			<dt>Name</dt>
+			<dd><input type="text" name="display_name" maxlength="50" tabindex="<?=$i++?>" /></dd>
+		
+			<dt>Website</dt>
+			<dd><input type="text" name="website" maxlength="50" tabindex="<?=$i++?>" /></dd>
+		
+			<dt>Email</dt>
+			<dd><input type="text" name="email" maxlength="150" tabindex="<?=$i++?>" /></dd>
 
-	<?else:?>
-	<dt>Email</dt>
-	<dd><input type="text" name="email" maxlength="150" />
+			<dt>Password</dt>
+			<dd><input type="password" name="password" tabindex="<?=$i++?>" /></dd>
+			<dd>
+				<label for="logme">
+					<input id="logme" type="radio" name="action" value="0" tabindex="<?=$i++?>" />
+					Log me in
+				</label>
+			</dd>
+			<dd>
+				<label for="regme">
+					<input id="regme" type="radio" name="action" value="1" tabindex="<?=$i++?>" />
+					Register me
+				</label>
+			</dd>
+			<?endif;?>
 
-	<dt>Password</dt>
-	<dd><input type="password" name="password" />
-
-	<dt>Name</dt>
-	<dd><input type="text" name="display_name" maxlength="50" />
-	<?endif;?>
-
-	<dt>Body</dt>
-	<dd><textarea name="body" rows="10"></textarea></dd>
-</dl>
-<center>
-	<input type="submit" value="Leave Comment" />
-	<input type="reset" value="Reset" />
-</center>
-</form>
+			<dt>Body</dt>
+			<dd><textarea name="body" rows="5" tabindex="<?=$i++?>"></textarea></dd>
+		</dl>
+		<br />
+		<center>
+			<input type="submit" value="Publish This Thought" tabindex="<?=$i++?>" />
+		</center>
+	</form>
+</div>

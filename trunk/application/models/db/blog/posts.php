@@ -9,17 +9,25 @@
  */
 class PostsDefinition extends DatabaseModelDefinition {
 	
+	const DRAFT = 0,
+	      PUBLISHED = 1,
+	      SPAM = 2;
+	
     public function describe() {
         
-        $this->id = int(10); // sqlite's own row id
-        $this->title = string(100);
-        $this->body = text();
-        $this->user_id = int(5);
-        $this->nice_title = string(100);
-        $this->created = int(10);
-        $this->published = bool();
-		$this->parent_id = int(10);
-		$this->num_children = int(5);
+        $this->id = FieldType::int(10); // sqlite's own row id
+        $this->title = FieldType::string(100);
+        $this->body = FieldType::text();
+        $this->user_id = FieldType::int(5);
+        $this->nice_title = FieldType::string(100);
+        $this->created = FieldType::int(10);
+        $this->status = FieldType::enum(
+			self::DRAFT, 
+			self::PUBLISHED, 
+			self::SPAM
+		);
+		$this->parent_id = FieldType::int(10);
+		$this->num_children = FieldType::int(5);
         
         $this->user_id->mapsTo('users', 'id');
 		$this->parent_id->mapsTo('posts', 'id');
@@ -70,7 +78,7 @@ class PostsGateway extends DatabaseModelGateway {
 			from('users')->select(ALL)->
 			link('posts', 'users')->
 			order()->posts('created')->desc->
-			where()->posts('published')->is(TRUE)
+			where()->posts('status')->is(PostsDefinition::PUBLISHED)
 		);
     }
     

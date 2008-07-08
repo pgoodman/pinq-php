@@ -15,9 +15,10 @@ CREATE TABLE posts (
 	user_id integer unsigned,
 	nice_title varchar(100),
 	created integer,
-	published integer,
-	parent_id integer,
 	num_children integer,
+	post_id integer,
+	parent_id integer,
+	status integer,
 	
 	UNIQUE(nice_title)
 );
@@ -33,6 +34,7 @@ CREATE TABLE users (
 	id integer primary key,
 	email varchar(150),
 	display_name varchar(50),
+	url varchar(50),
 	password varchar(32),
 	login_key varchar(32),
 	

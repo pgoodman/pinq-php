@@ -49,6 +49,18 @@ class YieldControlException extends PinqException {
 }
 
 /**
+ * Exception that yields control to a 500 Internal Server Error page.
+ *
+ * @author Peter Goodman
+ */
+class InternalErrorException extends YieldControlException {
+	public function __construct($message) {
+		parent::__construct(ERROR_500);
+		err($message);
+	}
+}
+
+/**
  * Exception that contains an array of generic validation errors. This class
  * extends YieldControlException and yields control to the /error/validation
  * route.

@@ -5,6 +5,7 @@
 	<title>I/O Reader<?=isset($title)?" : {$title}":'';?></title>
 	<link rel="stylesheet" href="<?=url('css','reset.css')?>" media="screen" />
 	<link rel="stylesheet" href="<?=url('css','styles.css')?>" media="screen" />
+	<link rel="stylesheet" href="<?=url('css','print.css')?>" media="print" />
 	
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	
@@ -48,8 +49,8 @@
 				</li>
 				<li>
 					<form action="<?=url('search')?>" method="get">
-					<input type="text" name="for" value="" />
-					<input type="submit" value="Search" />
+						<input type="text" name="for" value="" />
+						<input type="submit" value="Search" />
 					</form>
 				</li>
 			</ul>

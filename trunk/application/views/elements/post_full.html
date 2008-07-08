@@ -1,21 +1,31 @@
 <!-- Single Post -->
 <h2><a href="<?=$post['perma_link']?>"><?=$post['title']?></a></h2>
-<div class="active_post post">
-	<?=$post['body']?>
+<div class="section">
+	<!-- Post Info -->
+	<div class="post_extra">
+		<dl class="tag_list">
+			<dt>Tags</dt>
+			<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
+	
+			<dt>Posted On</dt>
+			<dd><?=$post['display_created']?></dd>
+	
+			<!--
+			<dt>Posted By</dt>
+			<dd><a href="<?=$user['perma_link']?>" title="view <?=$user['display_name']?>'s profile"><?=$user['display_name']?></a></dd>
+			-->
+	
+			<dt>Number of Comments</dt>
+			<dd><?=(int)$post['num_children']?></dd>
+		</dl>
+		<br />
+	</div>
+	<!-- / Post Info -->
+	
+	<!-- Post Body -->
+	<div class="post">
+		<?=$post['body']?>
+	</div>
+	<!-- / Post Body -->
 </div>
-<dl class="tag_list">
-	<dt>Tags</dt>
-	<?=element_view('tag_list')->render($scope,array('tags'=>$tags))?>
-	
-	<dt>Posted On</dt>
-	<dd><?=$post['display_created']?></dd>
-	
-	<!--
-	<dt>Posted By</dt>
-	<dd><a href="<?=$user['perma_link']?>" title="view <?=$user['display_name']?>'s profile"><?=$user['display_name']?></a></dd>
-	-->
-	
-	<dt>Number of Comments</dt>
-	<dd><?=(int)$post['num_children']?></dd>
-</dl>
 <!-- / Single Post -->

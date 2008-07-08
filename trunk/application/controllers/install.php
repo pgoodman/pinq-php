@@ -51,7 +51,8 @@ class InstallController extends AppController {
 			'body' => str_repeat('This is the first blog post. ', 50),
 			'user_id' => 1,
 			'created' => time()-(60*60*24*7),
-			'published' => TRUE,
+			'parent_id' => 0,
+			'status' => 1,
 		)));
 		$this->db->insert($tag_link, array(1, 1));
 		$this->db->insert($tag_link, array(1, 2));
@@ -64,8 +65,9 @@ class InstallController extends AppController {
 			'nice_title' => 'second-blog-post',
 			'body' => str_repeat('This is the second blog post. ', 25),
 			'user_id' => 1,
-			'created' => time(),
-			'published' => TRUE,
+			'created' => time()-(60*60*24),
+			'parent_id' => 0,
+			'status' => 1,
 		)));
 		
 		$this->db->insert($tag_link, array(2, 1));
@@ -79,7 +81,8 @@ class InstallController extends AppController {
 			'body' => str_repeat('lorum ipsum dolor sit amet. ', 25),
 			'user_id' => 1,
 			'created' => time(),
-			'published' => TRUE,
+			'parent_id' => 0,
+			'status' => 1,
 		)));
 		
 		$this->db->insert($tag_link, array(3, 2));

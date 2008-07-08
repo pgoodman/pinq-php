@@ -24,6 +24,7 @@ class IndexController extends AppController {
 			$view['tags'] = $this->db->tags->getAll($view['post']->posts);
 		}
 		
+		$this->layout['title'] = 'Curious About Programming';
 		$this->view[] = $view;
 	}
 	
@@ -44,6 +45,15 @@ class IndexController extends AppController {
 		);
 		
 		// send the original route to the layout view
+		$this->view['original_route'] = $_GET['route'];
 		$this->layout['original_route'] = $_GET['route'];
+		$this->layout['title'] = 'View Source';
+	}
+	
+	/**
+	 * About page.
+	 */
+	public function GET_about() {
+		$this->layout['title'] = 'About '. $this->layout['blog_author'];
 	}
 }

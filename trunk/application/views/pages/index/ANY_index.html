@@ -5,7 +5,7 @@
 	))?>
 	<div class="columns">
 		<div class="col_left">
-			<h2>Older Posts</h2>
+			<h3>Recently</h3>
 			<? if(!empty($posts)): ?>
 			<? foreach($posts as $post): ?>
 				<?=element_view('post_overview')->render(
@@ -20,7 +20,7 @@
 			<? endif; ?>
 		</div>
 		<div class="col_right">
-			<h2>Recent Comments</h2>
+			<h3>Discussions</h3>
 			<? if(!empty($comments)): ?>
 			<? foreach($comments as $comment): ?>
 				<?=element_view('comment')->render(

@@ -1,0 +1,12 @@
+/** General */
+body {
+	font-family: helvetica, 'Lucida Grande', verdana, arial, sans-serif;
+	font-size: 0.85em;
+	line-height: 1.7em;
+	color: #2c2c2c;
+	cursor: default;
+}
+
+form {
+	display: none;
+}

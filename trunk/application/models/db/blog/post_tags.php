@@ -5,8 +5,8 @@
 class PostTagsDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
-		$this->tag_id = int(5);
-		$this->post_id = int(5);
+		$this->tag_id = FieldType::int(5);
+		$this->post_id = FieldType::int(5);
 		
 		$this->post_id->mapsTo('posts', 'id');
 		$this->tag_id->mapsTo('tags', 'id');

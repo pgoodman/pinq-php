@@ -5,9 +5,9 @@
 class TagsDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
-		$this->id = int(10); // sqlite's own row id
-		$this->name = string(20);
-		$this->num_posts = int(5);
+		$this->id = FieldType::int(10); // sqlite's own row id
+		$this->name = FieldType::string(20);
+		$this->num_posts = FieldType::int(5);
 		
 		$this->relatesTo('posts', through('post_tags'));
 	}
