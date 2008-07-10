@@ -223,7 +223,7 @@ function pinq($script_file, $app_dir) {
 				
 				// don't want infinite loop!
 				if($route === ($new_route = $y->getRoute()))
-					break;
+					throw $y;
 				
 				// change the next route that will be parsed
 				$route = $new_route;

@@ -9,7 +9,7 @@ class AppController extends PinqController {
 	 * Constructor hook.
 	 */
 	protected function __init__() {		
-		list($this->db, $this->session) = $this->import('db.blog', 'session.blog');
+		list($this->db, $this->auth) = $this->import('db.blog', 'auth.blog');
 		
 		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
 		$logged_in = FALSE;

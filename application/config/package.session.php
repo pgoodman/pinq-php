@@ -1,5 +1,7 @@
 <?php
 
+!defined('DIR_APPLICATION') && exit();
+
 $config['blog'] = array(
 	
 	// where this session is stored
