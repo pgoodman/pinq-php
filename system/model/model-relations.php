@@ -280,7 +280,7 @@ class ModelRelations {
 	}
 	
 	/**
-	 * $r->getRelationDependencies(array $aliases, array $relations, ModelDictionary)
+	 * $r->getRelationDependencies(array $aliases, array &$relations, ModelDictionary)
 	 * -> array
 	 *
 	 * Return a graph of the dependencies for this query, that is, lay out the
@@ -315,7 +315,7 @@ class ModelRelations {
 		
 		// temporary indexes for through queries
 		$t = 1;
-		
+				
 		// populate the entry nodes array. this is actually *more* complicated
 		// than solving datasource dependencies because we need to sneak the
 		// indirect relationships in.
@@ -391,7 +391,7 @@ class ModelRelations {
 				$entry_points[$right] = NULL;
 			}
 		}
-						
+								
 		// go over the relations and build up the dependency graph. the graph
 		// is structured as a multi-dimensional associative array. the keys on
 		// the first level are the base things that we're trying to get that

@@ -501,27 +501,36 @@ class Query {
 	}
 	
 	/**
+	 * $q->getOrCreatePredicates(void) -> QueryPredicates
+	 *
+	 * Get the current or create a new predicates object for this query.
+	 */
+	protected function getOrCreatePredicates() {
+		if(NULL === $this->_predicates)
+			$this->_predicates = new QueryPredicates($this);
+		
+		return $this->_predicates;
+	}
+	
+	/**
 	 * $q->where(void) <==> (new QueryPredicates)->where() -> QueryPredicates
 	 */
 	public function where() {
-		$this->_predicates = new QueryPredicates($this);
-		return $this->_predicates->where();
+		return $this->getOrCreatePredicates()->where();
 	}
 	
 	/**
 	 * $q->group(void) <==> (new QueryPredicates)->group() -> QueryPredicates
 	 */
 	public function group() {
-		$this->_predicates = new QueryPredicates($this);
-		return $this->_predicates->group();
+		return $this->getOrCreatePredicates()->group();
 	}
 	
 	/**
 	 * $q->order(void) <==> (new QueryPredicates)->order() -> QueryPredicates
 	 */
 	public function order() {
-		$this->_predicates = new QueryPredicates($this);
-		return $this->_predicates->order();
+		return $this->getOrCreatePredicates()->order();
 	}
 	
 	/**
@@ -529,7 +538,6 @@ class Query {
 	 * <==> (new QueryPredicates)->limit(...) -> QueryPredicates
 	 */
 	public function limit($start, $offset = NULL) {
-		$this->_predicates = new QueryPredicates($this);
-		return $this->_predicates->limit($start, $offset);
+		return $this->getOrCreatePredicates()->limit($start, $offset);
 	}
 }

@@ -116,7 +116,7 @@ class QueryPredicates extends StackOfStacks {
 		);
 		
 		$this->_query = $query;
-		$this->setContext('where');
+		$this->changeContext('where');
 	}
 	
 	/**
@@ -196,14 +196,14 @@ class QueryPredicates extends StackOfStacks {
 	}
 	
 	/**
-	 * $p->setContext(string $context) -> QueryPredicates
+	 * $p->changeContext(string $context) -> QueryPredicates
 	 *
 	 * Set which context {where, order, limit, group, search} of the query is
 	 * currently being appended to.
 	 *
 	 * @internal
 	 */
-	public function setContext($context) {
+	public function changeContext($context) {
 		$this->_compiled = FALSE;
 		$this->addTrailingOperators();
 		$this->_context = &$this->_contexts[$context];
@@ -276,7 +276,7 @@ class QueryPredicates extends StackOfStacks {
 	 */
 	public function limit($limit, $offset = NULL) {		
 		$this->_contexts['limit'] = array();
-		$this->setContext('limit');
+		$this->changeContext('limit');
 		
 		$limit = abs($limit);
 		
@@ -301,21 +301,21 @@ class QueryPredicates extends StackOfStacks {
 	 *
 	 * Change the query context to 'order'.
 	 */
-	public function order() { return $this->setContext('order'); }
+	public function order() { return $this->changeContext('order'); }
 	
 	/**
 	 * $p->where(void) -> QueryPredicates
 	 *
 	 * Change the query context to 'where'.
 	 */
-	public function where() { return $this->setContext('where'); }
+	public function where() { return $this->changeContext('where'); }
 	
 	/**
 	 * $p->group(void) -> QueryPredicates
 	 *
 	 * Change the query context to 'group'.
 	 */
-	public function group() { return $this->setContext('group'); }
+	public function group() { return $this->changeContext('group'); }
 	
 	/**
 	 * $p->search(void) -> QueryPredicates
@@ -326,7 +326,7 @@ class QueryPredicates extends StackOfStacks {
 	 * @see QueryPredicates::with(...)
 	 */
 	public function search() {
-		$this->setContext('search');
+		$this->changeContext('search');
 		$this->addOperator('search');
 		
 		return $this;
@@ -342,7 +342,7 @@ class QueryPredicates extends StackOfStacks {
 	 * @see QueryPredicates::search(...)
 	 */
 	public function with($search_term) {
-		$this->setContext('where');
+		$this->changeContext('where');
 		
 		// add in the special search predicate
 		$this->_context[] = array(self::OPERATOR, 'search', array(
@@ -533,7 +533,7 @@ class QueryPredicates extends StackOfStacks {
 			
 			// incoming data is appended onto existing data
 			if($context == 'where') {
-				$this->setContext($context);
+				$this->changeContext($context);
 				
 				if(!empty($data))
 					$this->parseOperator('and');

@@ -102,9 +102,12 @@ class SqliteDataSource extends Database {
 	protected function query($query, array $args) {
 		
 		$error = '';
+		$query = $this->substituteArgs($query, $args);
+		
+		out('<pre>', $query, '</pre>');
 		
 		$result = $this->conn->query(
-			$this->substituteArgs($query, $args),
+			$query,
 			SQLITE_ASSOC,
 			$error
 		);
@@ -121,8 +124,11 @@ class SqliteDataSource extends Database {
 	public function update($query, array $args = array()) {		
 		
 		$error = '';
+		$query = $this->substituteArgs($query, $args);
+		out('<pre>', $query, '</pre>');
+		
 		$result = $this->conn->queryExec(
-			$this->substituteArgs($query, $args),
+			$query,
 			$error
 		);
 		

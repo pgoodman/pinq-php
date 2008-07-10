@@ -56,7 +56,7 @@ class YieldControlException extends PinqException {
 class InternalErrorException extends YieldControlException {
 	public function __construct($message) {
 		parent::__construct(ERROR_500);
-		err($message);
+		$this->message = $message;
 	}
 }
 

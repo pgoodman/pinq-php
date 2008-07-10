@@ -318,22 +318,25 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		// will be found.
 		$path_parts = explode('/', ltrim($path, '/') .'///');
 		
-		$i = -1;
+		$i = 0;
 		
 		// build up the directory to the controller, making sure to ignore
 		// empty sub-directories
-		while(isset($path_parts[++$i]) && is_dir($directory .'/'. $path_parts[$i])) {
+		while(isset($path_parts[$i]) && is_dir($directory .'/'. $path_parts[$i])) {
 			$directory .= '/'. $path_parts[$i];
-			$partial_directory .= '/'. $path_parts[$i];
+			$partial_directory .= '/'. $path_parts[$i++];
 		}
 
 		// we might have found what we're looking for ;)
 		if(!empty($path_parts[$i]))
 			$controller = $path_parts[$i++];
 		
-		$first_arg = isset($arguments[0]) ? $arguments[0] : NULL;
-		if(!empty($path_parts[$i]) && $path_parts[$i] != $first_arg)
-			$method = $path_parts[$i];
+		//$first_arg = isset($arguments[0]) ? $arguments[0] : NULL;
+		if(!empty($path_parts[$i])/* && $path_parts[$i] != $first_arg*/)
+			$method = $path_parts[$i++];
+		
+		if(empty($arguments))
+			$arguments = array_slice($path_parts, $i);
 		
 		// make it applicable as a file name
 		$controller = function_name($controller);

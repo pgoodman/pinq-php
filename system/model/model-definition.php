@@ -278,6 +278,7 @@ abstract class ModelDefinition implements Object {
 			case self::TYPE_FLOAT:
 				return (float)$value;
 			
+			case self::TYPE_BINARY:
 			case self::TYPE_STRING:
 				
 				if(is_object($value) || is_array($value))
@@ -291,10 +292,6 @@ abstract class ModelDefinition implements Object {
 			
 			case self::TYPE_ENUM:
 				return in_array($value, $context['value']) ? $value : NULL;
-			
-			// TODO: this probably isn't what should be done
-			case self::TYPE_BINARY:
-				return base64_encode($value);
 			
 			default:
 				throw new InvalidArgumentException(

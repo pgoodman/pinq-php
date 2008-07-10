@@ -46,3 +46,10 @@ CREATE TABLE post_tags (
 	tag_id integer unsigned,
 	PRIMARY KEY(post_id, tag_id)
 );
+
+CREATE TABLE session (
+	id varchar(32),
+	data text,
+	last_active integer,
+	UNIQUE(id)
+);
