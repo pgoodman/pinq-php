@@ -1,7 +1,7 @@
 <h2>About <?=$scope['blog_author']?></h2>
 <div class="section post">
 	<p>
-		Heyo! I'm a <?=year()-1988?> yeard-old Canadian, computer programmer, 
+		Heyo! I'm a <?=floor((time()-mktime(0,0,0,4,27,1988))/31536000)?> yeard-old Canadian, computer programmer, 
 		blogger, and former ski racer. I'm currently enrolled in the 
 		<a href="http://csd.uwo.ca" title="UWO's Computer Science Program">Computer
 		Science program</a> at the University of Western Ontario.

@@ -19,6 +19,14 @@ function destroy_php_session() {
 }
 
 /**
+ * Interface so that the package doesn't need to be referred to as PinqSession
+ * or AppSession.
+ */
+interface Session {
+	
+}
+
+/**
  * Represents a PINQ session. This is just a basic dictionary wrapper around
  * the session super global. If a data source is used then more than one
  * sessions can be managed simultaneously. When datasources are used, PHP's
@@ -28,7 +36,7 @@ function destroy_php_session() {
  *
  * @author Peter Goodman
  */
-class PinqSession extends OuterRecord implements ConfigurablePackage {
+class PinqSession extends OuterRecord implements ConfigurablePackage, Session {
 	
 	/**
 	 * PinqSession::configure(PackageLoader, ConfigLoader, array $args) 
@@ -78,7 +86,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 				session_start();
 			
 			// the session is not a PinqSession object
-			if($create || get_class($_SESSION) !== $class) {
+			if($create || !($_SESSION instanceof Session)) {
 				session_id(random_hash());
 				$data = array();
 				$record = new InnerRecord($data);
@@ -236,6 +244,17 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 			return $this->_data[$key];
 		
 		return NULL;
+	}
+	
+	/**
+	 * $s->offsetGetRef(string $key) <==> &$s[$key] -> mixed
+	 */
+	public function &offsetGetRef($key) {
+		$ret = NULL;
+		if(isset($this->_data[$key]))
+			$ret = &$this->_data[$key];
+		
+		return $ret;
 	}
 	
 	/**
