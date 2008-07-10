@@ -251,5 +251,6 @@ class StringObject implements SeekableIterator, ArrayAccess, Countable {
 	 */
 	public function reverse() {
 		$this->str = mb_strrev($this->str);
+		return $this;
 	}
 }
