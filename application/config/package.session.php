@@ -1,6 +1,6 @@
 <?php
 
-$config = array(
+$config['blog'] = array(
 	
 	// where this session is stored
 	'data_source' => 'db.blog',

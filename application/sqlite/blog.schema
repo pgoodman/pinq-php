@@ -51,5 +51,6 @@ CREATE TABLE session (
 	id varchar(32),
 	data text,
 	last_active integer,
-	UNIQUE(id)
+	PRIMARY KEY(id)
 );
+CREATE INDEX ON session(last_active);

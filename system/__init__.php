@@ -134,9 +134,6 @@ function pinq($script_file, $app_dir) {
 			'file_extension' => EXT,
 		));
 		
-		//var_dump(session_id());
-		$_SESSION = $packages->load('session');
-		
 		// the starting route, taken from the url, it's outside of the
 		// do-while loop because if any controllers yield to another
 		// controller then the route to go to is passed in through the yield-
@@ -255,7 +252,6 @@ function pinq($script_file, $app_dir) {
 	// none but there's no guarantee.
 	} catch(Exception $e) {
 		echo $e->getMessage();
-		
 	}
 
 	// break references, we're done.
