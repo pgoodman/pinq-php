@@ -49,7 +49,7 @@ class IndexController extends AppController {
 		$this->layout['original_route'] = $_GET['route'];
 		$this->layout['title'] = 'View Source';
 	}
-	
+	/*
 	public function ANY_dump($table) {
 		//$this->db->delete(from($table));
 		$rows = $this->db->getAll(from($table)->select(ALL));
@@ -59,7 +59,7 @@ class IndexController extends AppController {
 			echo '</pre>';
 		}
 		stop();
-	}
+	}*/
 	
 	/**
 	 * About page.

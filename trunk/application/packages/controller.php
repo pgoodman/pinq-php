@@ -2,13 +2,14 @@
 
 class AppController extends PinqController {
 	
-	protected $db;
+	protected $db,
+	          $session;
 	
 	/**
 	 * Constructor hook.
 	 */
 	protected function __init__() {		
-		$this->db = $this->import('db.blog');
+		list($this->db, $this->session) = $this->import('db.blog', 'session.blog');
 		
 		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
 		$logged_in = FALSE;
@@ -40,6 +41,6 @@ class AppController extends PinqController {
 	 * Destructor hook.
 	 */
 	protected function __del__() {
-		unset($this->db);
+		unset($this->session, $this->db);
 	}
 }

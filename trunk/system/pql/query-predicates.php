@@ -85,7 +85,8 @@ class QueryPredicates extends StackOfStacks {
 		'lt' => 3, 'gt' => 3, 'neq' => 3,
 		
 		// boolean
-		'and' => 2, 'or' => 2, 'xor' => 2,
+		'or' => 2, 'xor' => 2,
+		'and' => 1,
 
 		// pseudo operators that have actual functions
 		'search' => -1, 'with' => -1,

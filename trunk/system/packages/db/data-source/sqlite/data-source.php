@@ -125,6 +125,7 @@ class SqliteDataSource extends Database {
 		
 		$error = '';
 		$query = $this->substituteArgs($query, $args);
+		
 		out('<pre>', $query, '</pre>');
 		
 		$result = $this->conn->queryExec(

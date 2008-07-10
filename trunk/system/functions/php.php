@@ -107,13 +107,14 @@ function random_hash() {
 }
 
 /**
- * set_http_cookie(string $name, string $value, int $expiry) -> void
+ * set_http_cookie(string $name, string $value, int $expiry[, string $path]) 
+ * -> void
  *
  * Create an HTTP-only cookie.
  *
  * @author Peter Goodman
  */
-function set_http_cookie($name, $value, $expiry) {
+function set_http_cookie($name, $value, $expiry, $path = '/') {
 	
 	if(headers_sent()) {
 		throw new InternalErrorException(
@@ -127,7 +128,7 @@ function set_http_cookie($name, $value, $expiry) {
 		(string)$name, 
 		(string)$value, 
 		(int)$expiry, 
-		NULL,
+		$path,
 		strpos($host, '.') !== FALSE ? ".{$host}" : '',
 		get_http_scheme() == 'https',
 		TRUE

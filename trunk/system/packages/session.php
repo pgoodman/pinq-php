@@ -9,19 +9,12 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid', 0);
 
 /**
- * empty_string(void) -> string
- */
-function empty_string() {
-	return '';
-}
-
-/**
- * destroy_session(void) -> void
+ * destroy_php_session(void) -> void
  *
  * Destroy session data and session cookie data.
  */
-function destroy_session() {
-	@setcookie(session_name(), '', time() - 42000, '/');
+function destroy_php_session() {
+	@setcookie(session_name(), '', time() - t2000, '/');
 	@session_destroy();
 }
 
@@ -50,20 +43,34 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 
 		// load and check the session config
 		$config = $config->load('package.session');
+		extract($args);
 		
+		// take the first one
+		if(0 === $argc)
+			$argv[0] = key($config);
+		
+		// hrm, no config stuff in the session config files.
+		if(!isset($config[$argv[0]])) {
+			throw new ConfigurationException(
+				"There must be at least one set of configuration settings ".
+				"in [package.session.php]."
+			);
+		}
+		
+		// debug the config
+		$config = $config[$argv[0]];
 		PINQ_DEBUG && expect_array_keys($config, array(
-			'data_source', 'model', 'field_id', 'field_data',
+			'data_source', 'model', 'field_id', 'field_data', 'field_time'
 		));
 		
 		$gateway = $query = $record = NULL;
-		$name = session_name();
-		$time = time() + ini_get('session.gc_maxlifetime');
-				
+		$gc_time = ini_get('session.gc_maxlifetime');
+		$use_php_session = empty($config['data_source']);
+		$name = $use_php_session ? session_name() : $argv[0];
 		$create = !isset($_COOKIE[$name]);
-		$recreated = FALSE;
 		
 		// we're just using existing session as a data storage
-		if(empty($config['data_source'])) {
+		if($use_php_session) {
 			
 			// start the session if it hasn't been started yet
 			if(!isset($_SESSION) || '' === session_id())
@@ -90,6 +97,18 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 			// load up a gateway
 			$gateway = $loader->load($config['data_source']);
 			
+			// get the garbage collection probability
+			$p = ini_get('session.gc_probability') / ini_get('session.gc_divisor');
+			$p = 100 * $p;
+			
+			// garbage collect
+			if($p >= mt_rand(1, 100)) {
+				$gateway->delete(
+					from($config['model'])->where()->
+					{$config['field_time']}->lt(time() - $gc_time)
+				);
+			}
+			
 			// create a query that is acceptable for all session-related
 			// operations
 			$query = from($config['model'])->select(ALL)->set(array(
@@ -97,7 +116,8 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 				$config['field_data'] => _,
 				$config['field_time'] => time(),
 			));
-			$query->where()->{$config['field_id']}->eq(_);
+			$query->where()->{$config['field_time']}->geq(time() - $gc_time)
+			               ->and->{$config['field_id']}->eq(_);
 						
 			try {
 				do {
@@ -130,12 +150,14 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 					// store the current and next session ids
 					$record['curr_session_id'] = $current_id;
 					$record['next_session_id'] = $next_id;
+					$record['cookie_name'] = $name;
 					
-					// set the cookie to the next session id
+					// set the cookie to the next session id, the db values
+					// will be updated on __destruct
 					set_http_cookie(
 						$name, 
 						$next_id, 
-						$time
+						time() + $gc_time
 					);
 					
 					break;
@@ -156,6 +178,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 				throw $e;
 			}
 			
+			// reference the field that stores the data in the session record
 			$data = &$record->offsetGetRef($config['field_data']);
 		}
 		
@@ -187,9 +210,10 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 		if(NULL === $this->_gateway)
 			session_write_close();
 		
-		// update the datasource. note: when a data-source is used as the
-		// storage means 
 		else {
+			
+			// update the session and change the session id to match the id
+			// that's in the cookie
 			$this->_gateway->update(
 				$this->_query,
 				array(
@@ -197,7 +221,9 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 					$this->_data, 
 					parent::offsetGet('curr_session_id')
 				)
-			);
+			);			
+			
+			// clean up
 			unset($this->_gateway, $this->_query);
 		}
 				
@@ -256,10 +282,10 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 	 */
 	public function destroy() {
 		if(NULL === $this->_gateway)
-			destroy_session();
+			destroy_php_session();
 		else {
 			$this->_gateway->delete($this->_query);
-			unset_http_cookie(session_name());
+			unset_http_cookie(parent::offsetGet('cookie_name'));
 		}
 	}
 }
