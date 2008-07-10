@@ -10,7 +10,8 @@
  *
  * @author Peter Goodman
  */
-abstract class QueryCompiler implements Compiler {
+abstract class QueryCompiler {
+	//implements Compiler
 	
 	// query types
 	const SELECT = 1,
@@ -40,16 +41,6 @@ abstract class QueryCompiler implements Compiler {
 			$this->models,
 			$this->relations
 		);
-	}
-	
-	/**
-	 * $c->setQuery(Query) -> void
-	 *
-	 * Set the query to be compiled.
-	 */
-	public function setQuery(Query $query) {
-		$this->query = NULL; // unset the old one
-		$this->query = $query;
 	}
 	
 	/**
@@ -92,7 +83,7 @@ abstract class QueryCompiler implements Compiler {
 			return NULL;
 		
 		$predicate_context = $predicates->getContext($context);
-		
+
 		if(empty($predicate_context))
 			return;
 		
@@ -193,7 +184,7 @@ abstract class QueryCompiler implements Compiler {
 		$relations = &$this->query->getRelations();
 		
 		// no relations, don't do anything useless
-		if(empty($relations))
+		if(count($relations) <= 1)
 			return;
 				
 		// get the predicates and set the context or create a new set of
@@ -237,7 +228,8 @@ abstract class QueryCompiler implements Compiler {
 				if(2 < ($count = count($path))) {
 					throw new DomainException(
 						"PQL modify query only allows direct relationships ".
-						"to be satisfied."
+						"to be satisfied. Relationship between [{$left_name}] ".
+						"and [{$right_name}] is indirect."
 					);
 				}
 				
@@ -345,12 +337,14 @@ abstract class QueryCompiler implements Compiler {
 	}
 	
 	/**
-	 * $c->compile([int $flags]) -> string
+	 * $c->compile(Query, [int $flags[, array $args]]) -> string
 	 *
 	 * Compile a certain type of query into a string representation of that
 	 * query.
 	 */
-	public function compile($flags = 0) {
+	public function compile(Query $query, $flags = 0, array &$args = array()) {
+		
+		$this->query = $query;
 		
 		$query_types = self::SELECT | self::UPDATE | self::INSERT | self::DELETE;
 		$this->query_type = $flags & $query_types;
@@ -360,10 +354,10 @@ abstract class QueryCompiler implements Compiler {
 				return $this->compileSelect();
 			
 			case self::UPDATE:
-				return $this->compileUpdate();
+				return $this->compileUpdate($args);
 			
 			case self::INSERT:
-				return $this->compileInsert();
+				return $this->compileInsert($args);
 			
 			case self::DELETE:
 				return $this->compileDelete();
@@ -413,7 +407,7 @@ abstract class QueryCompiler implements Compiler {
 	
 	// query types
 	abstract protected function compileSelect();
-	abstract protected function compileUpdate();        
-	abstract protected function compileInsert();   
+	abstract protected function compileUpdate(array &$args = array());        
+	abstract protected function compileInsert(array &$args = array());   
 	abstract protected function compileDelete();
 }

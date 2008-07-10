@@ -68,7 +68,7 @@ class Http {
 		// defaulting the last_id to something that will improbably match
 		// any existing continuations is useful for when there aren't any
 		// continuations or when the http referer doesn't exist
-		$last_id = md5(uniqid(rand(), true));
+		$last_id = random_hash();
 		
 		// the http referer exists, hash it into a usable id
 		if(isset($_SERVER['HTTP_REFERER']))

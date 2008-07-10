@@ -12,8 +12,7 @@ class DatabaseModelGateway extends ModelGateway {
 	
 	protected $_compiler;
 	
-	public function __destruct() {
-		parent::__destruct();
+	protected function __del__() {
 		unset($this->_compiler);
 	}
 	
@@ -37,14 +36,14 @@ class DatabaseModelGateway extends ModelGateway {
 	protected function getRecordIterator($result_resource) {		
 		return new DatabaseRecordIterator(
 			$this->_ds->getRecordIterator($result_resource), 
-			$this->_models
+			$this
 		);
 	}
 	
 	/**
 	 * Compile a query.
 	 */
-	protected function compileQuery(Query $query, $type) {
+	protected function compileQuery(Query $query, $type, array &$args) {
 		
 		// cache the compiler
 		if($this->_compiler === NULL) {
@@ -54,9 +53,7 @@ class DatabaseModelGateway extends ModelGateway {
 			);
 		}
 		
-		// chaneg the query stored in the compiler
-		$this->_compiler->setQuery($query);
-		
-		return $this->_compiler->compile($type);
+		// change the query stored in the compiler
+		return $this->_compiler->compile($query, $type, $args);
 	}
 }

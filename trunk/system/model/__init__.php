@@ -10,4 +10,5 @@ require_once $dir .'/model-gateway.php';
 require_once $dir .'/model-definition.php';
 require_once $dir .'/model-dictionary.php';
 require_once $dir .'/model-relations.php';
-require_once $dir .'/types.php';
+require_once $dir .'/model-exception.php';
+require_once $dir .'/field-type.php';

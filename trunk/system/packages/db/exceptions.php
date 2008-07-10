@@ -14,10 +14,6 @@
  *
  * @author Peter Goodman
  */
-class DatabaseException extends YieldControlException {
+class DatabaseException extends ModelException {
 	
-	public function __construct($message) {
-		parent::__construct(ERROR_500);
-		$this->message = $message;
-	}
 }

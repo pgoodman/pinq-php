@@ -44,7 +44,7 @@ abstract class ModelGateway implements Gateway {
 	
 	/**
 	 */
-	public function __destruct() {
+	final public function __destruct() {
 		
 		$this->__del__();
 		
@@ -126,8 +126,15 @@ abstract class ModelGateway implements Gateway {
 		return $gateway;
 	}
 	
-	protected function getCompiledQuery_Record(Record $record, $type) {
-		
+	/**
+	 * $q->getCompiledQuery_Record(Record, int $type) -> string
+	 *
+	 * Get the compiled query given a Record object.
+	 */
+	private function getCompiledQuery_Record(Record $record, 
+	                                                $type, 
+	                                         array &$args = array()) {
+	
 		// the problem is that we need a partial query to do a query pivot
 		// a partial query comes from when use use __call or __get on the
 		// model gateway, which returns a new model gateway. If they
@@ -178,60 +185,73 @@ abstract class ModelGateway implements Gateway {
 			);
 			
 			// compile the query and cache it
-			$query = $this->getCompiledQuery_Query($query, $type);
+			$query = $this->getCompiledQuery_Query($query, $type, $args);
 			$this->_cached_relations[$model_name][$type] = $query;
 		}
 		
 		return $this->_cached_relations[$model_name][$type];
 	}
 	
-	protected function getCompiledQuery_QueryPredicates(QueryPredicates $qp, 
-	                                                                    $type) {
+	/**
+	 * $q->getCompiledQuery_QueryPredicates(QueryPredicates, int $type) 
+	 * -> string
+	 *
+	 * Get the compiled query given a QueryPredicates object.
+	 */
+	private function getCompiledQuery_QueryPredicates(
+	                                  QueryPredicates $qp, 
+	                                                  $type,
+	                                           array &$args = array()) {
+	
 		if(NULL === $qp->getQuery()) {
 			
 			// set the partial query to this query predicates object
-			$partial_query = $this->getPartialQuery();
-			$predicates = $partial_query->getPredicates();
+			$query = $this->getPartialQuery();
+			if($query instanceof QueryPredicates)
+				$query = $query->getQuery();
 			
+			$predicates = $query->getPredicates();
+
 			// the partial query has no predicates, this is easy
 			if(NULL == $predicates)
-				$qp->setQuery($partial_query);
+				$query->setPredicates($qp);
 			
 			// the partial query has predicates, merge $query into the
 			// predicates of the partial query
-			else {
+			else
 				$predicates->merge($qp);
-				unset($qp);
-				$qp = $predicates;
-			}
-		}
-	
-		// try to get a query object out of this predicates object
-		if(NULL === ($query = $qp->getQuery())) {
-			throw new InvalidArgumentException(
-				"Argument passed to RecordGateway method is not ".
-				"string or PQL query."
-			);
-		}
-		
-		return $this->getCompiledQuery_Query($query, $type);
+			
+		} else
+			$query = $qp->getQuery();
+				
+		return $this->getCompiledQuery_Query($query, $type, $args);
 	}
 	
-	protected function getCompiledQuery_Query(Query $query, $type) {
-		
+	/**
+	 * $q->getCompiledQuery_Query(Query, int $type) -> string
+	 *
+	 * Get the compiled query given a Query object.
+	 */
+	private function getCompiledQuery_Query(Query $query, 
+	                                              $type, 
+	                                       array &$args = array()) {
+	
 		$query_id = $query->getId();
+		$is_set_type = $type & (QueryCompiler::INSERT | QueryCompiler::UPDATE);
 		
-		// the query has already been compiled and cached, use it. This
-		// is a double test because if the query (query or predicates)
-		// are ever changed then those changes need to invalidate the
-		// cache
-		if($query->isCompiled() && isset($this->_cached_queries[$query_id]))
-			return $this->_cached_queries[$query_id];
-
-		// nope, we need to compile the query
+		// the query has already been compiled and cached, use it.
+		if(!$is_set_type && $query->isCompiled()) {
+			if(isset($this->_cached_queries[$type][$query_id]))
+				return $this->_cached_queries[$type][$query_id];
+		}
+		
+		// nope, we need to compile the query. $args is passed into the query
+		// compiler for use in insert/update queries where the validity of the
+		// data being used needs to be guaranteed.
 		$stmt = $this->compileQuery(
-			$query, 
-			$type
+			$query,
+			$type,
+			$args
 		);
 		
 		// tell the query and its predicates that it has been compiled
@@ -280,46 +300,57 @@ abstract class ModelGateway implements Gateway {
 	 *
 	 * @internal
 	 */
-	protected function getCompiledQuery($query, $type) {
-		switch(get_class($query)) {
-			case 'Record':
-				return getCompiledQuery_Record($query, $type);
-			case 'QueryPredicates':
-				return getCompiledQuery_QueryPredicates($query, $type);
-			case 'Query':
-				return getCompiledQuery_Query($query, $type);
-			default:
-				return (string)$query;
+	protected function getCompiledQuery($query, $type, array &$args = array()) {
+		
+		if(is_string($query))
+			return $query;
+		
+		if($query instanceof Record)
+			$func = 'getCompiledQuery_Record';
+		
+		else if($query instanceof QueryPredicates)
+			$func = 'getCompiledQuery_QueryPredicates';
+		
+		else if($query instanceof Query)
+			$func = 'getCompiledQuery_Query';
+		
+		else {
+			throw new DomainException(
+				"Unexpected query type."
+			);
 		}
+		
+		return $this->$func($query, $type, $args);
 	}
 	
 	/**
-	 * $g->createRecord([array $data]) -> Record
+	 * $g->createRecord([array $data[, string $model_name]]) -> Record
 	 *
 	 * Return a new Record object with the default unsaved data in it.
 	 */
-	public function createRecord(array $data = array()) {
+	public function createRecord(array $data = array(), $model_name = NULL) {
+		if(NULL === $model_name)
+			$model_name = $this->_model_name;
 		
-		if(NULL === $this->_model_name)
+		if(NULL === $model_name)
 			$record = new InnerRecord;
 		else {
-			$definition = $this->_models[$this->_model_name];
+			$definition = $this->_models[$model_name];
 			$class = $definition->getRecordClass();
-			$record = new $class;
+			$record = new $class($data);
+			$record->setModelName($model_name);
 		}
-		
-		$record[] = $data;
 		
 		return $record;
 	}
 	
 	/**
-	 * $g->compileQuery(Query, enum int $type) -> string[]
+	 * $g->compileQuery(Query, enum int $type, array &$args) -> string[]
 	 *
 	 * Get the query compiler for this gateway / data source and compile the
 	 * query into a string (or array of strings).
 	 */
-	abstract protected function compileQuery(Query $query, $type);
+	abstract protected function compileQuery(Query $query, $type, array &$args);
 	
 	/**
 	 * $g->getRecord(resource) -> Record
@@ -342,13 +373,13 @@ abstract class ModelGateway implements Gateway {
 	 *
 	 * @see ModelGateway::getCompiledQuery(...)
 	 */
-	protected function selectResult($query, array $args = array()) {
+	protected function selectResult($query, array &$args = array()) {
 		
 		if($query instanceof Record)
 			$args = $query->toArray();
 		
 		// get the query, and compile it if necessary
-		$query = $this->getCompiledQuery($query, QueryCompiler::SELECT);
+		$query = $this->getCompiledQuery($query, QueryCompiler::SELECT, $args);
 		
 		// we expect a string query back
 		if(!is_string($query)) {
@@ -489,17 +520,13 @@ abstract class ModelGateway implements Gateway {
 	 * @see ModelGateway::getCompiledQuery(...)
 	 */
 	public function delete($what, array $args = array()) {
-		
-		// deleting based on a query
-		if($what instanceof Query)
-			$query = $this->getCompiledQuery($query, QueryCompiler::DELETE);
 			
 		// deleting based on a record. this is a bit sketchy as we're going to
 		// need to pivot on something. usually, for example with a database,
 		// the primary key would be used, but we don't know what primary keys
 		// are, but we can make a decent guess of it by using all integer
 		// fields
-		else if($what instanceof Record) {
+		if($what instanceof Record) {
 			
 			// the record is not named, ie: we cannot identify which model
 			// is having row(s) deleted from it.
@@ -514,8 +541,13 @@ abstract class ModelGateway implements Gateway {
 			die('TODO');
 		
 		// force it to be a string, oh well :P
-		} else
-			$query = (string)$what;
+		} else {
+			$query = $this->getCompiledQuery(
+				$what, 
+				QueryCompiler::DELETE, 
+				$args
+			);
+		}
 		
 		return $this->_ds->update($query, $args);
 	}
@@ -535,7 +567,7 @@ abstract class ModelGateway implements Gateway {
 		
 		// make sure a substitute value isn't being passed in
 		if(_ === $value) {
-			throw new UnexpectedValueException(
+			throw new InvalidArgumentException(
 				"ModelGateway::find[All]By() does not accept a substitute ".
 				"value for the value of a field."
 			);
@@ -545,8 +577,8 @@ abstract class ModelGateway implements Gateway {
 		
 		// make sure the field actually exists
 		if(!$definition->hasField($field)) {
-			throw new UnexpectedValueException(
-				"ModelGateway::find[All]By() expects first argument to be an ".
+			throw new InvalidArgumentException(
+				"ModelGateway::get[All]By() expects first argument to be an ".
 				"existing field in model definition [{$this->_model_name}]."
 			);
 		}
@@ -604,9 +636,30 @@ abstract class ModelGateway implements Gateway {
 	 */
 	public function insert($query, array $args = array()) {
 		
+		// dealing with a record, turn it into a query
+		if($query instanceof Record) {
+			$record = $query;
+			
+			if(NULL === ($model_name = $record->getModelName())) {
+				if(NULL === ($model_name = $this->_model_name)) {
+					throw new InvalidArgumentException(
+						"ModelGateway::insert() expects either named record ".
+						"or for the gateway to be named when a Record object ".
+						"is passed. Neither condition satisfied."
+					);
+				}
+			}
+			
+			// build a query
+			$query = from($model_name)->set($record->toArray());
+		}
+		
 		// compile the query
-		if($query instanceof Query || $query instanceof QueryPredicates)
-			$query = $this->getCompiledQuery($query, QueryCompiler::INSERT);
+		$query = $this->getCompiledQuery(
+			$query, 
+			QueryCompiler::INSERT, 
+			$args
+		);
 		
 		return (bool)$this->_ds->update($query, $args);
 	}
@@ -620,8 +673,13 @@ abstract class ModelGateway implements Gateway {
 	 * @see ModelGateway::getCompiledQuery(...)
 	 */
 	public function update($query, array $args = array()) {
-		$query = $this->getCompiledQuery($query, QueryCompiler::UPDATE);
-		return (bool)$this->_ds->update($query);
+		$query = $this->getCompiledQuery(
+			$query, 
+			QueryCompiler::UPDATE, 
+			$args
+		);
+		
+		return (bool)$this->_ds->update($query, $args);
 	}
 	
 	/**

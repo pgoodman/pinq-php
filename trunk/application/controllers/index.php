@@ -50,6 +50,17 @@ class IndexController extends AppController {
 		$this->layout['title'] = 'View Source';
 	}
 	
+	public function ANY_dump($table) {
+		//$this->db->delete(from($table));
+		$rows = $this->db->getAll(from($table)->select(ALL));
+		foreach($rows as $row) {
+			echo '<pre>';
+			print_r($row);
+			echo '</pre>';
+		}
+		stop();
+	}
+	
 	/**
 	 * About page.
 	 */

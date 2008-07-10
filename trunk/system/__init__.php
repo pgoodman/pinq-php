@@ -134,7 +134,7 @@ function pinq($script_file, $app_dir) {
 			'file_extension' => EXT,
 		));
 		
-		// bring in the session
+		//var_dump(session_id());
 		$_SESSION = $packages->load('session');
 		
 		// the starting route, taken from the url, it's outside of the
@@ -254,11 +254,10 @@ function pinq($script_file, $app_dir) {
 	// catch ALL exceptions that have bubbled up this far. We hope there are 
 	// none but there's no guarantee.
 	} catch(Exception $e) {
-		print_r($e);
-		echo '<br>top-level exception';
+		echo $e->getMessage();
 		
 	}
 
 	// break references, we're done.
-	unset($config, $packages);
+	unset($_SESSION, $config, $packages);
 }

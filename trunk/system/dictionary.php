@@ -29,7 +29,7 @@ class Dictionary implements ArrayAccess {
 	 * Dictionary([array $default_values]) <==> dict($default_values)
 	 */
 	public function __construct(array &$vals = NULL) {
-		if(!empty($vals))
+		if(is_array($vals))
 			$this->_dict = &$vals;
 		
 		$this->__init__();
@@ -52,6 +52,19 @@ class Dictionary implements ArrayAccess {
 	public function offsetGet($key) {
 		if(!isset($this->_dict[$key]))
 			return NULL;
+		
+		return $this->_dict[$key];
+	}
+	
+	/**
+	 * &$d->offsetGetRef($key) <==> &$d[$key]
+	 *
+	 * Get the value at an offset by reference.
+	 */
+	public function &offsetGetRef($key) {
+		$null = NULL;
+		if(!isset($this->_dict[$key]))
+			return $null;
 		
 		return $this->_dict[$key];
 	}

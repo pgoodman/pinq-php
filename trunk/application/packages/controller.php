@@ -10,9 +10,9 @@ class AppController extends PinqController {
 	protected function __init__() {		
 		$this->db = $this->import('db.blog');
 		
-		
 		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
 		$logged_in = FALSE;
+		$tags = array();
 		
 		try {
 			

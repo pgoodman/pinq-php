@@ -200,29 +200,48 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 */
 	protected function compileReference($field, $model_alias = NULL) {
 		
+		$contexts = $this->query->getContexts();
+		$use_selects = $this->query_type === self::SELECT;
+		
+		// only one table is being used and we're not doing a select query,
+		// ie: there is no field aliasing
+		if(count($contexts) === 1 && !$use_selects)
+			return $field;
+		
 		// this is somewhat of a wild guess that assumes there is only one
 		// model being selected from
-		if(empty($model_alias))
-			$model_alias = key($this->query->getContexts());
+		if(empty($model_alias)) {
+			reset($contexts);
+			$model_alias = key($contexts);
+		}
 		
 		// model name
 		$model_name = $this->query->getUnaliasedModelName($model_alias);
 		
+		// this will probably cause a problem in the query, which is a good
+		// thing
+		if(!isset($contexts[$model_alias]))
+			return "{$model_alias}.{$field}";
+		
 		// if we're dealing with a query-defined alias that's different than
 		// the model name
 		if($model_alias !== $model_name) {
-			$context = $this->query->getContext($model_alias);
 			
-			// special case for COUNT columns
-			if(!empty($context['select_counts'])) {
-				if(isset($context['select_counts'][$field]))
-					return "{$model_name}_{$field}";
-			}
+			$context = $contexts[$model_alias];
 			
-			// special case for aliases SELECT fields
-			if(!empty($context['select_fields']) && isset($context['select_fields'][$field])) {
-				if($context['select_fields'][$field] != $field)
-					return "{$model_name}_{$field}";
+			if($use_selects) {
+				
+				// special case for COUNT columns
+				if(!empty($contexts['select_counts'])) {
+					if(isset($context['select_counts'][$field]))
+						return "{$model_name}_{$field}";
+				}
+			
+				// special case for aliases SELECT fields
+				if(isset($context['select_fields'][$field])) {
+					if($context['select_fields'][$field] != $field)
+						return "{$model_name}_{$field}";
+				}
 			}
 			
 			return "{$model_alias}.{$field}";
@@ -237,10 +256,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		//       query then this could fail. Really it's dependent on $model
 		//       being set.
 		//
-		$contexts = $this->query->getContexts();
-		if(isset($contexts[$model_alias]))
-			if(!empty($contexts[$model_alias]['select_fields']))
-				return "{$model_name}_{$field}";
+		if($use_selects && !empty($contexts[$model_alias]['select_fields']))
+			return "{$model_name}_{$field}";
 		
 		// note: tables are aliased with their model names, hence the use here
 		return "{$model_name}.{$field}";
@@ -347,7 +364,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$aliases = &$this->query->getAliases();
 		$relations = &$this->query->getRelations();
 		
-		// create a graph of the 
+		// create a graph of the
 		$graph = $this->relations->getRelationDependencies(
 			$aliases,
 			$relations,
@@ -371,9 +388,10 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			$sql .= ' FROM '. $joins;
 		}
 		
+		
 		// get parts of the query
 		$this->compilePivots();
-		
+				
 		$where = $this->compilePredicates('where');
 		$order = $this->compilePredicates('order');
 		$limit = $this->compilePredicates('limit');
@@ -384,8 +402,6 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		if(!empty($order)) $sql .= " ORDER BY ". implode(' ', $order);
 		if(!empty($limit)) $sql .= " LIMIT ". implode(' ', $limit);
 		
-		out('<pre>', $sql, '</pre>');
-		
 		// add in the predicates and return
 		return $sql;
 	}
@@ -393,17 +409,20 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Compile a query that works for both UPDATES and DELETES.
 	 */
-	protected function compileModify($sql, $set = TRUE) {
+	protected function compileModify($sql, $set = TRUE, array &$args) {
 		
 		$query = $this->query;
+		$contexts = $query->getContexts();
+		
+		$set_sql = '';
 		
 		// query isn't cached, build up the sql then cache it.
-		$fields = array();
 		$comma = '';
+		$set_comma = '';
 		
 		// go over the tables being modified and construct the beginning of
 		// the SQL statement along with the fields to be set
-		foreach($query->getContexts() as $model_alias => $context) {
+		foreach($contexts as $model_alias => $context) {
 			
 			$definition = $this->getDefinitionByModelAlias($model_alias);
 			$table_name = $definition->getInternalName();
@@ -415,26 +434,30 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			$comma = ',';
 			
 			// build up the field listing
-			$fields = array_merge(
-				$fields,
-				$this->buildFieldsList(
-					$context, 
-					$definition, 
-					"{$model_alias}."
-				)
+			$fields = $this->buildFieldsList(
+				$context, 
+				$definition, 
+				$args
 			);
+			
+			if(count($fields)) {
+				$column_prefix = count($contexts) > 1 ? "{$model_alias}." : '';
+				foreach($fields as $column => $val) {
+					$set_sql .= "{$set_comma} {$column_prefix}{$column}={$val}";
+					$set_comma = ',';
+				}
+			}
 		}
-		
-		// concatenate the fields into the query
-		if(!empty($fields))
-			$sql .= ' SET '. implode(', ', $fields);
 		
 		// compile the conditions
 		$this->compileRelationsAsPredicates();
 		$where = $this->compilePredicates('where');
 		
+		if($this->query_type != self::DELETE && !empty($set_sql))
+			$sql .= " SET {$set_sql} ";
+		
 		if(!empty($where)) $sql .= ' WHERE '. implode(' ', $where);
-				
+		
 		return $sql;
 	}
 	
@@ -443,10 +466,10 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 */
 	protected function buildFieldsList(array $context, 
 	                         ModelDefinition $definition, 
-	                                         $prefix) {
+	                                  array &$args = array()) {
 
 		$fields = array();
-		
+
 		// validate all of the fields. this is more of a step where the
 		// programmer can deal with any business logic stuff without worrying
 		// about manually typecasting the different fields, as that is already
@@ -461,6 +484,10 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// ignore non-existant properties
 			if(!$definition->hasField($column))
 				continue;
+			
+			// take a value right out of the incoming args
+			if($value === _ && !empty($args))
+				$value = array_shift($args);
 			
 			if($value !== _) {
 				
@@ -477,12 +504,13 @@ class DatabaseQueryCompiler extends QueryCompiler {
 					$value = 'NULL';
 			
 			// substitute value
-			} else
+			} else {
 				$value = '?';
+			}
 			
-			$fields[] = "{$prefix}{$column}={$value}";
+			$fields[$column] = $value;
 		}
-		
+
 		return $fields;
 	}
 	
@@ -491,7 +519,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * ignores any relations made in the query and so it will not satisfy
 	 * those in any way. This also ingores multiple tables.
 	 */
-	protected function compileInsert() {
+	protected function compileInsert(array &$args = array()) {
 		
 		// query isn't cached, build up the query
 		$queries = array();
@@ -508,10 +536,16 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		$sql = "INSERT INTO {$table_name}";
 		$comma = '';
 		
-		$fields = $this->buildFieldsList($context, $definition, '');
+		$fields = $this->buildFieldsList($context, $definition, $args);
 		
-		if(!empty($fields))
-			$sql .= ' SET '. implode(', ', $fields);
+		if(!empty($fields)) {
+			$sql .= ' SET';
+			$comma = '';
+			foreach($fields as $column => $val) {
+				$sql .= "{$comma} {$column}={$val}";
+				$comma = ',';
+			}
+		}
 			
 		return $sql;
 	}
@@ -519,14 +553,15 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	/**
 	 * Compile an UPDATE query.
 	 */
-	protected function compileUpdate() {
-		return $this->compileModify('UPDATE ', TRUE);
+	protected function compileUpdate(array &$args = array()) {
+		return $this->compileModify('UPDATE ', TRUE, $args);
 	}
 	
 	/**
 	 * Compile a DELETE query.
 	 */
 	protected function compileDelete() {
-		return $this->compileModify('DELETE FROM ', FALSE);
+		$args = array();
+		return $this->compileModify('DELETE FROM ', FALSE, $args);
 	}
 }

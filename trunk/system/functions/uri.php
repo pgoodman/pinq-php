@@ -99,8 +99,12 @@ function get_base_url() {
 	// remove any query parameters and anchors from the end of the url
 	$url = preg_replace('~(\?|#).*$~', '', get_url());
 	
-	// remove the route from the end of the url
-	$url = preg_replace('~'. preg_quote(get_route()) .'$~', '', $url);
+	// remove the route from the end of the URI
+	$url = preg_replace(
+		'~/?'. preg_quote(trim(get_route(), '/')) .'/?$~', 
+		'', 
+		$url
+	);
 	
 	return $url;
 }

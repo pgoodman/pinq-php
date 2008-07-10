@@ -5,17 +5,7 @@
  * out individual model information (if a PQL query was performed).
  * @author Peter Goodman
  */
-class DatabaseRecordIterator extends OuterRecordIterator {
-	
-	private $_models;
-	
-	/**
-	 * Constructor, bring in the database iterator along with the models.
-	 */
-	public function __construct(RecordIterator $it, Dictionary $models) {
-		parent::__construct($it);
-		$this->_models = $models;
-	}
+class DatabaseRecordIterator extends GatewayRecordIterator {
 	
 	/**
 	 * Return a single record that possibly has multipel sub-records in it.
@@ -48,7 +38,6 @@ class DatabaseRecordIterator extends OuterRecordIterator {
 				// which we've already deal with, a model name will be the
 				// first column, so we'll take it off
 				$model_name = substr(array_shift($keys), 2);
-				$definition = $this->_models[$model_name];
 				$record_data = array();
 				
 				// plus one because the columns are prefixed with
@@ -83,10 +72,11 @@ class DatabaseRecordIterator extends OuterRecordIterator {
 				
 				// get the record, stored as $record so that if there is only
 				// one record it will carry down nicely to the return
-				$record_class = $definition->getRecordClass();
+				$record = $this->gateway->createRecord(
+					$record_data,
+					$model_name
+				);
 				
-				$record = new $record_class($record_data);
-				$record->setModelName($model_name);
 				$records[$model_name] = $record;
 				
 				// this is needed so that the referenced model to the above

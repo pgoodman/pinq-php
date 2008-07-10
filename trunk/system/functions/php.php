@@ -96,3 +96,51 @@ function base36_encode($num) {
 function base36_decode($num) {
 	return (int)base_convert((string)$num, 36, 10);
 }
+
+/**
+ * random_hash(void) -> string
+ *
+ * Returns a random md5 hash.
+ */
+function random_hash() {
+	return md5(uniqid(rand(), true));
+}
+
+/**
+ * set_http_cookie(string $name, string $value, int $expiry) -> void
+ *
+ * Create an HTTP-only cookie.
+ *
+ * @author Peter Goodman
+ */
+function set_http_cookie($name, $value, $expiry) {
+	
+	if(headers_sent()) {
+		throw new InternalErrorException(
+			"Can't set cookie after headers have been sent."
+		);
+	}
+	
+	$host = trim(get_http_host(), '.');
+	
+	@setcookie(
+		(string)$name, 
+		(string)$value, 
+		(int)$expiry, 
+		NULL,
+		strpos($host, '.') !== FALSE ? ".{$host}" : '',
+		get_http_scheme() == 'https',
+		TRUE
+	);
+}
+
+/**
+ * unset_http_cookie(string $name) -> void
+ *
+ * Unset an HTTP-only cookie.
+ *
+ * @author Peter Goodman
+ */
+function unset_http_cookie($name) {
+	set_http_cookie($name, '', time() - 7200);
+}

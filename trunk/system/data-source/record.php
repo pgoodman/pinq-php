@@ -10,6 +10,8 @@
 interface Record extends ArrayAccess {
 	public function toArray();
 	public function isSaved();
+	public function getUnsavedData();
+	public function getSavedData();
 }
 
 /**
@@ -40,6 +42,25 @@ class InnerRecord extends Dictionary implements Record {
 	 */
 	public function getModelName() {
 		return $this->_name;
+	}
+	
+	/**
+	 * $r->getUnsavedData(void) -> array
+	 *
+	 * Get the data that doesn't yet exist in the data source for this record.
+	 */
+	public function getUnsavedData() {
+		return $this->_dirty;
+	}
+	
+	/**
+	 * $r->getSavedData(void) -> array
+	 *
+	 * Get the data in this record that already exists in the data source and
+	 * hasn't yet been overwritten by unsaved data.
+	 */
+	public function getSavedData() {
+		return $this->_dict;
 	}
 	
 	/**
@@ -105,6 +126,21 @@ class InnerRecord extends Dictionary implements Record {
 			return $this->_dirty[$key];
 		
 		return parent::offsetGet($key);
+	}
+	
+	/**
+	 * &$r->offsetGetRef(string $key) <==> &$r[$key] -> mixed
+	 *
+	 * Get a data entry from the Record. This first looks in the "dirty" 
+	 * (changed) data, and then in the unchanged data.
+	 */
+	public function &offsetGetRef($key) {
+		if(isset($this->_dirty[$key]))
+			$ret = &$this->_dirty[$key];
+		else
+			$ret = &parent::offsetGetRef($key);
+		
+		return $ret;
 	}
 	
 	/**
@@ -174,6 +210,12 @@ abstract class OuterRecord implements Record {
 	}
 	
 	/**
+	 */
+	public function __destruct() {
+		unset($this->_inner_record);
+	}
+	
+	/**
 	 * $r->getRecord(void) -> Record
 	 *
 	 * Get the record that this outer record holds.
@@ -187,6 +229,13 @@ abstract class OuterRecord implements Record {
 	 */
 	public function offsetGet($key) { 
 		return $this->_inner_record->offsetGet($key); 
+	}
+	
+	/**
+	 * @see InnerRecord::offsetGetRef(...)
+	 */
+	public function &offsetGetRef($key) { 
+		return $this->_inner_record->offsetGet($key);
 	}
 	
 	/**
@@ -224,6 +273,22 @@ abstract class OuterRecord implements Record {
 		return $this->_inner_record->isSaved();
 	}
 	
+	/**
+	 * @see InnerRecord::getUnsavedData(...)
+	 */
+	public function getUnsavedData() {
+		return $this->_inner_record->getUnsavedData();
+	}
+	
+	/**
+	 * @see InnerRecord::getSavedData(...)
+	 */
+	public function getSavedData() {
+		return $this->_inner_record->getSavedData();
+	}
+	
+	/**
+	 */
 	public function __call($fn, array $args = array()) {
 		$ref = array($this->_inner_record, $fn);
 		if(is_callable($ref) || method_exists($this->_inner_record, '__call'))
