@@ -69,7 +69,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	 * of the route parser.
 	 *
 	 * @note When extending this class, there is no need to change this method
-	 *       as the class bane to be instantiated is passed in.
+	 *       as the class name to be instantiated is passed in.
 	 */
 	static public function configure(Loader $loader, 
 	                                 Loader $config, 

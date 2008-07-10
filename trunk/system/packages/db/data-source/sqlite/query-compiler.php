@@ -21,7 +21,6 @@ class SqliteQueryCompiler extends DatabaseQueryCompiler {
 		
 		// get the field and values
 		$fields = $this->buildFieldsList($context, $definition, $args);
-		//$values = $this->buildFieldValueList($context, $definition);
 		
 		// create the query
 		$sql = "INSERT INTO {$table_name} ";

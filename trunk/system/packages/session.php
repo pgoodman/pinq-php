@@ -20,21 +20,22 @@ function destroy_php_session() {
 
 /**
  * Represents a PINQ session. This is just a basic dictionary wrapper around
- * the session super global.
+ * the session super global. If a data source is used then more than one
+ * sessions can be managed simultaneously. When datasources are used, PHP's
+ * session_set_save_handler() is essentially re-invented to make sure desired
+ * behavior occurs. Also, when a data-source is used, the session ids are
+ * rotated per request.
  *
  * @author Peter Goodman
  */
 class PinqSession extends OuterRecord implements ConfigurablePackage {
 	
 	/**
-	 * PinqRouteParser::configure(PackageLoader, ConfigLoader, array $args) 
+	 * PinqSession::configure(PackageLoader, ConfigLoader, array $args) 
 	 * -> {Package, void}
 	 *
 	 * Configure this package for the PackageLoader and return a new instance
-	 * of the route parser.
-	 *
-	 * @note When extending this class, there is no need to change this method
-	 *       as the class bane to be instantiated is passed in.
+	 * of the session class.
 	 */
 	static public function configure(Loader $loader, 
 	                                 Loader $config, 
@@ -66,8 +67,8 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 		$gateway = $query = $record = NULL;
 		$gc_time = ini_get('session.gc_maxlifetime');
 		$use_php_session = empty($config['data_source']);
-		$name = $use_php_session ? session_name() : $argv[0];
-		$create = !isset($_COOKIE[$name]);
+		$cookie_name = $use_php_session ? session_name() : $argv[0];
+		$create = !isset($_COOKIE[$cookie_name]);
 		
 		// we're just using existing session as a data storage
 		if($use_php_session) {
@@ -90,9 +91,6 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 		// functions to deal with this and instead just manually manage the
 		// cookie
 		} else {
-			
-			// little hack :P
-			session_write_close();
 			
 			// load up a gateway
 			$gateway = $loader->load($config['data_source']);
@@ -131,7 +129,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 					
 					// a session record probably exists
 					} else {
-						$current_id = $_COOKIE[$name];
+						$current_id = $_COOKIE[$cookie_name];
 					}
 					
 					// get an existing session record from before or the one
@@ -150,12 +148,12 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 					// store the current and next session ids
 					$record['curr_session_id'] = $current_id;
 					$record['next_session_id'] = $next_id;
-					$record['cookie_name'] = $name;
+					$record['cookie_name'] = $cookie_name;
 					
 					// set the cookie to the next session id, the db values
 					// will be updated on __destruct
 					set_http_cookie(
-						$name, 
+						$cookie_name, 
 						$next_id, 
 						time() + $gc_time
 					);
@@ -174,7 +172,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 					array($next_id, $current_id)
 				);
 				
-				unset_http_cookie($name);
+				unset_http_cookie($cookie_name);
 				throw $e;
 			}
 			
@@ -190,7 +188,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage {
 	          $_query;
 	
 	/**
-	 * PinqSession([Gateway], Record, array &$data[, Query])
+	 * PinqSession(Record, array &$data[, Gateway[, Query]])
 	 */
 	public function __construct(Record $record,
 	                            array &$data,
