@@ -1,0 +1,26 @@
+<h2>Register</h2>
+<? $i = 1; ?>
+<div class="section">
+	<form method="post" action="<?=url('users','register')?>">
+		<dl>		
+			<dt>Name</dt>
+			<dd class="required"><input type="text" name="display_name" maxlength="50" tabindex="<?=$i++?>" value="<?=$_POST['display_name']?>" /></dd>
+			<? if(isset($scope['form_errors']['display_name'])): ?>
+			<dd class="error">Please give a display name between 4 and 20 characters long, with the characters a-z, A-Z, 0-9, -, _, and spaces.</dd>
+			<? endif; ?>
+			
+			<dt>Website</dt>
+			<dd><input type="text" name="website" maxlength="50" tabindex="<?=$i++?>" value="<?=$_POST['website']?>" /></dd>
+		
+			<dt>Email</dt>
+			<dd class="required"><input type="text" name="email" maxlength="150" tabindex="<?=$i++?>" value="<?=$_POST['email']?>" /></dd>
+
+			<dt>Password</dt>
+			<dd class="required"><input type="password" name="password" tabindex="<?=$i++?>" value="<?=$_POST['password']?>" /></dd>
+		</dl>
+		<br />
+		<center>
+			<input type="submit" value="Register me so I can post!" tabindex="<?=$i++?>" />
+		</center>
+	</form>
+</div>

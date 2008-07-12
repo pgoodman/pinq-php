@@ -110,6 +110,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$this->addMacro('id',		'[0-9]+');
 		$this->addMacro('uuid',		'[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]'.
 									'{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}');
+		$this->addMacro('hex',      '[a-fA-F0-9]+');
 		
 		$this->base_dir = $base_dir;
 		$this->ext = $php_file_extension;
@@ -279,7 +280,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		// need to be passed into the proper route mapping. We'll assume that
 		// such dynamic elements are ordered correctly.
 		if(isset($this[$prefix])) {
-			
+						
 			// we don't want to mangle the actual route because we might not
 			// find what we're looking for in here, so we'll work with a
 			// temporary copy of the route

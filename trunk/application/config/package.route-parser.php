@@ -5,7 +5,7 @@
 $routes['/about'] = '/index/about';
 $routes['/view-source'] = '/index/source';
 
-$routes['/users/(:alphanum)'] = '/users/index/$1';
+//$routes['/users/(:alphanum)'] = '/users/index/$1';
 
 // archives
 $routes['/(:year)'] = '/archive/$1';

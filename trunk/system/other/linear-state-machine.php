@@ -3,17 +3,29 @@
 /* $Id$ */
 
 /**
+ * states(void) -> LinearStateMachine
+ *
+ * Return a new linear state machine.
+ *
+ * @author Peter Goodman
+ */
+function states() {
+	return new LinearStateMachine;
+}
+
+/**
  * A state machine-like class for validating the order of states. It is linear
  * insofar as a states move in only one direction: forward. The state machine
  * works as a stack and a queue. States are added to the stack, then as they
  * are popped off (a transition), they are put onto the transitions queue. Each
  * state is also a queue, thus allowing for nested states and branching.
+ *
  * @author Peter Goodman
  */
 class LinearStateMachine extends Stack {
 	
 	public $transitions; // the currently available transitions
-	private $full = FALSE; // are we done adding states?
+	protected $full = FALSE; // are we done adding states?
 	
 	/**
 	 * Constructor, set up the state transitions.
@@ -27,7 +39,7 @@ class LinearStateMachine extends Stack {
 	 * Add a state.
 	 * @internal
 	 */
-	private function pushState($state, $type) {
+	protected function pushState($state, $type) {
 		
 		if($this->full)
 			throw new InvalidStateException("State machine is full.");
@@ -85,7 +97,7 @@ class LinearStateMachine extends Stack {
 	public function end() {
 		
 		// pop anything left off the stack
-		while(count($this) > 0)
+		while(!$this->isEmpty())
 			$this->pop();
 		
 		$this->full = TRUE;
@@ -134,8 +146,8 @@ class LinearStateMachine extends Stack {
 	 * Create a branch.
 	 */
 	private function pushBranch(array $states, 
-								$branch_type = LinearState::OPTIONAL, 
-								$state_type = LinearState::OPTIONAL) {
+	                                  $branch_type = LinearState::OPTIONAL, 
+	                                  $state_type = LinearState::OPTIONAL) {
 		
 		// make sure we have at least one optional state to add
 		if(empty($states))
@@ -207,7 +219,8 @@ class LinearStateMachine extends Stack {
 }
 
 /**
- * A class representing a single state in the state machine.
+ * Class representing a single state in the state machine.
+ *
  * @author Peter Goodman
  * @internal
  */

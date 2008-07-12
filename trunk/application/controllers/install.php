@@ -93,7 +93,7 @@ class InstallController extends AppController {
 			'id' => NULL,
 			'email' => 'peter.goodman@gmail.com',
 			'display_name' => 'Peter Goodman',
-			'password' => md5('test'),
+			'password' => 'test',
 		)));
 		
 		// done installing the blog

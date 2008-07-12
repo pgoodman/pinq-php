@@ -469,25 +469,32 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	                                  array &$args = array()) {
 
 		$fields = array();
-
-		// validate all of the fields. this is more of a step where the
-		// programmer can deal with any business logic stuff without worrying
-		// about manually typecasting the different fields, as that is already
-		// done in the loop
-		$values = $definition->validateFields(
-			$context['modify_values'],
-			$this->query_type
-		);
 		
-		foreach($values as $column => $value) {
+		// this step filters out unwanted fields and also replaces substitutes
+		// with their values in the $args array
+		foreach($context['modify_values'] as $column => $value) {
 			
-			// ignore non-existant properties
+			// done need this
 			if(!$definition->hasField($column))
 				continue;
 			
 			// take a value right out of the incoming args
 			if($value === _ && !empty($args))
 				$value = array_shift($args);
+			
+			// add this into the fields array for use
+			$fields[$column] = $value;
+		}
+		
+		// validate all of the fields. By default this is only an array
+		// intersection.
+		$fields = $definition->validateFields(
+			$fields,
+			$this->query_type
+		);
+		
+		// go over the fields and build build up the SQL values for each item.
+		foreach($fields as $column => $value) {
 			
 			if($value !== _) {
 				
@@ -503,9 +510,9 @@ class DatabaseQueryCompiler extends QueryCompiler {
 				else if(NULL === $value)
 					$value = 'NULL';
 			
-			// substitute value
+			// substitute value, in general this shouldn't happen
 			} else {
-				$value = '?';
+				$value = $this->compileSubstitute(NULL);
 			}
 			
 			$fields[$column] = $value;

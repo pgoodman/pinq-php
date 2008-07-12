@@ -10,7 +10,6 @@
  * @author Peter Goodman
  */
 interface Package {
-	
 }
 
 /**
@@ -36,7 +35,6 @@ interface ConfigurablePackage extends Package {
  * @author Peter Goodman
  */
 interface InstantiablePackage extends Package {
-	
 }
 
 /**
@@ -46,7 +44,6 @@ interface InstantiablePackage extends Package {
  * @author Peter Goodman
  */
 class InvalidPackageException extends InternalErrorException {
-	
 }
 
 /**
@@ -78,20 +75,34 @@ class PackageLoader extends Loader {
 	/**
 	 * $p->load(string $key[, array $context]) -> mixed
 	 *
+	 * Load a cached or new package into memory.
+	 *
+	 * @see PackageLoader::loadNew(...)
+	 */
+	public function load($key, array $context = array()) {
+		
+		// have we already loaded this package?
+		if($this->offsetExists($key))
+			return $this[$key];
+		
+		return $this->loadNew($key, $context);
+	}
+	
+	/**
+	 * $p->loadNew(string $key[, array $context]) -> mixed
+	 *
 	 * Load and configure a package. Context becomes arguments to pass to the
 	 * class controller if it exists. If the package is found in the applications
 	 * directory and an equivalent package exists in the system directory then
 	 * this function will include the system one first but make no attempts to
 	 * configure the package.
 	 */
-	public function load($key, array $context = array()) {
+	public function loadNew($key, array $context = array()) {
 		
 		// packages are given as dir.subdir.subdir. etc
 		$key = strtolower($key);
 		
-		// have we already loaded this package?
-		if(isset($this[$key]))
-			return $this[$key];
+		
 		
 		// search in both the system and application directories. this will
 		// look first in the applications directory
@@ -210,9 +221,15 @@ class PackageLoader extends Loader {
 		// the package is directly instantiatied
 		} else if(in_array('InstantiablePackage', $interfaces))
 			$package = new $class;
-		 
-		$this->offsetSet($key, $package);
 		
+		// if the class implements Factory then tell it what class its factory
+		// method should instantiate
+		if(in_array('Factory', $interfaces)) {
+			$property = new ReflectionProperty($class, '_class');
+			$property->setValue(NULL, $class);
+		}
+		
+		$this->offsetSet($key, $package);		
 		return $package;
 	}
 	

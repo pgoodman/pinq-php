@@ -145,3 +145,19 @@ function set_http_cookie($name, $value, $expiry, $path = '/') {
 function unset_http_cookie($name) {
 	set_http_cookie($name, '', time() - 7200);
 }
+
+/**
+ * md5_salted(string) -> string
+ *
+ * Hash a string using a salted md5. The point of the salt is to make
+ * the input to the md5 longer than the md5 itself. It also means that
+ * even if a value for a given md5 can be found (through a rainbow table
+ * or brute force) it won't necessarily be useful because it won't include
+ * the salting, and thus when hashed will not be the same as the original
+ * string.
+ *
+ * @author Peter Goodman
+ */
+function md5_salted($str) {
+	md5("ce92ac8710e7879{$str}9351b8a5a4730ec10");
+}

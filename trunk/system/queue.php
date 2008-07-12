@@ -25,6 +25,23 @@ class Queue implements Countable, IteratorAggregate {
 	          $_end = -1;
 	
 	/**
+	 * Queue([array])
+	 */
+	public function __construct(array $default = array()) {
+		if(!empty($default))
+			$this->extend($default);
+		
+		$this->__init__();
+	}
+	
+	/**
+	 */
+	public function __destruct() {
+		$this->__del__();
+		unset($this->_queue);
+	}
+	
+	/**
 	 * $q->push(mixed $val)
 	 *
 	 * Push a value on to the end of the queue.
@@ -126,4 +143,18 @@ class Queue implements Countable, IteratorAggregate {
 	public function getIterator() {
 		return new ArrayIterator($this->_queue);
 	}
+	
+	/**
+	 * $c->__init__(void) -> void
+	 *
+	 * Hook called right after class construction.
+	 */
+	protected function __init__() { }
+	
+	/**
+	 * $c->__del__(void) -> void
+	 *
+	 * Hook called before class resources are released.
+	 */
+	protected function __del__() { }
 }

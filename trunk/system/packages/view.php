@@ -12,7 +12,7 @@
  * @author Peter Goodman
  */
 function element_view($id) {
-	return  View::factory()->setFile((string)$id, View::ELEMENT);
+	return  PinqView::factory()->setFile((string)$id, PinqView::ELEMENT);
 }
 
 /**
@@ -23,7 +23,7 @@ function element_view($id) {
  * @author Peter Goodman
  */
 function page_view($id) {
-	return View::factory()->setFile((string)$id, View::PAGE);
+	return PinqView::factory()->setFile((string)$id, PinqView::PAGE);
 }
 
 /**
@@ -34,95 +34,35 @@ function page_view($id) {
  * @author Peter Goodman
  */
 function layout_view($id) {
-	return View::factory()->setFile((string)$id, View::LAYOUT);
-}
-
-/**
- * Scope stack. Allows variables to be found from parent scopes.
- *
- * @author Peter Goodman
- */
-class ScopeStack extends StackOfDictionaries {
-	
-	/**
-	 * $s->offsetGet(string $key) <==> $s[$key] -> mixed
-	 *
-	 * Get a value from the current scope or a parent one.
-	 */
-	public function offsetGet($key) {
-		
-		if(isset($this->_dict[$key]))
-			return $this->_dict[$key];
-		
-		$i = count($this->_stack) - 1;
-		
-		while(isset($this->_stack[$i])) {
-			if(isset($this->_stack[$i][$key]))
-				return $this->_stack[$i][$key];
-			
-			$i--;
-		}
-		
-		return NULL;
-	}
-}
-
-/**
- * An abstract view.
- *
- * @author Peter Goodman
- */
-abstract class View extends Dictionary implements ConfigurablePackage {
-	
-	// view types, nicer to get at than using the plural strings
-	const LAYOUT = 'layouts',
-	      ELEMENT = 'elements',
-	      PAGE = 'pages';
-	
-	// the class name for this package, normally would be PinqView if the
-	// package is not being extended
-	static public $class;
-	
-	/**
-	 * View::configure(PackageLoader, ConfigLoader, array) -> void
-	 *
-	 * Configure the view.. this is sort of a hack to make extending views
-	 * right.
-	 *
-	 * TODO: find a way around this hack.
-	 */
-	static public function configure(Loader $p, Loader $c, array $args) {
-		self::$class = $args['class'];
-	}
-	
-	/**
-	 * View::factory(void) -> View
-	 *
-	 * Factory method to return a new view instance.
-	 */
-	static public function factory() {
-		$args = func_get_args();
-		return call_user_class_array(self::$class, $args);
-	}
-	
-	/**
-	 * $v->render(StackOfDictionaries) -> void
-	 */
-	abstract public function render(StackOfDictionaries $scope);
-	
-	/**
-	 * $v->setFile(string $file, int $type) -> View
-	 */
-	abstract public function setFile($file, $type);
+	return PinqView::factory()->setFile((string)$id, PinqView::LAYOUT);
 }
 
 /**
  * Represents a single view.
  * @author Peter Goodman
  */
-class PinqView extends View {
+class PinqView extends Dictionary implements Package, Factory {
 	
 	protected $file;
+	
+	// the class name for this package, normally would be PinqView if the
+	// package is not being extended
+	static public $_class;
+	
+	// view types, nicer to get at than using the plural strings
+	const LAYOUT = 'layouts',
+	      ELEMENT = 'elements',
+	      PAGE = 'pages';
+	
+	/**
+	 * PinqView::factory(void) -> View
+	 *
+	 * Factory method to return a new view instance.
+	 */
+	static public function factory() {
+		$class = self::$_class;
+		return new $class;
+	}
 	
 	/**
 	 * $v->setFile(string $file, int $type) -> View
@@ -151,8 +91,6 @@ class PinqView extends View {
 		
 		if(NULL === $this->file)
 			return;
-		
-		
 		
 		// set the immediate vars
 		$immediate_vars = array_merge(
