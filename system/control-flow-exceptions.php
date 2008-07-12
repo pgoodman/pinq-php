@@ -5,32 +5,32 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * yield(string $route[, string $request_method]) ! YieldControlException
+ * yield(string $route[, string $request_method]) ! YieldControllerException
  *
  * Yield control to another controller's action by passing in a route to that
- * controller's action. This function works by throwing a new YieldControlException
+ * controller's action. This function works by throwing a new YieldControllerException
  * exception.
  *
  * @note The action being called will be called using the same request method
  *       as the current action.
  * @author Peter Goodman
  */
-function yield($route, $request_method = NULL) {
-	throw new YieldControlException($route, $request_method);
-}
+/*function yield($route, $request_method = NULL) {
+	throw new YieldControllerException($route, $request_method);
+}*/
 
 /**
  * Exception to yield control of the current process to another controller.
  *
  * @author Peter Goodman
  */
-class YieldControlException extends PinqException {
+class YieldControllerException extends PinqException {
 	
 	protected $_route,
 	          $_request_method;
 	
 	/**
-	 * YieldControlException(string $route[, string $rquest_method]) 
+	 * YieldControllerException(string $route[, string $rquest_method]) 
 	 * <==> yield(...)
 	 */
 	public function __construct($route, $request_method = NULL) {
@@ -63,7 +63,7 @@ class YieldControlException extends PinqException {
  *
  * @author Peter Goodman
  */
-class InternalErrorException extends YieldControlException {
+class InternalErrorException extends YieldControllerException {
 	public function __construct($message) {
 		parent::__construct(ERROR_500);
 		$this->message = $message;
@@ -72,13 +72,13 @@ class InternalErrorException extends YieldControlException {
 
 /**
  * Exception that contains an array of generic validation errors. This class
- * extends YieldControlException and yields control to the /error/validation
+ * extends YieldControllerException and yields control to the /error/validation
  * route.
  *
- * @see YieldControlException
+ * @see YieldControllerException
  * @author Peter Goodman
  */
-class FailedValidationException extends YieldControlException {
+class FailedValidationException extends YieldControllerException {
 	
 	protected $_errors;
 	
