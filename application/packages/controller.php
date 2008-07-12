@@ -3,17 +3,23 @@
 class AppController extends PinqController {
 	
 	protected $db,
-	          $session;
+	          $session,
+	          $exclude_from_history = FALSE;
 	
 	/**
 	 * Constructor hook.
 	 */
-	protected function __init__() {		
-		list($this->db, $this->auth) = $this->import('db.blog', 'auth.blog');
+	protected function __init__() {
 		
+		// set up the basic template stuff
 		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
 		$logged_in = FALSE;
 		$tags = array();
+		
+		// bring in the data source and authentication class
+		list($this->db, $this->auth, $this->history) = $this->import(
+			'db.blog', 'auth.blog', 'history-stack.blog'
+		);
 		
 		try {
 			
@@ -41,6 +47,7 @@ class AppController extends PinqController {
 	 * Destructor hook.
 	 */
 	protected function __del__() {
-		unset($this->session, $this->db);
+		$this->history->push(get_url());
+		unset($this->auth, $this->history, $this->db);
 	}
 }

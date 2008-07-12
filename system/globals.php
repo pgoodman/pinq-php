@@ -35,8 +35,6 @@ unset($GLOBALS);
 extract(
 	array(
 		'_SERVER' => $server,
-		'_GET' => new ReadOnlyDictionary($_GET),
-		'_POST' => new ReadOnlyDictionary($_POST),
 		'_FILES' => new ReadOnlyDictionary($_FILES),
 		'_REQUEST' => NULL,
 	), 

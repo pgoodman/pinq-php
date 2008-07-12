@@ -40,6 +40,10 @@ interface Gateway {
 	public function __call($model_name, array $select = array(ALL));
 }
 
+interface Factory {
+	static public function factory();
+}
+
 /**
  * Interface for a class with overloadable properties.
  *

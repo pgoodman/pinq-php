@@ -44,6 +44,7 @@ class PinqAuth implements ConfigurablePackage {
 		PINQ_DEBUG && expect_array_keys($config, array(
 			'data_source', 'model', 'session',
 			'field_user_id', 'field_login', 'field_pass', 'field_login_key',
+			'hash_function',
 		));
 		
 		// get the gateway and session
@@ -73,7 +74,7 @@ class PinqAuth implements ConfigurablePackage {
 	 * PinqAuth(Gateway, array $session, array $config, string $cookie_id)
 	 */
 	public function __construct(Gateway $gateway, 
-	                              array $session, 
+	                             array &$session, 
 	                              array $config,
 	                                    $cookie_id) {
 		$this->_gateway = $gateway;
@@ -89,24 +90,22 @@ class PinqAuth implements ConfigurablePackage {
 	/**
 	 */
 	public function __destruct() {
-		unset(
-			$this->_session,
-			$this->_gateway
-		);
+		unset($this->_gateway);
 	}
 	
 	/**
 	 * $a->hash(string) -> string
 	 *
-	 * Hash a password using a salted md5. The point of the salt is to make
-	 * the input to the md5 longer than the md5 itself. It also means that
-	 * even if a value for a given md5 can be found (through a rainbow table
-	 * or brute force) it won't necessarily be useful because it won't include
-	 * the salting, and thus when hashed will not be the same as the original
-	 * password.
+	 * Hash the incoming password.
 	 */
-	protected function hash($str) {
-		return md5("ce92ac8710e7879{$str}9351b8a5a4730ec10");
+	protected function hash($password) {
+		
+		$hash_func = $this->_config['hash_function'];
+		if(empty($hash_func))
+			$hash_func = 'md5_salted';
+		
+		// using call_user_func so that $hash_func can be a true PHP callback
+		return call_user_func($hash_func, $password);
 	}
 	
 	/**

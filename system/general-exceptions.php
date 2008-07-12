@@ -19,4 +19,5 @@ class PinqException extends Exception { }
 class InvalidStateException extends PinqException { }
 //class ModelException extends PinqException { }
 
+class UnsatisfiedDependencyException extends PinqException { }
 

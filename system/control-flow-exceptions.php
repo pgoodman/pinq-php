@@ -5,7 +5,7 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * yield($route) -> void
+ * yield(string $route[, string $request_method]) ! YieldControlException
  *
  * Yield control to another controller's action by passing in a route to that
  * controller's action. This function works by throwing a new YieldControlException
@@ -15,11 +15,8 @@
  *       as the current action.
  * @author Peter Goodman
  */
-function yield($route = NULL) {
-	if(NULL === $route)
-		$route = get_route();
-	
-	throw new YieldControlException($route);
+function yield($route, $request_method = NULL) {
+	throw new YieldControlException($route, $request_method);
 }
 
 /**
@@ -29,13 +26,17 @@ function yield($route = NULL) {
  */
 class YieldControlException extends PinqException {
 	
-	protected $_route;
+	protected $_route,
+	          $_request_method;
 	
 	/**
-	 * YieldControlException(route) <==> yield(route)
+	 * YieldControlException(string $route[, string $rquest_method]) 
+	 * <==> yield(...)
 	 */
-	public function __construct($route) {
+	public function __construct($route, $request_method = NULL) {
 		$this->_route = $route;
+		$this->_request_method = !$request_method ? get_request_method() 
+		                                          : $request_method;
 	}
 	
 	/**
@@ -45,6 +46,15 @@ class YieldControlException extends PinqException {
 	 */
 	public function getRoute() {
 		return $this->_route;
+	}
+	
+	/**
+	 * $e->getRequestMethod(void) -> string
+	 *
+	 * Get the request method to use for action of the next controller.
+	 */
+	public function getRequestMethod() {
+		return $this->_request_method;
 	}
 }
 

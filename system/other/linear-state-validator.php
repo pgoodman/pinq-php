@@ -8,8 +8,10 @@ require_once DIR_SYSTEM . '/linear-state-machine.php';
  * Maintain a stack of queues to validate incoming states against a state
  * machine.
  * TODO: this could also be cleanly implemented using PHP's FilterIterator.
+ *
+ * @author Peter Goodman
  */
-class LinearStateValidator extends Stack implements Stateful {
+class LinearStateValidator extends Stack {
 	
 	protected $machine, // the state machine
 			  $current; // the current state

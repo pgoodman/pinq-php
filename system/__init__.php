@@ -134,11 +134,25 @@ function pinq($script_file, $app_dir) {
 			'file_extension' => EXT,
 		));
 		
+		// set some of the global variables
+		$packages->load('input-dictionary');
+		$_POST = PinqInputDictionary::factory($_POST);
+		$_GET = PinqInputDictionary::factory($_GET);
+		
 		// the starting route, taken from the url, it's outside of the
 		// do-while loop because if any controllers yield to another
 		// controller then the route to go to is passed in through the yield-
 		// control exception and set in the catch() block.
 		$route = get_route();
+		$request_method = get_request_method();
+		
+		// create the page and layout views
+		$packages->load('view');
+		$layout_view = PinqView::factory();
+		$layout_view['page_view'] = PinqView::factory();
+		
+		// maintain a stack of controllers
+		$events = new Stack;
 		
 		do {
 			
@@ -162,25 +176,24 @@ function pinq($script_file, $app_dir) {
 
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} controller");
-				$request_method = $_SERVER['REQUEST_METHOD'];
+				
 				
 				// if we're not working with a valid controller then error
 				if(!is_subclass_of($class, 'PinqController'))
 					yield(ERROR_404);
 				
-				// create the page and layout views
-				$packages->load('view');
-				$layout_view = View::factory();
-				$layout_view['page_view'] = View::factory();
-				
 				// insantiate the controller and call its action
-				$event = new $class(
-					$packages, 
-					$layout_view, 
-					$layout_view['page_view']
-				);
+				if($events->isEmpty() || get_class($events->top()) != $class) {
+					$events->push(new $class(
+						$packages, 
+						$layout_view, 
+						$layout_view['page_view']
+					));
+				}
 				
 				// call the action and figure out which method was called
+				$event = $events->top();
+				$event->beforeAction();
 				$event->act(
 					$request_method, 
 					$method, 
@@ -192,26 +205,30 @@ function pinq($script_file, $app_dir) {
 				// stuff
 				$render_layout = (bool)$event->render_layout;
 				
-				// clear the controller, it's no longer needed
-				unset($event);
+				// call all of the acter action hooks built up through yielding
+				// and garbage collect the controllers. This is to simulate a
+				// proper call stack.
+				while(!$events->isEmpty()) {
+					$event = $events->pop();
+					$event->afterAction();
+					unset($event);
+				}
+				unset($events);
 				
 				// not rendering a layout, leave
 				if(!$render_layout)
 					break;
 				
 				// render and output the layout view
-				$layout_view->render(new ScopeStack);
+				$layout_view->render(
+					$packages->load('scope-stack')
+				);
 				
 				// layout view no longer needed
 				unset($layout_view);
 			
 			// the controller has yielded its control to another controller
 			} catch(YieldControlException $y) {
-				
-				// get rid of the previous controller
-				// TODO: getting rid of the controller is useful, but should
-				//       the afterAction() hook be called?
-				if(isset($event)) unset($event);
 				
 				// clear the output buffer for the new action
 				OutputBuffer::clearAll();
@@ -227,6 +244,8 @@ function pinq($script_file, $app_dir) {
 				
 				// change the next route that will be parsed
 				$route = $new_route;
+				$request_method = $y->getRequestMethod();
+				
 				continue;
 				
 			// output and stop, we catch this early 

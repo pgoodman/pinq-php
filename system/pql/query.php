@@ -490,8 +490,15 @@ class Query {
 		
 		$this->_compiled = FALSE;
 		
-		$keys = is_array($key) ? $key : array((string)$key => $value);
-				
+		// handle multiple different formats
+		if(is_array($key))
+			$keys = $key;
+		else if($key instanceof Dictionary)
+			$keys = $key->toArray();
+		else
+			$keys = array((string)$key => $value);
+		
+		// add to the modify values
 		$this->_context['modify_values'] = array_merge(
 			$this->_context['modify_values'],
 			$keys

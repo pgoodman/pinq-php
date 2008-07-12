@@ -5,20 +5,25 @@
 !defined('DIR_SYSTEM') && exit();
 
 /**
- * expect_array_keys(array $array, array $required_keys) ! UnexpectedValueException
+ * expect_array_keys($array, array $required_keys) ! UnexpectedValueException
  *
  * Test that $array has all keys present in the values of $required_keys. If
  * that is not the case then this function will throw an UnexpectedValueException.
  *
  * @author Peter Goodman
  */
-function expect_array_keys(array $array, array $required_keys) {
+function expect_array_keys($array, array $required_keys) {
 	$keys = array_flip($required_keys);
+	
+	if($array instanceof Dictionary)
+		$array = $array->toArray();
+	
+	$array = (array)$array;
 	
 	// not all the keys were present, throw an exception, unfortunately this
 	// error is somewhat vague.
-	if(count(array_intersect_key($array, $keys)) != count($keys)) {
-		throw new UnexpectedValueException(
+	if(count(array_intersect_key($array, $keys)) < count($keys)) {
+		throw new UnsatisfiedDependencyException(
 			"Dependency not satisfied. Expected [". implode(',', $required_keys).
 			"] keys in array but did not find them all."
 		);

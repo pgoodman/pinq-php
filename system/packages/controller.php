@@ -23,15 +23,15 @@ abstract class PinqController implements Package {
 	       $layout_file = 'default';
 	
 	/**
-	 * PinqController(PackageLoader, View $layout, View $page)
+	 * PinqController(PackageLoader, PinqView $layout, PinqView $page)
 	 */
-	final public function __construct(Loader $packages, View $layout, View $page) {
+	final public function __construct(Loader $packages, PinqView $layout, PinqView $page) {
 		
 		// package loader
 		$this->packages = &$packages;
 		
 		// view stuff, if someone wants to change the file used by the layout
-		// they need only do: $this->layout->setFile('...', View::LAYOUT);
+		// they need only do: $this->layout->setFile('...', PinqView::LAYOUT);
 		$this->view = $page;
 		$this->layout = $layout;
 		$layout->setFile($this->layout_file, 'layouts');
@@ -79,15 +79,13 @@ abstract class PinqController implements Package {
 			yield(ERROR_405);
 		
 		// set the page view
-		$this->view->setFile("{$view_dir}{$action}", View::PAGE);
+		$this->view->setFile("{$view_dir}{$action}", PinqView::PAGE);
 		
 		// call the controller's action
-		$this->beforeAction();
 		call_user_func_array(
 			array($this, $action), 
 			$arguments
 		);
-		$this->afterAction();
 		
 		return $action;
 	}
@@ -150,16 +148,16 @@ abstract class PinqController implements Package {
 	/**
 	 * $c->beforeAction(void) -> void
 	 *
-	 * Hook called before a controller's action is called.
+	 * Hook called before a controller's action is dispatched.
 	 */
-	protected function beforeAction() { }
+	public function beforeAction() { }
 	
 	/**
 	 * $c->afterAction(void) -> void
 	 *
-	 * Hook called after a controller's action is called.
+	 * Hook called after a controller's action is dispatched.
 	 */
-	protected function afterAction() { }
+	public function afterAction() { }
 	
 	/**
 	 * $c->beforeImport(void) -> void

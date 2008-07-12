@@ -32,6 +32,15 @@ class Stack implements Countable, IteratorAggregate {
 	public function __construct(array $default = NULL) {
 		if(NULL !== $default)
 			$this->extend($default);
+		
+		$this->__init__();
+	}
+	
+	/**
+	 */
+	public function __destruct() {
+		$this->__del__();
+		unset($this->_stack);
 	}
 	
 	/**
@@ -65,7 +74,7 @@ class Stack implements Countable, IteratorAggregate {
 	 * Remove and return the top item on the stack. If there are zero items in
 	 * the stack this method will throw a StackException.
 	 */
-	public function pop($null = NULL) {
+	public function pop() {
 		if($this->_top < 0)
 			throw new StackException("Nothing to pop off stack.");
 		
@@ -151,6 +160,20 @@ class Stack implements Countable, IteratorAggregate {
 	public function getIterator() {
 		return new ArrayIterator(array_reverse($this->_stack));
 	}
+	
+	/**
+	 * $c->__init__(void) -> void
+	 *
+	 * Hook called right after class construction.
+	 */
+	protected function __init__() { }
+	
+	/**
+	 * $c->__del__(void) -> void
+	 *
+	 * Hook called before class resources are released.
+	 */
+	protected function __del__() { }
 }
 
 /**
