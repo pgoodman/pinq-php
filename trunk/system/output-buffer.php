@@ -116,6 +116,6 @@ function err() {
  *
  * @author Peter Goodman
  */
-function stop() {
+/*function stop() {
 	throw new FlushBufferException;
-}
+}*/

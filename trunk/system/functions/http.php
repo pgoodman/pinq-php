@@ -10,7 +10,7 @@
  * Attempt to get the current http host. This function first tries to find the
  * host and then validates it against the (partial) host given in the main
  * PINQ application configuration file. If the host fails to validate then
- * a YieldControlException is thrown.
+ * a YieldControllerException is thrown.
  */
 function get_http_host() {
 	static $host;

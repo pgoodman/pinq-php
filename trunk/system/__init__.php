@@ -99,162 +99,7 @@ function pinq($script_file, $app_dir) {
 		
 	try {
 
-		// set things up!
-		$config = new ConfigLoader;
-		$config->load('config');
-		$config->load('config-defaults');
-
-		// make sure that all default required configuration settings exist
-		$config['config'] = array_merge(
-			$config['config-defaults'], 
-			$config['config']
-		);
-
-		// a pattern for what we expect the host to be
-		define('PINQ_HTTP_HOST', preg_quote($config['config']['host_name']));
-
-		// we no longer need these
-		unset($config['config-defaults']);
-
-		// put restrictions on the use of the $GLOBALS array and the other 
-		// super-globls arrays. The require is in here because it's possible 
-		// that the call to get_host will throw an exception.
-		require_once DIR_SYSTEM .'/globals.php';	
-
-		// bring in the package loader
-		$packages = new PackageLoader($config);
-
-		// bring a page controller class. the page controller doesn't actually 
-		// install itself into the packages dictionary
-		$packages->load('controller');
-
-		// bring in and configure the route parser with a context.
-		$router = $packages->load('route-parser', array(
-			'controller_dir' => DIR_APPLICATION .'/controllers/',
-			'file_extension' => EXT,
-		));
-		
-		// set some of the global variables
-		$packages->load('input-dictionary');
-		$_POST = PinqInputDictionary::factory($_POST);
-		$_GET = PinqInputDictionary::factory($_GET);
-		
-		// the starting route, taken from the url, it's outside of the
-		// do-while loop because if any controllers yield to another
-		// controller then the route to go to is passed in through the yield-
-		// control exception and set in the catch() block.
-		$route = get_route();
-		$request_method = get_request_method();
-		
-		// create the page and layout views
-		$packages->load('view');
-		$layout_view = PinqView::factory();
-		$layout_view['page_view'] = PinqView::factory();
-		
-		// maintain a stack of controllers
-		$events = new Stack;
-		
-		do {
-			
-			// look for a yield or a flush buffer
-			try {
-			
-				// parse the URI, if it can't be parsed a 404 error will occur.
-				if(!($path_info = $router->parse($route)))
-					yield(ERROR_404);
-				
-				// get the controller, method, and arguments form the route
-				// parser
-				list($dir, $pdir, $controller, $method, $arguments) = $path_info;
-				
-				// bring in the controller file, we know it exists because the 
-				// route parser figured that out.
-				if(!file_exists($dir .'/'. $controller . EXT))
-					yield(ERROR_404);
-				
-				require_once $dir .'/'. $controller . EXT;
-
-				// get the class name and clean up the method name
-				$class = class_name("{$pdir} {$controller} controller");
-				
-				
-				// if we're not working with a valid controller then error
-				if(!is_subclass_of($class, 'PinqController'))
-					yield(ERROR_404);
-				
-				// insantiate the controller and call its action
-				if($events->isEmpty() || get_class($events->top()) != $class) {
-					$events->push(new $class(
-						$packages, 
-						$layout_view, 
-						$layout_view['page_view']
-					));
-				}
-				
-				// call the action and figure out which method was called
-				$event = $events->top();
-				$event->beforeAction();
-				$event->act(
-					$request_method, 
-					$method, 
-					$arguments, 
-					"{$pdir}/{$controller}/"
-				);
-				
-				// get some view info before we finish with the controller
-				// stuff
-				$render_layout = (bool)$event->render_layout;
-				
-				// call all of the acter action hooks built up through yielding
-				// and garbage collect the controllers. This is to simulate a
-				// proper call stack.
-				while(!$events->isEmpty()) {
-					$event = $events->pop();
-					$event->afterAction();
-					unset($event);
-				}
-				unset($events);
-				
-				// not rendering a layout, leave
-				if(!$render_layout)
-					break;
-				
-				// render and output the layout view
-				$layout_view->render(
-					$packages->load('scope-stack')
-				);
-				
-				// layout view no longer needed
-				unset($layout_view);
-			
-			// the controller has yielded its control to another controller
-			} catch(YieldControlException $y) {
-				
-				// clear the output buffer for the new action
-				OutputBuffer::clearAll();
-				
-				// put the message from the exception into the new output
-				// buffer. if there was no message, ie: this was not cause by
-				// an error that threw an exception
-				err($y->getMessage());
-				
-				// don't want infinite loop!
-				if($route === ($new_route = $y->getRoute()))
-					throw $y;
-				
-				// change the next route that will be parsed
-				$route = $new_route;
-				$request_method = $y->getRequestMethod();
-				
-				continue;
-				
-			// output and stop, we catch this early 
-			} catch(FlushBufferException $e) { }
-			
-			// all other exceptions will bubble up
-			break;
-			
-		} while(TRUE);
+		yield(get_route(), get_request_method());
 		
 		// flush the output buffer
 		OutputBuffer::flush('out');
@@ -275,4 +120,244 @@ function pinq($script_file, $app_dir) {
 
 	// break references, we're done.
 	unset($_SESSION, $config, $packages);
+}
+
+/**
+ * yield(string $route[, string $request_method])
+ *
+ * Yield control to another controller's action by passing in a route to that
+ * controller's action. This function works by throwing a new YieldControllerException
+ * exception.
+ *
+ * @note The action being called will be called using the same request method
+ *       as the current action.
+ * @author Peter Goodman
+ */
+function yield($route, $request_method = NULL) {
+	
+	static $config,
+	       $packages,
+	       $layout_view,
+	       $router,
+	       $events,
+	       $scope_stack;
+	
+	// set up the default stuff
+	if(NULL === $config) {
+		
+		// set things up!
+		$config = new ConfigLoader;
+		$config->load('config');
+
+		// a pattern for what we expect the host to be
+		define('PINQ_HTTP_HOST', preg_quote($config['config']['host_name']));
+
+		// put restrictions on the use of the $GLOBALS array and the other 
+		// super-globls arrays. The require is in here because it's possible 
+		// that the call to get_host will throw an exception.
+		require_once DIR_SYSTEM .'/globals.php';	
+
+		// bring in the package loader
+		$packages = new PackageLoader($config);
+
+		// bring a page controller class. the page controller doesn't actually 
+		// install itself into the packages dictionary
+		$packages->load('controller');
+
+		// bring in and configure the route parser with a context.
+		$router = $packages->load('route-parser', array(
+			'controller_dir' => DIR_APPLICATION .'/controllers/',
+			'file_extension' => EXT,
+		));
+	
+		// set some of the global variables
+		$packages->load('input-dictionary');
+		$_POST = PinqInputDictionary::factory($_POST);
+		$_GET = PinqInputDictionary::factory($_GET);
+	
+		// create the page and layout views
+		$packages->load('view');
+		$layout_view = PinqView::factory();
+		$layout_view['page_view'] = PinqView::factory();
+	
+		// maintain a stack of controllers
+		$events = new Stack;
+		$scope_stack = $packages->load('scope-stack');
+	}
+	
+	// get the request method
+	if(NULL === $request_method)
+		$request_method = get_request_method();
+	
+	// should the view be rendered?
+	$render_layout = FALSE;
+	
+	$return = NULL;
+	$e = NULL;
+	
+	//do {
+		// look for a yield or a flush buffer
+		try {
+		
+			// parse the URI, if it can't be parsed a 404 error will occur.
+			if(!($path_info = $router->parse($route)))
+				yield(ERROR_404);
+			
+			// get the controller, method, and arguments form the route
+			// parser
+			list($dir, $pdir, $controller, $method, $arguments) = $path_info;
+			
+			// bring in the controller file, we know it exists because the 
+			// route parser figured that out.
+			if(!file_exists($dir .'/'. $controller . EXT))
+				yield(ERROR_404);
+			
+			require_once $dir .'/'. $controller . EXT;
+
+			// get the class name and clean up the method name
+			$class = class_name("{$pdir} {$controller} controller");
+			
+			// if we're not working with a valid controller then error
+			if(!is_subclass_of($class, 'PinqController'))
+				yield(ERROR_404);
+			
+			// only instantiate a new controller if we're yielding to a
+			// different controller
+			//if($events->isEmpty() || get_class($events->top()) != $class) {
+			$event = new $class(
+				$packages, 
+				$layout_view, 
+				$layout_view['page_view']
+			);
+			$events->push($event);
+			$event->beforeAction();
+			
+			//} else
+			//	$event = $events->top();
+			
+			// call the event's action
+			$event->act(
+				$request_method, 
+				$method, 
+				$arguments, 
+				"{$pdir}/{$controller}/"
+			);
+			
+			// get some view info before we finish with the controller
+			// stuff
+			$render_layout = (bool)$event->render_layout;
+		
+		} catch(Exception $e) {
+			
+			$event = $events->silentPop();
+			$event->afterAction();
+			unset($event);
+			
+			// return to the yielding controller
+			if($e instanceof ResumeControllerException) {
+				
+				// return from here if there is something on the even stack. if
+				// there is nothing on the event stack then we will return
+				// after we've released up all resources.
+				if(!$events->isEmpty())
+					return $e->getArgs();
+				
+				$return = $e->getArgs();
+			
+			// we want the current event to be a leaf event
+			} else if($e instanceof StopControllerException) {
+				if(!$events->isEmpty())
+					throw $e;			
+			}
+			
+			// other exceptions are let through so that we can clean up
+			// resources before re-throwing
+		}
+		
+		// execute all of the after action hooks
+		while(!$events->isEmpty()) {
+			$event = $events->pop();
+			$event->afterAction();
+			unset($event);
+		}
+		
+		// render the layout
+		if(!$e && $render_layout) {
+			$layout_view->render(
+				$scope_stack
+			);
+		}
+		
+		// clear up resources
+		unset(
+			$event, $events, $scope_stack, $layout_view, 
+			$route, $config, $packages
+		);
+		
+		// an exception was thrown that we couldn't identify, clear up all
+		// resources then rethrown
+		if($e instanceof Exception)
+			throw $e;
+		
+		return $return;
+		
+		// the controller has yielded its control to another controller
+		/*} catch(YieldControllerException $y) {
+			
+			// clear the output buffer for the new action
+			OutputBuffer::clearAll();
+			
+			// put the message from the exception into the new output
+			// buffer. if there was no message, ie: this was not cause by
+			// an error that threw an exception
+			err($y->getMessage());
+			
+			// don't want infinite loop!
+			if($route === ($new_route = $y->getRoute()))
+				throw $y;
+			
+			// change the next route that will be parsed
+			$route = $new_route;
+			$request_method = $y->getRequestMethod();
+			
+			continue;
+			
+		// output and stop, we catch this early 
+		} catch(FlushBufferException $e) { }*/
+		
+		// call all of the acter action hooks built up through yielding
+		// and garbage collect the controllers. This is to simulate a
+		// proper call stack.
+		/*while(!$events->isEmpty()) {
+			$event = $events->pop();
+			$event->afterAction();
+			unset($event);
+		}
+		unset($events);
+		
+		// not rendering a layout, leave
+		if(!$render_layout)
+			break;
+		
+		// render and output the layout view
+		$layout_view->render(
+			$scope_stack
+		);
+		
+		// layout view no longer needed
+		unset($layout_view);
+		
+		// all other exceptions will bubble up
+		break;*/
+		
+	//} while(TRUE);
+}
+
+function stop() {
+	throw new StopControllerException;
+}
+
+function resume() {
+	$args = func_get_args();
+	throw new ResumeControllerException($args);
 }
