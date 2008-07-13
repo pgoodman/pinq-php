@@ -490,7 +490,8 @@ class DatabaseQueryCompiler extends QueryCompiler {
 		// intersection.
 		$fields = $definition->validateFields(
 			$fields,
-			$this->query_type
+			$this->query_type,
+			$context['errors']
 		);
 		
 		// go over the fields and build build up the SQL values for each item.

@@ -12,38 +12,55 @@
 final class FieldType {
 	
 	/**
-	 * FieldType::int(int $length) -> array
+	 * FieldType::int() -> array
 	 */
-	static public function int($length = 0) {
-		return array(ModelDefinition::TYPE_INT, $length, NULL);
+	static public function int(array $v = array()) {
+		return array(ModelDefinition::TYPE_INT, array_merge(
+			array(
+			'default' => NULL,
+			),
+			$v
+		));
 	}
 
 	/**
-	 * FieldType::float([int $length]) -> array
+	 * FieldType::float() -> array
 	 */
-	static public function float($length = 0) {
-		return array(ModelDefinition::TYPE_FLOAT, $length, NULL);
+	static public function float(array $v = array()) {
+		return array(ModelDefinition::TYPE_FLOAT, array_merge(
+			array(
+			'default' => NULL,
+			),
+			$v
+		));
 	}
 
 	/**
 	 * FieldType::bool([bool $default]) -> array
 	 */
 	static public function bool($default = FALSE) {
-		return array(ModelDefinition::TYPE_BOOLEAN, 1, (bool)$default);
+		return array(ModelDefinition::TYPE_BOOLEAN, array(
+			'default' => (bool)$default,
+		));
 	}
 
 	/**
-	 * FieldType::string([int $length[, string $default]]) -> array
+	 * FieldType::string([array $v]]) -> array
 	 */
-	static public function string($length = 0, $default = NULL) {
-		return array(ModelDefinition::TYPE_STRING, $length, $default);
+	static public function string(array $v = array()) {
+		return array(ModelDefinition::TYPE_STRING, array_merge(
+			array(
+				'default' => NULL,
+			),
+			$v
+		));
 	}
 
 	/**
-	 * FieldType::text(void) -> array
+	 * FieldType::text(]) -> array
 	 */
 	static public function text() {
-		return array(ModelDefinition::TYPE_STRING, 0, NULL);
+		return array(ModelDefinition::TYPE_STRING, NULL);
 	}
 
 	/**
@@ -51,20 +68,22 @@ final class FieldType {
 	 */
 	static public function enum() {
 		$default = func_get_args();
-		return array(ModelDefinition::TYPE_ENUM, 0, $default);
+		return array(ModelDefinition::TYPE_ENUM, array(
+			'default' => $default,
+		));
 	}
 
 	/**
 	 * FieldType::blob(void) <==> binary(void) -> array
 	 */
 	static public function blob() {
-		return array(ModelDefinition::TYPE_BINARY, 0, NULL);
+		return array(ModelDefinition::TYPE_BINARY, NULL);
 	}
 
 	/**
 	 * FieldType::binary(void) <==> blob(void) -> array
 	 */
 	static public function binary() {
-		return array(ModelDefinition::TYPE_BINARY, 0, NULL);
+		return array(ModelDefinition::TYPE_BINARY, NULL);
 	}
 }

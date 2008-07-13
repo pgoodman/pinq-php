@@ -107,7 +107,6 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$this->addMacro('year',		'[12][0-9]{3}');
 		$this->addMacro('month',	'0[1-9]|1[012]');
 		$this->addMacro('day',		'0[1-9]|[12][0-9]|3[01]');
-		$this->addMacro('id',		'[0-9]+');
 		$this->addMacro('uuid',		'[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]'.
 									'{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}');
 		$this->addMacro('hex',      '[a-fA-F0-9]+');

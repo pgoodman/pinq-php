@@ -77,6 +77,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage, Session {
 		$use_php_session = empty($config['data_source']);
 		$cookie_name = $use_php_session ? session_name() : $argv[0];
 		$create = !isset($_COOKIE[$cookie_name]);
+		$next_id = $current_id = '';
 		
 		// we're just using existing session as a data storage
 		if($use_php_session) {

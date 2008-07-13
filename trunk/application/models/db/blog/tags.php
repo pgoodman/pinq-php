@@ -5,11 +5,24 @@
 class TagsDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
-		$this->id = FieldType::int(10); // sqlite's own row id
-		$this->name = FieldType::string(20);
-		$this->num_posts = FieldType::int(5);
+		$this->id = FieldType::int(array(
+			'optional' => TRUE,
+		));
+		
+		$this->name = FieldType::string(array(
+			'filter' => array(
+				array($this, 'cleanTag'),
+			),
+			'length_between' => array(1, 15),
+		));
+		
+		$this->num_posts = FieldType::int();
 		
 		$this->relatesTo('posts', through('post_tags'));
+	}
+	
+	public function cleanTag($tag) {
+		return preg_replace('~[^a-zA-Z0-9]+~', '', $tag);
 	}
 }
 

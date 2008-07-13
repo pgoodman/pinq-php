@@ -58,7 +58,7 @@ h3 { color: #6b0165; font-size: 1em; padding: 0.85em 0 0.85em; margin: 0 0 0.85e
 
 /** Forms */
 form { margin: 0; padding: 0; display: inline; }
-input, textarea { background-color: #d6d7d7; border:1px solid #fff; padding: 0.2em; margin: 0; }
+input, textarea { cursor: text; background-color: #d6d7d7; border:1px solid #fff; padding: 0.2em; margin: 0; }
 textarea { width: 99% !important; }
 input[type="submit"], input[type="reset"] { background: #C3D6D8; }
 form dd { margin-left: 8em; }

@@ -2,24 +2,25 @@
 <div class="section">
 	<form method="post" action="<?=url('posts',isset($post)?$post['id']:0)?>">
 		<dl>		
-			<?if(!$scope['logged_in']):?>
-			<dt>Name</dt>
-			<dd><input type="text" name="display_name" maxlength="50" tabindex="<?=$i++?>" /></dd>
-		
-			<dt>Website</dt>
-			<dd><input type="text" name="website" maxlength="50" tabindex="<?=$i++?>" /></dd>
-		
+			<?if(!$scope['logged_in']):?>		
 			<dt>Email</dt>
-			<dd><input type="text" name="email" maxlength="150" tabindex="<?=$i++?>" /></dd>
+			<dd class="required"><input type="text" name="email" maxlength="150" tabindex="<?=$i++?>" /></dd>
 
 			<dt>Password</dt>
-			<dd><input type="password" name="password" tabindex="<?=$i++?>" /></dd>
+			<dd class="required"><input type="password" name="password" tabindex="<?=$i++?>" /></dd>
 			<dd>
 				<label for="logme">
 					<input id="logme" type="radio" name="action" value="0" tabindex="<?=$i++?>" />
 					Log me in
 				</label>
 			</dd>
+			
+			<dt>Display Name</dt>
+			<dd class="required"><input type="text" name="display_name" maxlength="50" tabindex="<?=$i++?>" /></dd>
+			
+			<dt>Website</dt>
+			<dd><input type="text" name="website" maxlength="50" tabindex="<?=$i++?>" /></dd>
+			
 			<dd>
 				<label for="regme">
 					<input id="regme" type="radio" name="action" value="1" tabindex="<?=$i++?>" />
@@ -29,7 +30,7 @@
 			<?endif;?>
 
 			<dt>Body</dt>
-			<dd><textarea name="body" rows="5" tabindex="<?=$i++?>"></textarea></dd>
+			<dd class="required"><textarea name="body" rows="5" tabindex="<?=$i++?>"></textarea></dd>
 		</dl>
 		<br />
 		<center>

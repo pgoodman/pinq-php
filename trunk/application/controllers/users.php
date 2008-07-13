@@ -9,8 +9,6 @@ class UsersController extends AppController {
 				
 		if($this->auth->isLogged())
 			yield(ERROR_500);
-		
-		// shows the view...
 	}
 	
 	/**
@@ -21,25 +19,20 @@ class UsersController extends AppController {
 		if($this->auth->isLogged())
 			yield(ERROR_500);
 		
-		$errors = array();
+		$this->history->exclude();
 		
 		try {
-			if($this->db->users->getBy('email', $_POST['email']))
-				$errors[] = 'email';
-			
-			if(!empty($errors))
-				throw new FailedValidationException($errors);
-			
-			$this->db->insert(to('users')->set($_POST));
-		
+			$this->db->users->register($_POST);
 		} catch(FailedValidationException $e) {
+			
 			$this->view['form_errors'] = $e->getErrors();
 			yield('/users/register', 'GET');
 		}
 		
 		// log the user in
-		$this->auth->login($_POST['email'], $_POST['password']);
+		$this->auth->login($_POST['email'], $_POST['password'], TRUE);
 		
+		// redirect to previous page
 		redirect($this->history->pop());
 	}
 }
