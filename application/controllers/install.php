@@ -3,12 +3,14 @@
 /**
  * Install controller.
  */
-class InstallController extends AppController {
+class InstallController extends PinqController {
 	
 	/**
 	 * Install the database tables.
 	 */
 	public function GET_index() {
+		
+		$this->db = $this->import('db.blog');
 		
 		// get the db tables from the schema file
 		$schema = file_get_contents(DIR_APPLICATION .'/sqlite/blog.schema');
@@ -29,7 +31,10 @@ class InstallController extends AppController {
 			'name' => _,
 			'num_posts' => _,
 		));
-		$tag_link = to('post_tags')->set('post_id', _)->set('tag_id', _);
+		$tag_link = to('post_tags')->set(array(
+			'post_id' => _,
+			'tag_id' => _,
+		));
 		
 		$this->db->insert($new_tag, array('php', 2));
 		$this->db->insert($new_tag, array('pinq', 2));

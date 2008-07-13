@@ -37,6 +37,17 @@ abstract class ModelDefinition implements Object {
 	        // cached version of external name run through class_name()
 	        $_extenal_name_as_class;
 	
+	private $_field_validators = array(
+		'default' => 1, 
+		'min_length' => 1, 
+		'max_length' => 1, 
+		'optional' => 1,
+		'filter' => 1, 
+		'regex' => 1, 
+		'min_byte_length' => 1, 
+		'max_byte_length' => 1,
+	);
+	
 	/**
 	 * ModelDefinition(string $name, ModelRelations)
 	 *
@@ -77,20 +88,6 @@ abstract class ModelDefinition implements Object {
 	 * Describe the fields and relations that this model has.
 	 */
 	abstract public function describe();
-	
-	/**
-	 * $d->validateFields(array $fields, int $query_type) -> array
-	 *
-	 * Perform validating/filtering on data to be stored to a data source. By
-	 * default this method lets only fields existing in this model through and
-	 * does not type coercion or validation.
-	 *
-	 * @note To report validation errors, throw a FailedValidationException.
-	 * @note Type coercion is automatically done after field validation.
-	 */
-	public function validateFields(array $fields, $query_type) {
-		return array_intersect_key($fields, $this->_fields);
-	}
 	
 	/**
 	 * $d->__init__(void) -> void
@@ -145,6 +142,194 @@ abstract class ModelDefinition implements Object {
 	}
 	
 	/**
+	 * $d->validateFields(array $fields, int $query_type) -> array
+	 *
+	 * Perform validating/filtering on data to be stored to a data source. By
+	 * default this method lets only fields existing in this model through and
+	 * does not type coercion or validation.
+	 *
+	 * @note To report validation errors, throw a FailedValidationException.
+	 * @note Type coercion is automatically done after field validation.
+	 */
+	public function validateFields(array $fields, 
+	                                     $query_type, 
+	                               array $errors = array()) {
+		
+		$fields = array_intersect_key($fields, $this->_fields);
+		
+		foreach($fields as $field => $value) {
+			$context = $this->_fields[$field]['validate'];
+			
+			if(empty($context))
+				continue;
+			
+			// if we've found an empty field and it's not optional then
+			// report an error immediately.
+			if(NULL === $value || trim($value) == '') {
+				if(!isset($context['optional']) || !$context['optional']) {
+					
+					if(isset($context['default']))
+						$value = $context['default'];
+						
+					else {
+						$errors[$field]['required'] = 'This field is required.';
+						continue;
+					}
+				}
+			}
+			
+			// we foreach through because the order of the validations might
+			// matter
+			foreach($context as $validator => $using) {
+				
+				switch($validator) {
+					case 'min_length':
+						if(mb_strlen($value) < (int)$using) {
+							$errors[$field]['min_length'] = (
+								"This field must be at least {$using} ".
+								"characters long."
+							);
+							break 2;
+						}
+						break;
+					
+					case 'max_length':
+						if(mb_strlen($value) > (int)$using) {
+							$errors[$field]['max_length'] = (
+								"This field must be no longer than {$using} ".
+								"characters long."
+							);
+							break 2;
+						}
+						break;
+					
+					case 'length_between':
+						$len = mb_strlen($value);
+						if($len < $user[0] || $len > $using[1]) {
+							$errors[$field]['length_between'] = (
+								"This field must be between {$using[0]} and ".
+								"{$using[1]} characters long."
+							);
+							break 2;
+						}
+						break;
+					
+					case 'min_byte_length':
+						if(strlen($value) < (int)$using) {
+							$errors[$field]['min_byte_length'] = (
+								"This field must be at least {$using} ".
+								"characters long."
+							);
+							break 2;
+						}
+						break;
+
+					case 'max_byte_length':
+						if(strlen($value) > (int)$using) {
+							$errors[$field]['max_byte_length'] = (
+								"This field must be no longer than {$using} ".
+								"characters long."
+							);
+							break 2;
+						}
+						break;
+					
+					case 'regex':
+						if(!preg_match($using, $value)) {
+							$errors[$field]['regex'] = (
+								"This field has invalid characters."
+							);
+							break 2;
+						}
+						break;
+					
+					case 'filter':
+						if(!is_array($using))
+							$using = array($using);
+						
+						// apply the filters
+						foreach($using as $callback) {
+							$value = call_user_func($callback, $value);
+							if(FALSE === $value
+							   && $context['type'] != self::TYPE_BOOLEAN) {
+								$errors[$field]['filter'] = (
+									"An error occured while filtering this ".
+									"field."
+								);
+								break 2;
+							}
+						}
+						break;
+				}
+			}
+			
+			$fields[$field] = $value;
+		}
+		
+		if(!empty($errors))
+			throw new FailedValidationException($errors);
+		
+		return $fields;
+	}
+	
+	/**
+	 * $d->coerceValueForField(string $name, mixed $value) -> mixed
+	 *
+	 * Given a field name and a value, coerce the value to the specific tyoe
+	 * as defined in the model. If the field does not exist in the model then
+	 * NULL is returned.
+	 */
+	public function coerceValueForField($field, $value) {
+		
+		$field = (string)$field;
+		
+		// this model doesn't contain the supplied field
+		if(!$this->hasField($field))
+			return NULL;
+		
+		$context = $this->_fields[$field];
+		
+		// return the default value if none is given
+		if(empty($value)) {
+			return NULL;
+		}
+		
+		switch($context['type']) {
+			
+			case self::TYPE_INT:				
+				return (int)$value;
+			
+			case self::TYPE_BOOLEAN:
+				return (int)(bool)$value;
+			
+			case self::TYPE_FLOAT:
+				return (float)$value;
+			
+			case self::TYPE_BINARY:
+			case self::TYPE_STRING:
+				
+				if(is_object($value) || is_array($value))
+					$value = serialize($value);
+				
+				return (string)$value;
+			
+			case self::TYPE_ENUM:
+				return in_array(
+					$value, 
+					$context['validate']['default']
+				) ? $value : NULL;
+			
+			default:
+				throw new InvalidArgumentException(
+					"ModelDefinition::coerceValueForField() cannot cast a ".
+					"value of an unknown or complex type."
+				);
+		}
+		
+		return NULL;
+	}
+	
+	/**
 	 * $d->__set(string $key, array $type) <==> $d->$key = $type -> void
 	 *
 	 * Set a field to the model. The field type is a numerically indexed array
@@ -155,13 +340,15 @@ abstract class ModelDefinition implements Object {
 	public function __set($key, $type) {
 		
 		$key = (string)$key;
-		PINQ_DEBUG && assert('is_array($type) && count($type) === 3');
-		
+		PINQ_DEBUG && assert('is_array($type) && count($type) === 2');
+				
 		$this->_fields[$key] = array(
 			'name' => $key,
 			'type' => (int)$type[0],
-			'length' => (int)$type[1],
-			'value' => $type[2],
+			'validate' => array_intersect_key(
+				(array)$type[1],
+				$this->_field_validators
+			),
 		);
 	}
 	
@@ -248,59 +435,6 @@ abstract class ModelDefinition implements Object {
 	 */
 	public function hasField($field) {
 		return isset($this->_fields[$field]);
-	}
-	
-	/**
-	 * $d->coerceValueForField(string $name, mixed $value) -> mixed
-	 *
-	 * Given a field name and a value, coerce the value to the specific tyoe
-	 * as defined in the model. If the field does not exist in the model then
-	 * NULL is returned.
-	 */
-	public function coerceValueForField($field, $value) {
-		
-		$field = (string)$field;
-		
-		// this model doesn't contain the supplied field
-		if(!$this->hasField($field) || NULL === $value)
-			return NULL;
-		
-		$context = $this->_fields[$field];
-		
-		switch($context['type']) {
-			
-			case self::TYPE_INT:				
-				return (int)$value;
-			
-			case self::TYPE_BOOLEAN:
-				return (int)(bool)$value;
-			
-			case self::TYPE_FLOAT:
-				return (float)$value;
-			
-			case self::TYPE_BINARY:
-			case self::TYPE_STRING:
-				
-				if(is_object($value) || is_array($value))
-					$value = serialize($value);
-			
-				$ret = (string)$value;
-				if($context['length'] > 0)
-					$ret = substr($ret, 0, $context['length']);
-				
-				return $ret;
-			
-			case self::TYPE_ENUM:
-				return in_array($value, $context['value']) ? $value : NULL;
-			
-			default:
-				throw new InvalidArgumentException(
-					"ModelDefinition::coerceValueForField() cannot cast a ".
-					"value of an unknown or complex type."
-				);
-		}
-		
-		return NULL;
 	}
 	
 	/**

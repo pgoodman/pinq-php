@@ -49,17 +49,18 @@ class IndexController extends AppController {
 		$this->layout['original_route'] = $_GET['route'];
 		$this->layout['title'] = 'View Source';
 	}
-	/*
+	
 	public function ANY_dump($table) {
 		//$this->db->delete(from($table));
 		$rows = $this->db->getAll(from($table)->select(ALL));
-		foreach($rows as $row) {
+		/*foreach($rows as $row) {
 			echo '<pre>';
 			print_r($row);
 			echo '</pre>';
-		}
-		stop();
-	}*/
+		}*/
+		
+		out(count($rows), 'rows');
+	}
 	
 	/**
 	 * About page.

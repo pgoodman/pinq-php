@@ -1,13 +1,4 @@
 
-CREATE TABLE links (
-	id integer primary key,
-	url varchar(255) NOT NULL DEFAULT '',
-	title varchar(100),
-	description TEXT,
-	
-	UNIQUE(url)
-);
-
 CREATE TABLE posts (
 	id integer primary key,
 	title varchar(100),
@@ -53,4 +44,4 @@ CREATE TABLE session (
 	last_active integer,
 	PRIMARY KEY(id)
 );
-CREATE INDEX ON session(last_active);
+CREATE INDEX last_active ON session(last_active);

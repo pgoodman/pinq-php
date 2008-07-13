@@ -53,7 +53,27 @@ abstract class Database implements DataSource {
 		return (bool)$this->query($query, $args);
 	}
 	
+	protected $_tokens = array();
+	
 	/**
+	 * $d->tokenizeSqlStatement(array) -> string
+	 *
+	 * Given a quote-enclosed value inside a query, return a tokenized version
+	 * of that string for replacement and store the original string so that it
+	 * can be replaced back into the query after.
+	 *
+	 * @internal
+	 */
+	final public function tokenizeSqlStatement(array $matches) {
+		$token = md5($matches[0]);
+		$this->_tokens[$token] = $matches[0];
+		
+		return $token;
+	}
+	
+	/**
+	 * $d->substituteArgs(string $query[, array $args]) -> string
+	 *
 	 * Given a SQL query statement, replace all question marks (?) in it with 
 	 * their respecitve values in the $args array. At the same time, make all 
 	 * values in the $args array safe for insertion to the query.
@@ -65,6 +85,18 @@ abstract class Database implements DataSource {
 		
 		if(empty($args))
 			return $stmt;
+		
+		// tokenize the statement so that we don't replace anything inside
+		// any of the existing values in the query. this pattern is a bit
+		// ugly because back references can't be inside character classes.
+		$token_count = 0;
+		$stmt = preg_replace_callback(
+			"~('(([^']|((?<=\\\)'))*)')|(\"(([^\"]|((?<=\\\)\"))*)\")~ix",
+			array($this, 'tokenizeSqlStatement'),
+			$stmt,
+			-1,
+			$token_count
+		);
 		
 		// the arguments array is associative. assume then that the substitutes
 		// in the query are also associative and turn them into question marks
@@ -150,7 +182,19 @@ abstract class Database implements DataSource {
 			}
 		}
 		
-		// sub in the variables, fix the %'s, and return
-		return str_replace('-%-', '%', vsprintf($stmt, $args));
+		// sub in the variables, fix the %'s
+		$stmt = str_replace('-%-', '%', vsprintf($stmt, $args));
+		
+		// replace tokens
+		if($token_count > 0) {
+			$stmt = str_replace(
+				array_keys($this->_tokens),
+				array_values($this->_tokens),
+				$stmt
+			);
+			$this->_tokens = array();
+		}
+		
+		return $stmt;
 	}
 }

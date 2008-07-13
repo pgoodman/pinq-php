@@ -317,6 +317,7 @@ class Query {
 				'select_fields' => array(),
 				'select_counts' => array(),
 				'modify_values' => array(),
+				'errors' => array(),
 			);
 			
 			// make sure that we can always find out the model name used for
@@ -502,6 +503,21 @@ class Query {
 		$this->_context['modify_values'] = array_merge(
 			$this->_context['modify_values'],
 			$keys
+		);
+		
+		return $this;
+	}
+	
+	/**
+	 * $q->errors(array $errors) -> Query
+	 *
+	 * Set some errors that should show up in validation when fields are
+	 * validated.
+	 */
+	public function errors(array $errors) {
+		$this->_context['errors'] = array_merge(
+			$this->_context['errors'],
+			$errors
 		);
 		
 		return $this;
