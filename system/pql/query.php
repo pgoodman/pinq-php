@@ -35,11 +35,11 @@ function in($model_name, $model_alias = NULL) {
 }
 
 /**
- * to(...) <==> from(...) -> Query
+ * into(...) <==> from(...) -> Query
  *
  * @author Peter Goodman
  */
-function to($model_name, $model_alias = NULL) {
+function into($model_name, $model_alias = NULL) {
 	$query = new Query;
 	return $query->from($model_name, $model_alias);
 }

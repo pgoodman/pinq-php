@@ -12,7 +12,7 @@ class UsersDefinition extends DatabaseModelDefinition {
 		
 		$this->email = FieldType::string(array(
 			'max_length' => 100,
-			//'regex' => REGEX_EMAIL,
+			'filter' => array('filter_email'),
 		));
 		$this->display_name = FieldType::string(array(
 			'length_between' => array(4, 20), 
@@ -21,7 +21,6 @@ class UsersDefinition extends DatabaseModelDefinition {
 		$this->url = FieldType::string(array(
 			'optional' => TRUE,
 			'max_length' => 50,
-			//'regex' => REGEX_URL,
 		));
 		$this->password = FieldType::string(array(
 			'filter' => 'md5_salted',
@@ -48,7 +47,7 @@ class UsersGateway extends DatabaseModelGateway {
 			);
 		}
 		
-		$this->insert(to('users')->set($_POST)->errors($errors));
+		$this->insert(into('users')->set($_POST)->errors($errors));
 	}
 }
 

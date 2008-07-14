@@ -84,7 +84,7 @@ class LinearStateMachine extends Stack {
 	 * We're done adding a state, pop it off the stack and place it into the
 	 * progression.
 	 */
-	public function to() {
+	public function into() {
 		return $this->pop();
 	}
 	public function __get($operator) {

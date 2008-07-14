@@ -35,7 +35,11 @@ class AppController extends PinqController {
 		
 		$this->layout[] = array(
 			'blog_name' => 'I/O Reader',
-			'blog_description' => '',
+			'blog_description' => (
+				'Peter Goodman is a freelance computer programmer and '.
+				'computer science student at the University of Western '.
+				'Ontario.'
+			),
 			'blog_keywords' => $keywords,
 			'blog_author' => 'Peter Goodman',
 			'tags' => $tags,
