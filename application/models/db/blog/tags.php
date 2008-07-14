@@ -5,24 +5,27 @@
 class TagsDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
-		$this->id = FieldType::int(array(
-			'optional' => TRUE,
-		));
 		
-		$this->name = FieldType::string(array(
+		$this->id = array(
+			'type' => 'int',
+			'optional' => TRUE,
+		);
+		
+		$this->name = array(
+			'type' => 'string',
 			'filter' => array(
 				array($this, 'cleanTag'),
 			),
 			'length_between' => array(1, 15),
-		));
+		);
 		
-		$this->num_posts = FieldType::int();
+		$this->num_posts = array('type' => 'int',);
 		
 		$this->relatesTo('posts', through('post_tags'));
 	}
 	
 	public function cleanTag($tag) {
-		return preg_replace('~[^a-zA-Z0-9]+~', '', $tag);
+		return trim(preg_replace('~[^a-zA-Z0-9]+~', '', $tag), '-');
 	}
 }
 

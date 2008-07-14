@@ -10,13 +10,12 @@
  *
  * @author Peter Goodman
  */
-abstract class ModelDefinition implements Object {
+abstract class ModelDefinition {
 	
 	// field types
 	const TYPE_UNKNOWN = 0,
 	      TYPE_INT = 1,
 	      TYPE_FLOAT = 2,
-	      TYPE_DOUBLE = 2,
 	      TYPE_STRING = 4,
 	      TYPE_ENUM = 8,
 	      TYPE_BINARY = 16,
@@ -46,6 +45,25 @@ abstract class ModelDefinition implements Object {
 		'regex' => 1, 
 		'min_byte_length' => 1, 
 		'max_byte_length' => 1,
+	);
+	
+	private $_valid_types = array(
+		'int' => self::TYPE_INT,
+		'integer' => self::TYPE_INT,
+		'number' => self::TYPE_INT,
+		
+		'float' => self::TYPE_FLOAT,
+		'double' => self::TYPE_FLOAT,
+		'decimal' => self::TYPE_FLOAT,
+		
+		'bool' => self::TYPE_BOOLEAN,
+		'boolean' => self::TYPE_BOOLEAN,
+		
+		'string' => self::TYPE_STRING,
+		'text' => self::TYPE_STRING,
+		
+		'blob' => self::TYPE_BINARY,
+		'binary' => self::TYPE_BINARY,
 	);
 	
 	/**
@@ -332,25 +350,52 @@ abstract class ModelDefinition implements Object {
 	}
 	
 	/**
-	 * $d->__set(string $key, array $type) <==> $d->$key = $type -> void
+	 * $d->__set(string $key, array $info) <==> $d->$key = $info -> void
 	 *
 	 * Set a field to the model. The field type is a numerically indexed array
 	 * with three elements. The first is integer type of the field, the second
 	 * is the integer length of the field (defaults to 0), and the third is
 	 * the default value (defaults to NULL).
 	 */
-	public function __set($key, $type) {
+	public function __set($key, array $info) {
 		
 		$key = (string)$key;
-		PINQ_DEBUG && assert('is_array($type) && count($type) === 2');
+		
+		if(!isset($info['type'])) {
+			throw new UnexpectedValueException(
+				"Field [{$this->_external_name}.{$key}] must be given a type."
+			);
+		}
 				
+		$type = strtolower($info['type']);
+		unset($info['type']);
+		
+		// invalid type, oh well.
+		if(!isset($this->_valid_types[$type])) {
+			throw new UnexpectedValueException(
+				"Type [{$type}] is not a valid field type in for the field ".
+				"[{$this->_external_name}.{$key}]. Valid field types are: ".
+				implode(', ', array_keys($this->_valid_types)) ."."
+			);
+		}
+		
+		$type = $this->_valid_types[$type];
+		
+		// if this is an enum then OR it in
+		if(isset($info['default']) && is_array($info['default']))
+			$type |= self::TYPE_ENUM;
+		
 		$this->_fields[$key] = array(
 			'name' => $key,
-			'type' => (int)$type[0],
+			'type' => $type,
 			'validate' => array_intersect_key(
-				(array)$type[1],
+				$info,
 				$this->_field_validators
 			),
+			'extra' => array_diff(
+				$info,
+				$this->_field_validators
+			)
 		);
 	}
 	

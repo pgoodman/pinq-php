@@ -64,9 +64,11 @@ class PinqView extends Dictionary implements Package, Factory {
 	      PAGE = 'pages';
 	
 	/**
-	 * PinqView::factory(void) -> View
+	 * PinqView::factory(void) -> PinqView
 	 *
-	 * Factory method to return a new view instance.
+	 * Factory method to return a new view instance. If this class is being
+	 * extended in the /application/packages directory then $_class will be
+	 * that class name.
 	 */
 	static public function factory() {
 		$class = self::$_class;
@@ -74,7 +76,7 @@ class PinqView extends Dictionary implements Package, Factory {
 	}
 	
 	/**
-	 * $v->setFile(string $file, int $type) -> View
+	 * $v->setFile(string $file, int $type) -> PinqView
 	 *
 	 * Set a file to the view. This is not part of the constructor so that
 	 * the views can be bound to a file after they've been created.
@@ -110,14 +112,12 @@ class PinqView extends Dictionary implements Package, Factory {
 		// don't allow hijacking of either $scope or $this
 		unset($immediate_vars['scope'], $immediate_vars['this']);
 		
-		// push the immediate variables onto the scope stack then extract them
 		$scope->push($immediate_vars);
 		extract($scope->top(), EXTR_REFS | EXTR_OVERWRITE);
 		
 		// bring in the view
 		include $this->file;
 		
-		// pop this scopes variables off the scope stack
 		$scope->pop();
 	}
 }

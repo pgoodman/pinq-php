@@ -126,8 +126,8 @@ function pinq($script_file, $app_dir) {
 		
 		// set some of the global variables
 		$packages->load('input-dictionary');
-		$_POST = new PinqInputDictionary($_POST);
-		$_GET = new PinqInputDictionary($_GET);
+		$_POST = PinqInputDictionary::factory($_POST);
+		$_GET = PinqInputDictionary::factory($_GET);
 		
 		// the starting route, taken from the url, it's outside of the
 		// do-while loop because if any controllers yield to another

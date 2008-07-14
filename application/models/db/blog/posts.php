@@ -15,29 +15,41 @@ class PostsDefinition extends DatabaseModelDefinition {
 	
 	public function describe() {
 		
-		$this->id = FieldType::int(array(
+		$this->id = array(
+			'type' => 'int',
 			'optional' => TRUE,
-		));
-		$this->title = FieldType::string(array(
+		);
+		
+		$this->title = array(
+			'type' => 'string',
 			'max_byte_len' => 150,
-		));
-		$this->body = FieldType::text();
-		$this->user_id = FieldType::int();
-		$this->nice_title = FieldType::string(array(
+		);
+		
+		$this->body = array('type' => 'string');
+		
+		$this->user_id = array('type' => 'int',);
+		
+		$this->nice_title = array(
+			'type' => 'string',
 			'filter' => array(
 				array($this, 'cleanTitle')
 			),
 			'max_byte_length' => 100,
 			'min_byte_length' => 5,
-		));
-		$this->created = FieldType::int();
-		$this->status = FieldType::enum(
-			self::DRAFT, 
-			self::PUBLISHED, 
-			self::SPAM
 		);
-		$this->parent_id = FieldType::int();
-		$this->num_children = FieldType::int();
+		
+		$this->created = array('type' => 'int',);
+		
+		$this->status = array(
+			'type' => 'int',
+			'default' => array(
+				self::DRAFT, 
+				self::PUBLISHED, 
+				self::SPAM
+			),
+		);
+		$this->parent_id = array('type' => 'int',);
+		$this->num_children = array('type' => 'int',);
 		
 		// relations
 		$this->user_id->mapsTo('users', 'id');
