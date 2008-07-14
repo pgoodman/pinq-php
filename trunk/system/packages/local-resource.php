@@ -11,7 +11,7 @@
  *
  * @author Peter Goodman
  */
-abstract class PinqResource implements Package {
+abstract class PinqLocalResource implements Package {
 	
 	// package loader
 	protected $packages,
@@ -23,7 +23,7 @@ abstract class PinqResource implements Package {
 	       $layout_file = 'default';
 	
 	/**
-	 * PinqResource(PackageLoader, PinqView $layout, PinqView $page)
+	 * PinqLocalResource(PackageLoader, PinqView $layout, PinqView $page)
 	 */
 	final public function __construct(Loader $packages, PinqView $layout, PinqView $page) {
 		

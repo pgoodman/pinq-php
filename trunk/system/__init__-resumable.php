@@ -218,7 +218,7 @@ function yield($route, $request_method = NULL) {
 			$class = class_name("{$pdir} {$controller} controller");
 			
 			// if we're not working with a valid controller then error
-			if(!is_subclass_of($class, 'PinqResource'))
+			if(!is_subclass_of($class, 'PinqLocalResource'))
 				yield(ERROR_404);
 			
 			// only instantiate a new controller if we're yielding to a
