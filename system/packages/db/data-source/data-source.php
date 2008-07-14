@@ -78,8 +78,12 @@ abstract class Database implements DataSource {
 	 * their respecitve values in the $args array. At the same time, make all 
 	 * values in the $args array safe for insertion to the query.
 	 *
-	 * TODO: currently this function does not support multiple instances of
+	 * @todo Currently this function does not support multiple instances of
 	 *       the same keyed substitution in the query.
+	 *
+	 * @note This function adds a hard limit to one SQL statement per query
+	 *       by destroying anything after the first ; it finds. It will ignore
+	 *       semicolons within values.
 	 */
 	final protected function substituteArgs($stmt = '', array $args = array()) {
 		
@@ -97,6 +101,10 @@ abstract class Database implements DataSource {
 			-1,
 			$token_count
 		);
+		
+		// only allow one sql statement per query. This is reasonably safe to
+		// do after tokenization
+		$stmt = preg_replace('~;(.*)$~s', '', $stmt);
 		
 		// the arguments array is associative. assume then that the substitutes
 		// in the query are also associative and turn them into question marks

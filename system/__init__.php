@@ -126,8 +126,8 @@ function pinq($script_file, $app_dir) {
 		
 		// set some of the global variables
 		$packages->load('input-dictionary');
-		$_POST = PinqInputDictionary::factory($_POST);
-		$_GET = PinqInputDictionary::factory($_GET);
+		$_POST = new PinqInputDictionary($_POST);
+		$_GET = new PinqInputDictionary($_GET);
 		
 		// the starting route, taken from the url, it's outside of the
 		// do-while loop because if any controllers yield to another
@@ -138,8 +138,9 @@ function pinq($script_file, $app_dir) {
 		
 		// create the page and layout views
 		$packages->load('view');
-		$layout_view = PinqView::factory();
-		$layout_view['page_view'] = PinqView::factory();
+		
+		$layout_view = call_user_class_array('PinqView');
+		$layout_view['page_view'] = call_user_class_array('PinqView');
 		
 		// maintain a stack of controllers
 		$events = new Stack;
@@ -165,7 +166,6 @@ function pinq($script_file, $app_dir) {
 				
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} resource");
-				
 				
 				// if we're not working with a valid controller then error
 				if(!is_subclass_of($class, 'PinqResource'))
