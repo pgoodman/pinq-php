@@ -1,13 +1,12 @@
 <?php
 
-class AppController extends PinqController {
+class AppResource extends PinqResource {
 	
 	protected $db,
 	          $session,
 	          $exclude_from_history = FALSE;
 	
 	/**
-	 * Constructor hook.
 	 */
 	protected function __init__() {
 		
@@ -48,7 +47,6 @@ class AppController extends PinqController {
 	}
 	
 	/**
-	 * Destructor hook.
 	 */
 	protected function __del__() {
 		$this->history->push(get_url());
