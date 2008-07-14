@@ -116,11 +116,11 @@ function pinq($script_file, $app_dir) {
 
 		// bring a page controller class. the page controller doesn't actually 
 		// install itself into the packages dictionary
-		$packages->load('controller');
+		$packages->load('resource');
 
 		// bring in and configure the route parser with a context.
 		$router = $packages->load('route-parser', array(
-			'controller_dir' => DIR_APPLICATION .'/controllers/',
+			'controller_dir' => DIR_APPLICATION .'/resources/',
 			'file_extension' => EXT,
 		));
 		
@@ -168,7 +168,7 @@ function pinq($script_file, $app_dir) {
 				
 				
 				// if we're not working with a valid controller then error
-				if(!is_subclass_of($class, 'PinqController'))
+				if(!is_subclass_of($class, 'PinqResource'))
 					yield(ERROR_404);
 				
 				// insantiate the controller and call its action

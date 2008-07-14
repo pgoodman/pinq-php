@@ -3,7 +3,7 @@
 /**
  * Index controller.
  */
-class IndexController extends AppController {
+class IndexController extends AppResource {
 	
 	/**
 	 * Main function for the index controller.
