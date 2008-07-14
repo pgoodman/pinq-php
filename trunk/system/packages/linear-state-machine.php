@@ -113,12 +113,12 @@ class PinqLinearStateMachine extends Stack implements Package, Factory {
 	}
 	
 	/**
-	 * $m->into(void) -> PinqLinearStateMachine
+	 * $m->to(void) -> PinqLinearStateMachine
 	 *
 	 * We're done adding a state, pop it off the stack and place it into the
 	 * progression.
 	 */
-	public function into() {
+	public function to() {
 		return $this->pop();
 	}
 	
