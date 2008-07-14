@@ -4,11 +4,12 @@
 
 class SessionDefinition extends DatabaseModelDefinition {
 	public function describe() {
-		$this->id = FieldType::string(array(
+		$this->id = array(
+			'type' => 'string',
 			'max_length' => 32,
-		));
-		$this->data = FieldType::text();
-		$this->last_active = FieldType::int();
+		);
+		$this->data = array('type' => 'string',);
+		$this->last_active = array('type' => 'int',);
 	}
 }
 
