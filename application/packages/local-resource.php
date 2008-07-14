@@ -1,6 +1,6 @@
 <?php
 
-class AppResource extends PinqResource {
+class AppLocalResource extends PinqLocalResource {
 	
 	protected $db,
 	          $auth,

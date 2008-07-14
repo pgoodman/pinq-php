@@ -3,7 +3,7 @@
 /**
  * Admin post controller.
  */
-class AdminPostResource extends AppResource {
+class AdminPostLocalResource extends AppLocalResource {
 	
 	public function ANY_index() {
 		out('nothing to see here...');
