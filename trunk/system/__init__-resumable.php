@@ -146,7 +146,7 @@ function yield($route, $request_method = NULL) {
 	if(NULL === $config) {
 		
 		// set things up!
-		$config = new ConfigLoader;
+		$config = call_user_class('ConfigLoader');
 		$config->load('config');
 
 		// a pattern for what we expect the host to be
@@ -158,7 +158,7 @@ function yield($route, $request_method = NULL) {
 		require_once DIR_SYSTEM .'/globals.php';	
 
 		// bring in the package loader
-		$packages = new PackageLoader($config);
+		$packages = call_user_class('PackageLoader', $config);
 
 		// bring a page controller class. the page controller doesn't actually 
 		// install itself into the packages dictionary
@@ -172,16 +172,16 @@ function yield($route, $request_method = NULL) {
 	
 		// set some of the global variables
 		$packages->load('input-dictionary');
-		$_POST = PinqInputDictionary::factory($_POST);
-		$_GET = PinqInputDictionary::factory($_GET);
+		$_POST = call_user_class('PinqInputDictionary', $_POST);
+		$_GET = call_user_class('PinqInputDictionary', $_GET);
 	
 		// create the page and layout views
 		$packages->load('view');
-		$layout_view = PinqView::factory();
-		$layout_view['page_view'] = PinqView::factory();
+		$layout_view = call_user_class('PinqView');
+		$layout_view['page_view'] = call_user_class('PinqView');
 	
 		// maintain a stack of controllers
-		$events = new Stack;
+		$events = call_user_class('Stack');
 		$scope_stack = $packages->load('scope-stack');
 	}
 	
@@ -224,11 +224,11 @@ function yield($route, $request_method = NULL) {
 			// only instantiate a new controller if we're yielding to a
 			// different controller
 			//if($events->isEmpty() || get_class($events->top()) != $class) {
-			$event = new $class(
+			$event = call_user_class_array($class, array(
 				$packages, 
 				$layout_view, 
 				$layout_view['page_view']
-			);
+			));
 			$events->push($event);
 			$event->beforeAction();
 			

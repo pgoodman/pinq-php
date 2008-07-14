@@ -12,7 +12,10 @@
  * @author Peter Goodman
  */
 function element_view($id) {
-	return  PinqView::factory()->setFile((string)$id, PinqView::ELEMENT);
+	return  call_user_class_array('PinqView')->setFile(
+		(string)$id, 
+		PinqView::ELEMENT
+	);
 }
 
 /**
@@ -23,7 +26,10 @@ function element_view($id) {
  * @author Peter Goodman
  */
 function page_view($id) {
-	return PinqView::factory()->setFile((string)$id, PinqView::PAGE);
+	return call_user_class_array('PinqView')->setFile(
+		(string)$id, 
+		PinqView::PAGE
+	);
 }
 
 /**
@@ -34,7 +40,10 @@ function page_view($id) {
  * @author Peter Goodman
  */
 function layout_view($id) {
-	return PinqView::factory()->setFile((string)$id, PinqView::LAYOUT);
+	return call_user_class_array('PinqView')->setFile(
+		(string)$id, 
+		PinqView::LAYOUT
+	);
 }
 
 /**

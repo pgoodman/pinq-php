@@ -68,6 +68,12 @@ function call_user_class_array($class_name, array $args = array()) {
 		);
 	}
 	
+	// this method has a factory function, use it
+	if(in_array('Factory', class_implements($class_name, FALSE))) {
+		$reflector = new ReflectionMethod($class_name, 'factory');
+		return $reflector->invokeArgs(NULL, $args);
+	}
+	
 	// don't load up reflection unnecessarily	
 	if(empty($args))
 		return new $class_name;

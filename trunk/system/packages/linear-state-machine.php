@@ -10,7 +10,7 @@
  * @author Peter Goodman
  */
 function states() {
-	return PinqLinearStateMachine::factory();
+	return call_user_class_array('PinqLinearStateMachine');
 }
 
 /**

@@ -6,7 +6,9 @@ class UsersResource extends AppResource {
 	 * Show the user registration form.
 	 */
 	public function GET_register() {
-				
+		
+		$this->history->exclude();
+		
 		if($this->auth->isLogged())
 			yield(ERROR_500);
 	}
