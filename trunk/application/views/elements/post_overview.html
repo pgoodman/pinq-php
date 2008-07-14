@@ -2,7 +2,7 @@
 	<legend><a href="<?=$post['perma_link']?>"><?=$post['title']?></a></legend>
 	<dl>
 		<dt>Posted On</dt><dd><?=$post['display_created']?></dd>
-		<!--<dt>Posted By</dt><dd><a href="<?=$user['perma_link']?>" title="view <?=$user['display_name']?>'s profile"><?=$user['display_name']?></a></dd>-->
+		<dt>Posted By</dt><dd><a href="<?=$user['perma_link']?>" title="view <?=$user['display_name']?>'s profile"><?=$user['display_name']?></a></dd>
 		<dt>Number of Comments</dt><dd><?=(int)$post['num_children']?></dd>
 	</dl>
 </fieldset>

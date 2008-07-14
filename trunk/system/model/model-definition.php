@@ -158,6 +158,8 @@ abstract class ModelDefinition implements Object {
 		$fields = array_intersect_key($fields, $this->_fields);
 		
 		foreach($fields as $field => $value) {
+			
+			$type = $this->_fields[$field]['type'];
 			$context = $this->_fields[$field]['validate'];
 			
 			if(empty($context))
@@ -251,7 +253,7 @@ abstract class ModelDefinition implements Object {
 						foreach($using as $callback) {
 							$value = call_user_func($callback, $value);
 							if(FALSE === $value
-							   && $context['type'] != self::TYPE_BOOLEAN) {
+							   && $type ^ self::TYPE_BOOLEAN) {
 								$errors[$field]['filter'] = (
 									"An error occured while filtering this ".
 									"field."

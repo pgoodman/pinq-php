@@ -125,24 +125,26 @@ class DatabaseQueryCompiler extends QueryCompiler {
 	 * the joins recursively.
 	 * @internal
 	 */
-	protected function recursiveJoin($dependent_model_name, 
+	protected function recursiveJoin($dependent_model_alias, 
 	                           array $graph = array(), 
 	                                 $prefix) {
 		
 		$sql = '';
 		$comma = '';
 		$query = $this->query;
-		$dependent_table_name = $query->getUnaliasedModelName(
-			$dependent_model_name
+		
+		$dependent_model_name = $query->getUnaliasedModelName(
+			$dependent_model_alias
 		);
 		
-		foreach($graph as $model_name => $dependencies) {
+		foreach($graph as $model_alias => $dependencies) {
 			
 			// if the alias is the same as the table name then we don't want
 			// to alias it
+			$model_name = $this->query->getUnaliasedModelName($model_alias);
 			$table_name = $this->getInternalModelName($model_name);
 			
-			if($model_name == $table_name)
+			if($model_alias == $table_name)
 				$table_name = '';
 			
 			// add in a leading comma for top-level froms and a join prefix
@@ -157,34 +159,35 @@ class DatabaseQueryCompiler extends QueryCompiler {
 					'INNER JOIN'
 				);
 				
-				$sql .= "({$table_name} {$model_name} {$joins})";
+				$sql .= "({$table_name} {$model_alias} {$joins})";
 			
 			// no more recursion necessary, start popping off the call stack
 			} else
-				$sql .= "{$table_name} {$model_name}";
+				$sql .= "{$table_name} {$model_alias}";
 			
 			// if we have something to join on, do it
-			if(!empty($dependent_model_name)) {
+			
+			if(!empty($dependent_model_alias)) {
 				
 				// this will return direct relations each time. The ordering
 				// is arbitrary. Note that most of this has already been
 				// cached when we generated the graph so this function is
 				// essentially free	
-				$relation = $this->relations->getPath(
-					$dependent_table_name,
-					$table_name,
+				$path = $this->relations->getPath(
+					$dependent_model_name,
+					$model_name,
 					$this->models
 				);
 				
-				if(empty($relation))
+				if(empty($path))
 					continue;
 				
 				// get the left and right columns out of the first relation				
-				$right_column = $relation[0][1];
-				$left_column = $relation[1][1];
+				$right_column = $path[0][1];
+				$left_column = $path[1][1];
 				
-				$sql .= " ON {$dependent_model_name}.{$right_column}=".
-				        "{$model_name}.{$left_column}";
+				$sql .= " ON {$dependent_model_alias}.{$right_column}=".
+				        "{$model_alias}.{$left_column}";
 			}
 			
 			// if we are dealing with the top-level froms then they need to

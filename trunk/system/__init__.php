@@ -215,7 +215,7 @@ function pinq($script_file, $app_dir) {
 				unset($layout_view);
 			
 			// the controller has yielded its control to another controller
-			} catch(YieldControlException $y) {
+			} catch(YieldResourceException $y) {
 				
 				// clear the output buffer for the new action
 				OutputBuffer::clearAll();
@@ -261,6 +261,9 @@ function pinq($script_file, $app_dir) {
 	// none but there's no guarantee.
 	} catch(Exception $e) {
 		echo $e->getMessage();
+		echo '<pre>';
+		print_r($e->getTrace());
+		echo '</pre>';
 	}
 
 	// break references, we're done.

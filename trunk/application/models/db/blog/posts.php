@@ -89,8 +89,8 @@ class PostsGateway extends DatabaseModelGateway {
 	public function getPartialQuery() {
 		return (
 			parent::getPartialQuery()->
-			from('users')->select(ALL)->
-			link('posts', 'users')->
+			from('users', 'u')->select(ALL)->
+			link('posts', 'u')->
 			order()->posts('created')->desc->
 			where()->posts('status')->is(PostsDefinition::PUBLISHED)
 		);
