@@ -255,8 +255,7 @@ function pinq($script_file, $app_dir) {
 	} catch(HttpRedirectException $r) {
 		
 		set_http_status(303);
-		
-		echo 'redirect: '. $r->getLocation();
+		$redirect_to = $r->getLocation();
 
 	// catch ALL exceptions that have bubbled up this far. We hope there are 
 	// none but there's no guarantee.
@@ -266,4 +265,7 @@ function pinq($script_file, $app_dir) {
 
 	// break references, we're done.
 	unset($_SESSION, $config, $packages);
+	
+	if(isset($redirect_to))
+		header("Location: {$redirect_to}");
 }

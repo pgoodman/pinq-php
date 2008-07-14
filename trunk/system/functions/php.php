@@ -161,3 +161,29 @@ function unset_http_cookie($name) {
 function md5_salted($str) {
 	md5("ce92ac8710e7879{$str}9351b8a5a4730ec10");
 }
+
+/**
+ * checkdnsrr(string $host[, string $type]) -> bool
+ *
+ * Check DNS records corresponding to a given Internet host name or IP address.
+ */
+if(!function_exists('checkdnsrr')){
+    function checkdnsrr($host, $type='') {
+        if(!empty($host)) {
+            $type = (empty($type)) ? 'MX' :  $type;
+            exec('nslookup -type='.$type.' '.escapeshellcmd($host), $result);
+			
+            $it = new RegexIterator(
+				new ArrayIterator($result), 
+				'~^'. preg_quote($host) .'~', 
+				RegexIterator::GET_MATCH
+			);
+			
+            foreach($it as $result) {
+                if($result)
+                    return TRUE;
+            }
+        }
+        return FALSE;
+    }
+}

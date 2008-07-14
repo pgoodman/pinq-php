@@ -26,12 +26,12 @@ class InstallController extends PinqController {
 			$this->db->insert($query);
 		}
 		
-		$new_tag = to('tags')->set(array(
+		$new_tag = into('tags')->set(array(
 			'id' => NULL,
 			'name' => _,
 			'num_posts' => _,
 		));
-		$tag_link = to('post_tags')->set(array(
+		$tag_link = into('post_tags')->set(array(
 			'post_id' => _,
 			'tag_id' => _,
 		));
@@ -49,7 +49,7 @@ class InstallController extends PinqController {
 		$this->db->insert($new_tag, array('code', 1));
 		
 		// add in our first post
-		$this->db->insert(to('posts')->set(array(
+		$this->db->insert(into('posts')->set(array(
 			'id' => NULL,
 			'title' => 'First blog post',
 			'nice_title' => 'first-blog-post',
@@ -64,7 +64,7 @@ class InstallController extends PinqController {
 		$this->db->insert($tag_link, array(1, 11));
 		
 		// add in our first post
-		$this->db->insert(to('posts')->set(array(
+		$this->db->insert(into('posts')->set(array(
 			'id' => NULL,
 			'title' => 'Second blog post',
 			'nice_title' => 'second-blog-post',
@@ -79,7 +79,7 @@ class InstallController extends PinqController {
 		$this->db->insert($tag_link, array(2, 2));
 		$this->db->insert($tag_link, array(2, 10));
 		
-		$this->db->insert(to('posts')->set(array(
+		$this->db->insert(into('posts')->set(array(
 			'id' => NULL,
 			'title' => 'Third blog post',
 			'nice_title' => 'third-blog-post',
@@ -94,7 +94,7 @@ class InstallController extends PinqController {
 		$this->db->insert($tag_link, array(3, 10));
 		
 		// add in our first user
-		$this->db->insert(to('users')->set(array(
+		$this->db->insert(into('users')->set(array(
 			'id' => NULL,
 			'email' => 'peter.goodman@gmail.com',
 			'display_name' => 'Peter Goodman',

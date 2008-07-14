@@ -1,13 +1,8 @@
 <?php
 
-/**
- * man(string) <==> help(string)
- *
- * @author Peter Goodman
- */
-function man($thing) {
-	help($thing);
-}
+/* $Id$ */
+
+!defined('DIR_SYSTEM') && exit();
 
 /**
  * help(mixed) -> void

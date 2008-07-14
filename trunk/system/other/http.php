@@ -187,7 +187,7 @@ class HttpContinuation implements Continuation, Stateful {
 	 * the intermediate states in the backround and account for their side-
 	 * effects.
 	 */
-	public function goto(HttpState $state) {
+	public function gointo(HttpState $state) {
 		
 	}
 	
