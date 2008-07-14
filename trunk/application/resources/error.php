@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-class ErrorController extends AppResource {	
+class ErrorResource extends AppResource {	
 	
 	//public $layout_file = 'error';
 	

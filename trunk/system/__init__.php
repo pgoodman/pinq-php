@@ -164,7 +164,7 @@ function pinq($script_file, $app_dir) {
 				require_once $dir .'/'. $controller . EXT;
 				
 				// get the class name and clean up the method name
-				$class = class_name("{$pdir} {$controller} controller");
+				$class = class_name("{$pdir} {$controller} resource");
 				
 				
 				// if we're not working with a valid controller then error

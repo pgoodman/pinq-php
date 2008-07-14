@@ -1,6 +1,6 @@
 <?php
 
-class UsersController extends AppResource {
+class UsersResource extends AppResource {
 	
 	/**
 	 * Show the user registration form.

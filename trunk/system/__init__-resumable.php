@@ -126,7 +126,7 @@ function pinq($script_file, $app_dir) {
  * yield(string $route[, string $request_method])
  *
  * Yield control to another controller's action by passing in a route to that
- * controller's action. This function works by throwing a new YieldControllerException
+ * controller's action. This function works by throwing a new YieldResourceException
  * exception.
  *
  * @note The action being called will be called using the same request method
@@ -254,7 +254,7 @@ function yield($route, $request_method = NULL) {
 			unset($event);
 			
 			// return to the yielding controller
-			if($e instanceof ResumeControllerException) {
+			if($e instanceof ResumeResourceException) {
 				
 				// return from here if there is something on the even stack. if
 				// there is nothing on the event stack then we will return
@@ -265,7 +265,7 @@ function yield($route, $request_method = NULL) {
 				$return = $e->getArgs();
 			
 			// we want the current event to be a leaf event
-			} else if($e instanceof StopControllerException) {
+			} else if($e instanceof StopResourceException) {
 				if(!$events->isEmpty())
 					throw $e;			
 			}
@@ -302,7 +302,7 @@ function yield($route, $request_method = NULL) {
 		return $return;
 		
 		// the controller has yielded its control to another controller
-		/*} catch(YieldControllerException $y) {
+		/*} catch(YieldResourceException $y) {
 			
 			// clear the output buffer for the new action
 			OutputBuffer::clearAll();
@@ -354,10 +354,10 @@ function yield($route, $request_method = NULL) {
 }
 
 function stop() {
-	throw new StopControllerException;
+	throw new StopResourceException;
 }
 
 function resume() {
 	$args = func_get_args();
-	throw new ResumeControllerException($args);
+	throw new ResumeResourceException($args);
 }

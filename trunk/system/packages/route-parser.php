@@ -36,8 +36,8 @@ function __sort_routes(array $a, array $b) {
  *     disirable to have methods other than index that are available. However,
  *     methods other than *_index of an application index controller are only
  *     accessible directly, as show:
- *         /                  -> IndexController::ANY_index
- *         /index/method      -> IndexController::ANY_method
+ *         /                  -> IndexResource::ANY_index
+ *         /index/method      -> IndexResource::ANY_method
  *
  *     To be able to access /index/method instead as /method, one would add
  *     the following route re-mapping in the /application/config/package.route
@@ -54,7 +54,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			  $path = array();	 // information about the current path
 	
 	protected $allowed_chars = "a-zA-Z0-9_+-",
-			  $default_controller = 'index',
+			  $default_resource = 'index',
 			  $default_method = 'index';
 	
 	// some config stuff
@@ -143,7 +143,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		return array(
 			$this->base_dir .'/',
 			'/',
-			$this->default_controller,
+			$this->default_resource,
 			$this->default_method,
 			array()
 		);
@@ -257,7 +257,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$route = $path = trim($this->cleanPath($route), '/');
 		
 		// set up the defaults
-		$controller = $this->default_controller;
+		$controller = $this->default_resource;
 		$method = $this->default_method;
 		$directory = $this->base_dir;
 		$partial_directory = '/';
