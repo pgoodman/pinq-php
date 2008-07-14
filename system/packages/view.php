@@ -104,16 +104,14 @@ class PinqView extends Dictionary implements Package, Factory {
 		// set the immediate vars
 		$immediate_vars = array_merge(
 			$this->toArray(),
-			($vars instanceof Record) ? $vars->toArray() : (array)$vars
+			($vars instanceof Dictionary) ? $vars->toArray() : (array)$vars
 		);
 		
-		// don't allow hijacking of either the scope or $this
+		// don't allow hijacking of either $scope or $this
 		unset($immediate_vars['scope'], $immediate_vars['this']);
 		
-		// push the immediate variables onto the scope stack
+		// push the immediate variables onto the scope stack then extract them
 		$scope->push($immediate_vars);
-
-		// extract the immediate variables into the current scope
 		extract($scope->top(), EXTR_REFS | EXTR_OVERWRITE);
 		
 		// bring in the view
