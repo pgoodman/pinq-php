@@ -244,7 +244,7 @@ abstract class ModelDefinition implements Object {
 						break;
 					
 					case 'filter':
-						if(!is_array($using))
+						if(is_callable($using))
 							$using = array($using);
 						
 						// apply the filters

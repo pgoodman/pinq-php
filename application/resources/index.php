@@ -3,7 +3,7 @@
 /**
  * Index controller.
  */
-class IndexController extends AppResource {
+class IndexResource extends AppResource {
 	
 	/**
 	 * Main function for the index controller.
@@ -53,11 +53,11 @@ class IndexController extends AppResource {
 	public function ANY_dump($table) {
 		//$this->db->delete(from($table));
 		$rows = $this->db->getAll(from($table)->select(ALL));
-		/*foreach($rows as $row) {
+		foreach($rows as $row) {
 			echo '<pre>';
 			print_r($row);
 			echo '</pre>';
-		}*/
+		}
 		
 		out(count($rows), 'rows');
 	}

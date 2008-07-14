@@ -23,7 +23,8 @@ class UsersDefinition extends DatabaseModelDefinition {
 			'max_length' => 50,
 		));
 		$this->password = FieldType::string(array(
-			'filter' => 'md5_salted',
+			'length_between' => array(1, 20),
+			'filter' => array('md5_salted'),
 			'max_length' => 32,
 		));
 		$this->login_key = FieldType::string(array(

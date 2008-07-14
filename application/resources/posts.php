@@ -3,7 +3,7 @@
 /**
  * Posts controller.
  */
-class PostsController extends AppResource {
+class PostsResource extends AppResource {
 	
 	/**
 	 * View a single post and its comments.

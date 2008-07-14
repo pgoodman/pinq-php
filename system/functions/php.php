@@ -159,7 +159,7 @@ function unset_http_cookie($name) {
  * @author Peter Goodman
  */
 function md5_salted($str) {
-	md5("ce92ac8710e7879{$str}9351b8a5a4730ec10");
+	return md5("ce92ac8710e7879{$str}9351b8a5a4730ec10");
 }
 
 /**
