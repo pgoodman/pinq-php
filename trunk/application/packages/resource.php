@@ -3,7 +3,8 @@
 class AppResource extends PinqResource {
 	
 	protected $db,
-	          $session,
+	          $auth,
+	          $history,
 	          $exclude_from_history = FALSE;
 	
 	/**
