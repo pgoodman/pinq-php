@@ -99,7 +99,6 @@ function pinq($script_file, $app_dir) {
 	define('DIR_APPLICATION', $app_dir);
 		
 	try {
-
 		// set things up!
 		$config = new ConfigLoader;
 		$config->load('config');
@@ -124,22 +123,23 @@ function pinq($script_file, $app_dir) {
 			'controller_dir' => DIR_APPLICATION .'/resources/',
 			'file_extension' => EXT,
 		));
-		
+
 		// set some of the global variables
 		$packages->load('input-dictionary');
 		$_POST = PinqInputDictionary::factory($_POST);
 		$_GET = PinqInputDictionary::factory($_GET);
-		
+
 		// the starting route, taken from the url, it's outside of the
 		// do-while loop because if any controllers yield to another
 		// controller then the route to go to is passed in through the yield-
 		// control exception and set in the catch() block.
 		$route = get_route();
 		$request_method = get_request_method();
-		
+
 		// maintain a stack of controllers
 		$events = new Stack;
-		
+		$event = NULL;
+
 		do {
 			// look for a yield or a flush buffer
 			try {
@@ -152,19 +152,22 @@ function pinq($script_file, $app_dir) {
 				// parser
 				list($dir, $pdir, $controller, $method, $arguments) = $path_info;
 				
-				// bring in the controller file, we know it exists because the 
-				// route parser figured that out.
-				if(!file_exists($dir .'/'. $controller . EXT))
-					yield(ERROR_404);
-				
-				require_once $dir .'/'. $controller . EXT;
-				
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} local resource");
 				
-				// if we're not working with a valid controller then error
-				if(!is_subclass_of($class, 'PinqLocalResource'))
-					yield(ERROR_404);
+				// bring in the controller file, we know it exists because the 
+				// route parser figured that out.
+				if(!class_exists($class, FALSE)) {
+					
+					if(!file_exists($dir .'/'. $controller . EXT))
+						yield(ERROR_404);
+				
+					require_once $dir .'/'. $controller . EXT;
+				
+					// if we're not working with a valid controller then error
+					if(!is_subclass_of($class, 'PinqLocalResource'))
+						yield(ERROR_404);
+				}
 				
 				$file = "{$pdir}/{$controller}";
 				
@@ -185,16 +188,6 @@ function pinq($script_file, $app_dir) {
 				// call the method
 				$event->beforeAction($method);
 				call_user_func_array(array($event, $method), $arguments);
-				
-				// call all of the acter action hooks built up through yielding
-				// and garbage collect the controllers. This is to simulate a
-				// proper call stack.
-				while(!$events->isEmpty()) {
-					$event = $events->pop();
-					$event->afterAction($method);
-					unset($event);
-				}
-				unset($events);
 			
 			// the controller has yielded its control to another controller
 			} catch(YieldResourceException $y) {
@@ -239,6 +232,9 @@ function pinq($script_file, $app_dir) {
 		
 		set_http_status(303);
 		$redirect_to = $r->getLocation();
+		
+		if($event)
+			$event->abort();
 
 	// catch ALL exceptions that have bubbled up this far. We hope there are 
 	// none but there's no guarantee.
@@ -248,9 +244,24 @@ function pinq($script_file, $app_dir) {
 		print_r($e->getTrace());
 		echo '</pre>';
 	}
-
+	
+	// call all of the after-action hooks built up through yielding
+	// and garbage collect the controllers. This is to simulate a
+	// proper call stack.
+	while(!$events->isEmpty()) {
+		$event = $events->pop();
+		$event->afterAction();
+		unset($event);
+	}
+	
 	// break references, we're done.
-	unset($_SESSION, $config, $packages);
+	unset(
+		$events, 
+		$router,
+		$_SESSION, $_POST, $_GET, 
+		$config, 
+		$packages
+	);
 	
 	if(isset($redirect_to))
 		header("Location: {$redirect_to}");
