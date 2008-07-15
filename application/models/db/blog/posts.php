@@ -23,6 +23,7 @@ class PostsDefinition extends DatabaseModelDefinition {
 		$this->title = array(
 			'type' => 'string',
 			'max_byte_len' => 150,
+			'default' => NULL,
 		);
 		
 		$this->body = array('type' => 'string');

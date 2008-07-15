@@ -1,6 +1,6 @@
 <? $i = 1; ?>
 <div class="section">
-	<form method="post" action="<?=url('posts',isset($post)?$post['id']:0)?>">
+	<form method="post" action="<?=get_url()?>">
 		<dl>		
 			<?if(!$scope['logged_in']):?>		
 			<dt>Email</dt>
