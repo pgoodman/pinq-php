@@ -33,16 +33,57 @@ class PostsLocalResource extends AppLocalResource {
 	/**
 	 * Add a new comment.
 	 */
-	public function POST_index($parent_id = 0) {
+	public function POST_index($nice_title = '') {
 		
-		$parent_id = (int)base36_decode($parent_id);
-		if(NULL === $this->db->posts->getBy('id', $parent_id))
-			$parent_id = 0;
+		$post = $this->db->posts->getBy('nice_title', $nice_title);
 		
-		// people aren't allowed to post top-level posts
-		if($parent_id === 0)
-			yield(ERROR_401);
+		// people aren't (currently) allowed to post to sub-level posts
+		if(!$post || $post['parent_id'] != 0)
+			yield(ERROR_404);
 		
+		if(!$this->auth->isLogged()) {
+			
+			$form_errors = array();
+			
+			if(!$_POST['regme']) {
+				
+				// try to log the poster in
+				$this->auth->login(
+					$_POST['email'], 
+					$_POST['password'], 
+					TRUE
+				
+				// login failed
+				) or $form_errors = array(
+					'logme' => array('Invalid email/password combination.'),
+				);
+			
+			} else {
+				try {
+					$this->db->users->register($_POST);
+				} catch(FailedValidationException $e) {
+					$form_errors = $e->getErrors();
+				}
+			}
+			
+			if(!empty($form_errors)) {
+				$this->view['form_errors'] = $form_errors;
+				yield(get_route(), 'GET');
+			}
+		}
 		
+		try {
+			$this->db->insert(into('posts')->set(array(
+				'parent_id' => $post['id'],
+				'id' => NULL,
+				'body' => $_POST['body'],
+				'title' => NULL,
+				'user_id' => NULL,
+			)));
+			
+		} catch(FailedValidationException $e) {
+			$this->view['form_errors'] = $e->getErrors();
+			yield(get_route(), 'GET');
+		}
 	}
 }

@@ -74,6 +74,7 @@ require_once DIR_SYSTEM .'/data-source/__init__.php';
 require_once DIR_SYSTEM .'/output-buffer.php';
 require_once DIR_SYSTEM .'/config-loader.php';
 require_once DIR_SYSTEM .'/package-loader.php';
+require_once DIR_SYSTEM .'/resource.php';
 require_once DIR_SYSTEM .'/functions/__init__.php';
 
 /**
@@ -136,12 +137,6 @@ function pinq($script_file, $app_dir) {
 		$route = get_route();
 		$request_method = get_request_method();
 		
-		// create the page and layout views
-		$packages->load('view');
-		
-		$layout_view = call_user_class_array('PinqView');
-		$layout_view['page_view'] = call_user_class_array('PinqView');
-		
 		// maintain a stack of controllers
 		$events = new Stack;
 		
@@ -171,48 +166,35 @@ function pinq($script_file, $app_dir) {
 				if(!is_subclass_of($class, 'PinqLocalResource'))
 					yield(ERROR_404);
 				
-				// insantiate the controller and call its action
-				if($events->isEmpty() || get_class($events->top()) != $class) {
-					$events->push(new $class(
-						$packages, 
-						$layout_view, 
-						$layout_view['page_view']
-					));
+				$file = "{$pdir}/{$controller}";
+				
+				// push a new resource onto the stack
+				if($events->isEmpty())
+					$events->push(new $class($packages, $file));
+				
+				// abort the previous event if it's different from this one
+				else if(get_class($events->top()) != $class) {
+					$events->top()->abort();
+					$events->push(new $class($packages, $file));
 				}
 				
-				// call the action and figure out which method was called
+				// figure out what method to call
 				$event = $events->top();
-				$event->beforeAction();
-				$event->act(
-					$request_method, 
-					$method, 
-					$arguments, 
-					"{$pdir}/{$controller}/"
-				);
+				$method = $event->getMethod($request_method, $method);
 				
-				// get some view info before we finish with the controller
-				// stuff
-				$render_layout = (bool)$event->render_layout;
+				// call the method
+				$event->beforeAction($method);
+				call_user_func_array(array($event, $method), $arguments);
 				
 				// call all of the acter action hooks built up through yielding
 				// and garbage collect the controllers. This is to simulate a
 				// proper call stack.
 				while(!$events->isEmpty()) {
 					$event = $events->pop();
-					$event->afterAction();
+					$event->afterAction($method);
 					unset($event);
 				}
 				unset($events);
-				
-				// render and output the layout view
-				if($render_layout) {
-					$layout_view->render(
-						$packages->load('scope-stack')
-					);
-				}
-				
-				// layout view no longer needed
-				unset($layout_view);
 			
 			// the controller has yielded its control to another controller
 			} catch(YieldResourceException $y) {
@@ -225,18 +207,19 @@ function pinq($script_file, $app_dir) {
 				// an error that threw an exception
 				err($y->getMessage());
 				
-				// don't want infinite loop!
 				$new_route = $y->getRoute();
 				$new_request_method = $y->getRequestMethod();
 				
-				if($route === $new_route && $request_method == $new_request_method) {
+				// if the inputs are the same then rethrow the exception to
+				// avoid an infinite loop
+				if($route == $new_route && $request_method == $new_request_method)
 					throw $y;
-				}
 				
-				// change the next route that will be parsed
+				// change the next route that will be parsed and abort the
+				// previous event
 				$route = $new_route;
 				$request_method = $new_request_method;
-								
+				
 				continue;
 				
 			// output and stop, we catch this early 

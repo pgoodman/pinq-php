@@ -50,7 +50,7 @@ function layout_view($id) {
  * Represents a single view.
  * @author Peter Goodman
  */
-class PinqView extends Dictionary implements Package, Factory {
+class PinqView extends Dictionary implements InstantiablePackage, Factory {
 	
 	protected $file;
 	
@@ -83,8 +83,8 @@ class PinqView extends Dictionary implements Package, Factory {
 	 */
 	public function setFile($file, $type) {
 		
-		$file = DIR_APPLICATION ."/views/{$type}/{$file}.html";
-				
+		$file = realpath(DIR_APPLICATION ."/views/{$type}/{$file}.html");
+		
 		// only set the file if it exists
 		if(is_readable($file))
 			$this->file = $file;

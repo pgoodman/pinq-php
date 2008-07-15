@@ -11,6 +11,8 @@ class AppLocalResource extends PinqLocalResource {
 	 */
 	protected function __init__() {
 		
+		parent::__init__();
+		
 		// set up the basic template stuff
 		$keywords = array('Peter Goodman', 'peter', 'goodman', 'programming');
 		$logged_in = FALSE;
@@ -51,6 +53,12 @@ class AppLocalResource extends PinqLocalResource {
 	 */
 	protected function __del__() {
 		$this->history->push(get_url());
-		unset($this->auth, $this->history, $this->db);
+		unset(
+			$this->auth, 
+			$this->history, 
+			$this->db
+		);
+		
+		parent::__del__();
 	}
 }

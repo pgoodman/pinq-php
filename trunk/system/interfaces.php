@@ -40,6 +40,11 @@ interface Gateway {
 	public function __call($model_name, array $select = array(ALL));
 }
 
+/**
+ * Interface for classes that have a factory method.
+ *
+ * @author Peter Goodman
+ */
 interface Factory {
 	static public function factory();
 }
