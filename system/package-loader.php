@@ -102,8 +102,6 @@ class PackageLoader extends Loader {
 		// packages are given as dir.subdir.subdir. etc
 		$key = strtolower($key);
 		
-		
-		
 		// search in both the system and application directories. this will
 		// look first in the applications directory
 		$search_where = array(DIR_APPLICATION, DIR_SYSTEM);
