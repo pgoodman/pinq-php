@@ -6,6 +6,7 @@
 
 interface RecordIterator extends Countable, SeekableIterator {
 	public function shift();
+	public function pop();
 }
 
 /**
@@ -16,13 +17,15 @@ interface RecordIterator extends Countable, SeekableIterator {
 abstract class InnerRecordIterator implements RecordIterator {
 	
 	protected $_key,
-	          $_offset;
+	          $_offset,
+	          $_limit;
 	
 	/**
 	 * InnerRecordIterator(void)
 	 */
 	public function __construct() {
 		$this->_key = $this->_offset = 0;
+		$this->_limit = $this->count();
 	}
 	
 	/**
@@ -46,6 +49,27 @@ abstract class InnerRecordIterator implements RecordIterator {
 	}
 	
 	/**
+	 * $i->pop(void) -> mixed
+	 *
+	 * Pop off and return the last record from the record iterator. If there
+	 * are no records left then this will return NULL.
+	 */
+	public function pop() {
+		try {
+			$this->seek($this->_limit - 1);
+			$ret = $this->current();
+			
+			$this->_limit--;
+			$this->rewind();
+			
+			return $ret;
+		
+		} catch(OutOfBoundsException $e) {
+			return NULL;
+		}
+	}
+	
+	/**
 	 * $i->seek(int $key) -> void
 	 *
 	 * Seek to a specific row in the iterator. Rows are indexed from [0, n-1].
@@ -55,7 +79,7 @@ abstract class InnerRecordIterator implements RecordIterator {
 	public function seek($key) {
 		
 		// make sure the key is in the right place
-		if($key < $this->_offset || $key >= $this->count()) {
+		if($key < $this->_offset || $key >= $this->_limit) {
 			throw new OutOfBoundsException(
 				"Could not access row [{$key}] of record set."
 			);
@@ -107,10 +131,13 @@ abstract class InnerRecordIterator implements RecordIterator {
  * Class to handle stacking iterators on top of a RecordIterator.
  *
  * @author Peter Goodman
+ * @note The shift/pop are also defined in here because the stacking of the
+ *       iterators needs to be maintained.
  */
 class OuterRecordIterator extends PinqIteratorIterator implements RecordIterator {
 	
-	protected $_offset;
+	protected $_offset,
+	          $_limit;
 	
 	/**
 	 * OuterRecordIterator(RecordIterator)
@@ -121,6 +148,7 @@ class OuterRecordIterator extends PinqIteratorIterator implements RecordIterator
 	public function __construct(RecordIterator $it) {
 		parent::__construct($it);
 		$this->_offset = 0;
+		$this->_limit = count($it);
 	}
 	
 	/**
@@ -149,19 +177,34 @@ class OuterRecordIterator extends PinqIteratorIterator implements RecordIterator
 	}
 	
 	/**
+	 * $i->pop() -> mixed
+	 *
+	 * Pop off the last record in the iterator.
+	 */
+	public function pop() {
+		$this->seek($this->_limit - 1);
+		$current = $this->current();
+		
+		$this->_limit--;
+		$this->rewind();
+		
+		return $current;
+	}
+	
+	/**
 	 * $i->rewind(void) -> void
 	 */
 	public function rewind() {
-		if($this->key() > $this->_offset) {
+		if($this->key() > $this->_offset)
 			$this->seek($this->_offset);
-		}
 	}
 	
 	/**
 	 * $i->valid(void) -> bool
 	 */
 	public function valid() {
-		return parent::valid() && ($this->key() >= $this->_offset);
+		$key = $this->key();
+		return $key >= $this->_offset && $key < $this->_limit;
 	}
 	
 	/**
