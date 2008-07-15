@@ -133,6 +133,12 @@ function set_http_status($code) {
 		);
 	}
 	
+	if(headers_sent()) {
+		throw new InternalErrorException(
+			"Can't set HTTP status after headers have been sent."
+		);
+	}
+	
 	$code = (int)$code;
 	$message = $codes[$code];
 	

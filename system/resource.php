@@ -130,7 +130,7 @@ abstract class Resource {
 	 *
 	 * Hook called after a controller's action is dispatched.
 	 */
-	public function afterAction($method) { }
+	public function afterAction() { }
 	
 	/**
 	 * $r->beforeImport(void) -> void
