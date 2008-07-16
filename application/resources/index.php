@@ -24,6 +24,9 @@ class IndexLocalResource extends AppLocalResource {
 			$view['tags'] = $this->db->tags->getAll($view['post']->posts);
 		}
 		
+		//$akismet = $this->import('http.akismet');
+		//$akismet->get(from('comment-check')->set($_POST));
+		
 		$this->layout['title'] = 'Curious About Programming';
 		$this->view[] = $view;
 	}
