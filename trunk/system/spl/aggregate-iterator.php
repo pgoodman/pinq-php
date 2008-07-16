@@ -97,8 +97,7 @@ class AggregateIterator implements Iterator {
 	 * Check if we can continue to iterate.
 	 */
 	public function valid() {
-		$this->findNextIterator();
-		return $this->_current->valid();
+		return isset($this->_its[$this->_pos]) && $this->_current->valid();
 	}
 	
 	/**
