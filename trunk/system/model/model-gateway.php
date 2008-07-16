@@ -6,8 +6,7 @@
 
 /**
  * Class that links the model layer and the data sources. It deals with finding
- * and manipulation records in the data source by using the models to fill in 
- * the relationships between them and validate data.
+ * and manipulation records in the data source.
  *
  * @author Peter Goodman
  * @todo Refactoring is needed to separate generic and named model gateway
@@ -16,45 +15,39 @@
 abstract class ModelGateway implements Gateway {
 	
 	protected $_models,
-	          $_relations,
 	          $_ds,
 	          $_partial_query,
 	          $_model_name,
-	          $_cached_queries = array(),
-	          $_cached_relations = array();
+	          $_cached_queries = array();
 	
 	/**
-	 * ModelGateway(ModelDictionary, ModelRelations, DataSource[, string $name])
+	 * ModelGateway(ModelDictionary, DataSource[, string $name])
 	 *
 	 * Bring in all resources needed to relate models to each other, query a
 	 * data source, and associate the results of those queries to models.
 	 */
-	final public function __construct(ModelDictionary $models, 
-	                                   ModelRelations $relations,
-	                                       DataSource $ds, 
-	                                                  $name = NULL) {
+	public function __construct(ModelDictionary $models, 
+	                                 DataSource $ds, 
+	                                            $name = NULL) {
 		
 		$this->_models = $models;
 		$this->_ds = $ds;
 		$this->_model_name = $name;
-		$this->_relations = $relations;
 		
 		$this->__init__();
 	}
 	
 	/**
 	 */
-	final public function __destruct() {
+	public function __destruct() {
 		
 		$this->__del__();
 		
 		unset(
 			$this->_models,
-			$this->_relations,
 			$this->_ds,
 			$this->_partial_query,
-			$this->_cache_queries,
-			$this->_cached_relations
+			$this->_cache_queries
 		);
 	}
 	
@@ -111,12 +104,7 @@ abstract class ModelGateway implements Gateway {
 		$class = $definition->getGatewayClass();
 		
 		// load up the definition-specific gateway class, or the default one
-		$gateway = new $class(
-			$this->_models, 
-			$this->_relations, 
-			$this->_ds, 
-			$model_name
-		);
+		$gateway = $this->getGateway($model_name, $class);
 		
 		// set the partial query to the model
 		$gateway->setPartialQuery(
@@ -127,69 +115,16 @@ abstract class ModelGateway implements Gateway {
 	}
 	
 	/**
-	 * $q->getCompiledQuery_Record(Record, int $type) -> string
+	 * $g->getGateway(string $model_name, string $class) -> ModelGateway
 	 *
-	 * Get the compiled query given a Record object.
+	 * Return a new model gateway.
 	 */
-	private function getCompiledQuery_Record(Record $record, 
-	                                                $type, 
-	                                         array &$args = array()) {
-	
-		// the problem is that we need a partial query to do a query pivot
-		// a partial query comes from when use use __call or __get on the
-		// model gateway, which returns a new model gateway. If they
-		// haven't done this then they are not allowed to pass a record
-		// to the query.
-		if(NULL === $this->_partial_query) {
-			throw new InvalidArgumentException(
-				"Cannot pivot on ambiguous model gateway."
-			);
-		}
-		
-		// we want to get at the innermost record
-		while($record instanceof OuterRecord)
-			$record = $record->getRecord();
-		
-		// get the model name that this record belongs to
-		$model_name = $record->getModelName();
-		
-		// we can't work with an ambiguous record
-		if(NULL === $model_name) {
-			throw new InvalidArgumentException(
-				"Cannot build relationship off of ambiguous record. If ".
-				"this record has sub-records (ie: the PQL query selected ".
-				"from multiple models at once) then the relationship ".
-				"needs to be called on one of the sub records. If this ".
-				"record was not found through PQL then you cannot use ".
-				"this feature."
-			);
-		}
-		
-		// if we haven't already created a query for this relation, then
-		// do so. the reason why these types of relations are cached is
-		// because if they are called on in a loop then this function
-		// would otherwise be very slow
-		if(!isset($this->_cached_relations[$model_name][$type])) {
-											
-			// clone it so that we can use it again if necessary
-			$query = $this->getPartialQuery();
-			if($query instanceof QueryPredicates)
-				$query = $query->getQuery();
-			
-			// add in the predicates to make linking and pivoting to the
-			// record possible
-			$query->from($model_name)->link(
-				$this->_model_name, 
-				$model_name, 
-				Query::PIVOT_RIGHT
-			);
-			
-			// compile the query and cache it
-			$query = $this->getCompiledQuery_Query($query, $type, $args);
-			$this->_cached_relations[$model_name][$type] = $query;
-		}
-		
-		return $this->_cached_relations[$model_name][$type];
+	protected function getGateway($model_name, $class) {
+		return new $class(
+			$this->_models, 
+			$this->_ds, 
+			$model_name
+		);
 	}
 	
 	/**
@@ -198,10 +133,10 @@ abstract class ModelGateway implements Gateway {
 	 *
 	 * Get the compiled query given a QueryPredicates object.
 	 */
-	private function getCompiledQuery_QueryPredicates(
-	                                  QueryPredicates $qp, 
-	                                                  $type,
-	                                           array &$args = array()) {
+	protected function getCompiledQuery_QueryPredicates(
+	                                    QueryPredicates $qp, 
+	                                                    $type,
+	                                             array &$args = array()) {
 	
 		if(NULL === $qp->getQuery()) {
 			
@@ -232,9 +167,9 @@ abstract class ModelGateway implements Gateway {
 	 *
 	 * Get the compiled query given a Query object.
 	 */
-	private function getCompiledQuery_Query(Query $query, 
-	                                              $type, 
-	                                       array &$args = array()) {
+	protected function getCompiledQuery_Query(Query $query, 
+	                                                $type, 
+	                                         array &$args = array()) {
 	
 		$query_id = $query->getId();
 		$is_set_type = $type & (QueryCompiler::INSERT | QueryCompiler::UPDATE);
@@ -271,15 +206,6 @@ abstract class ModelGateway implements Gateway {
 	 *
 	 * string
 	 *     $query is returned as-is.
-	 * Record
-	 *     To pass a record as a query (known as pivoting on a record),
-	 *     the gateway must have a partial query. If there is none then
-	 *     an InvalidArgumentException is thrown. The record must also
-	 *     not be ambiguous (it must be directly associated with a model
-	 *     definition). If the record is not associated with a model name
-	 *     then a InvalidArgumentException is thrown. Assuming everything
-	 *     is right with the Record, it is used to extend the partial
-	 *     query in model gateway.
 	 * QueryPredicates
 	 *     If the predicates object is not associated to a Query object
 	 *     and there is partial query in the model then the predicates
@@ -305,9 +231,6 @@ abstract class ModelGateway implements Gateway {
 		if(is_string($query))
 			return $query;
 		
-		if($query instanceof Record)
-			$func = 'getCompiledQuery_Record';
-		
 		else if($query instanceof QueryPredicates)
 			$func = 'getCompiledQuery_QueryPredicates';
 		
@@ -316,7 +239,8 @@ abstract class ModelGateway implements Gateway {
 		
 		else {
 			throw new DomainException(
-				"Unexpected query type."
+				"Unexpected query type [". get_class($query) ."]. Allowed ".
+				"types are: QueryPredicates, Query, or string."
 			);
 		}
 		
@@ -695,4 +619,144 @@ abstract class ModelGateway implements Gateway {
 	 * Hook called before class resources are released.
 	 */
 	protected function __del__() { }
+}
+
+/**
+ * Class for handling relational models.
+ *
+ * @author Peter Goodman
+ */
+abstract class RelationalModelGateway extends ModelGateway {
+	
+	protected $_relations,
+	          $_cached_relations = array();
+	
+	/**
+	 * ModelGateway(ModelRelations, ModelDictionary, DataSource[, string $name])
+	 *
+	 * Bring in all resources needed to relate models to each other, query a
+	 * data source, and associate the results of those queries to models.
+	 */
+	public function __construct(ModelRelations $relations, 
+		                       ModelDictionary $models, 
+	                                DataSource $ds, 
+	                                           $name = NULL) {
+		$this->_relations = $relations;
+		parent::__construct($models, $ds, $name);
+	}
+	
+	/**
+	 */
+	public function __destruct() {
+		parent::__destruct();		
+		unset(
+			$this->_relations,
+			$this->_cached_relations
+		);
+	}
+	
+	/**
+	 * $g->getGateway(string $model_name, string $class) 
+	 * -> RelationalModelGateway
+	 *
+	 * Return a new model gateway.
+	 */
+	protected function getGateway($model_name, $class) {
+		return new $class(
+			$this->_relations,
+			$this->_models, 
+			$this->_ds, 
+			$model_name
+		);
+	}
+	
+	/**
+	 * $q->getCompiledQuery_Record(Record, int $type) -> string
+	 *
+	 * Get the compiled query given a Record object.
+	 */
+	protected function getCompiledQuery_Record(Record $record, 
+	                                                  $type, 
+	                                           array &$args = array()) {
+	
+		// the problem is that we need a partial query to do a query pivot
+		// a partial query comes from when use use __call or __get on the
+		// model gateway, which returns a new model gateway. If they
+		// haven't done this then they are not allowed to pass a record
+		// to the query.
+		if(NULL === $this->_partial_query) {
+			throw new InvalidArgumentException(
+				"Cannot pivot on ambiguous model gateway."
+			);
+		}
+		
+		// we want to get at the innermost record
+		while($record instanceof OuterRecord)
+			$record = $record->getRecord();
+		
+		// get the model name that this record belongs to
+		$model_name = $record->getModelName();
+		
+		// we can't work with an ambiguous record
+		if(NULL === $model_name) {
+			throw new InvalidArgumentException(
+				"Cannot build relationship off of ambiguous record. If ".
+				"this record has sub-records (ie: the PQL query selected ".
+				"from multiple models at once) then the relationship ".
+				"needs to be called on one of the sub records. If this ".
+				"record was not found through PQL then you cannot use ".
+				"this feature."
+			);
+		}
+		
+		// if we haven't already created a query for this relation, then
+		// do so. the reason why these types of relations are cached is
+		// because if they are called on in a loop then this function
+		// would otherwise be very slow
+		if(!isset($this->_cached_relations[$model_name][$type])) {
+											
+			// clone it so that we can use it again if necessary
+			$query = $this->getPartialQuery();
+			if($query instanceof QueryPredicates)
+				$query = $query->getQuery();
+			
+			// add in the predicates to make linking and pivoting to the
+			// record possible
+			$query->from($model_name)->link(
+				$this->_model_name, 
+				$model_name, 
+				Query::PIVOT_RIGHT
+			);
+			
+			// compile the query and cache it
+			$query = $this->getCompiledQuery_Query($query, $type, $args);
+			$this->_cached_relations[$model_name][$type] = $query;
+		}
+		
+		return $this->_cached_relations[$model_name][$type];
+	}
+	
+	/**
+	 * $g->getCompiledQuery(mixed $query, enum int $type) -> string
+	 *
+	 *
+	 * Behavior when a Record object is passed in:
+	 *     To pass a record as a query (known as pivoting on a record),
+	 *     the gateway must have a partial query. If there is none then
+	 *     an InvalidArgumentException is thrown. The record must also
+	 *     not be ambiguous (it must be directly associated with a model
+	 *     definition). If the record is not associated with a model name
+	 *     then a InvalidArgumentException is thrown. Assuming everything
+	 *     is right with the Record, it is used to extend the partial
+	 *     query in model gateway.
+	 *
+	 * @see ModelGateway::getCompiledQuery(...)
+	 */
+	protected function getCompiledQuery($query, $type, array &$args = array()) {
+		
+		if($query instanceof Record)
+			return $this->getCompiledQuery_Record($query, $type, $args);
+		
+		return parent::getCompiledQuery($query, $type, $args);
+	}
 }

@@ -92,15 +92,15 @@ class PinqDb implements ConfigurablePackage {
 		$database = new $class($host, $user, $pass);
 		$database->open($name);
 		
-		// get a new relations dictionary and figure out which directory that
-		// models will be in
 		$relations = new ModelRelations;
-		$models_dir = DIR_APPLICATION ."/models/db/{$argv[0]}";
 		
 		// return the database model gateway to the package
 		return new DatabaseModelGateway(
-			new ModelDictionary($relations, $models_dir),
 			$relations,
+			new RelationalModelDictionary(
+				DIR_APPLICATION ."/models/db/{$argv[0]}", 
+				$relations
+			),
 			$database,
 			NULL
 		);

@@ -8,7 +8,7 @@
  * The model gateway is the link between the model layer and the database.
  * @author Peter Goodman
  */
-class DatabaseModelGateway extends ModelGateway {
+class DatabaseModelGateway extends RelationalModelGateway {
 	
 	protected $_compiler;
 	

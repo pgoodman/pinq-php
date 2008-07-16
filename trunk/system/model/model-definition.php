@@ -21,20 +21,19 @@ abstract class ModelDefinition {
 	      TYPE_BINARY = 16,
 	      TYPE_BOOLEAN = 32;
 	
-	private $_fields = array(), // fields in this model
-	        $_context, // what field we're currently working with
-	        $_relations, // ModelRelations instance
-	
-	         // the name that is used to identify this model in the code
-	        $_external_name,
-	        
-	        // starts off as the externam name, but, for example with
-	        // databases, the internal name would be the table name, the
-	        // external name would be the file name sans extension
-	        $_internal_name,
-	        
-	        // cached version of external name run through class_name()
-	        $_extenal_name_as_class;
+	protected $_fields = array(), // fields in this model
+	          $_context, // what field we're currently working with
+	          
+	           // the name that is used to identify this model in the code
+	          $_external_name,
+	          
+	          // starts off as the externam name, but, for example with
+	          // databases, the internal name would be the table name, the
+	          // external name would be the file name sans extension
+	          $_internal_name,
+	          
+	          // cached version of external name run through class_name()
+	          $_extenal_name_as_class;
 	
 	private $_field_validators = array(
 		'default' => 1, 
@@ -67,7 +66,7 @@ abstract class ModelDefinition {
 	);
 	
 	/**
-	 * ModelDefinition(string $name, ModelRelations)
+	 * ModelDefinition(string $name)
 	 *
 	 * Brings in the external name (how this model will be referred to in the
 	 * code) and a ModelRelations instance to specify how this model relates
@@ -76,15 +75,11 @@ abstract class ModelDefinition {
 	 * @note By default the external and internal names are the same. To change
 	 *       the internal name one must call ModelDefinition::setInternalName().
 	 */
-	final public function __construct($name, ModelRelations $relations) {
+	public function __construct($name) {
 		
 		// naming things
 		$this->_extenal_name_as_class = class_name($name);
 		$this->_external_name = $this->_internal_name = strtolower($name);
-		
-		// relations stuff
-		$this->_relations = $relations;
-		$relations->registerModel($name);
 		
 		// hook
 		$this->__init__();
@@ -95,7 +90,6 @@ abstract class ModelDefinition {
 	public function __destruct() {
 		$this->__del__();
 		unset(
-			$this->_relations,
 			$this->_fields
 		);
 	}
@@ -427,53 +421,7 @@ abstract class ModelDefinition {
 	 */
 	public function __unset($key) { }
 	
-	/**
-	 * $d->mapsTo(string $model_alias, string $foreign_field) -> ModelDefinition
-	 *
-	 * This function must be called after a call to __get() such that a field
-	 * context is set. With that field context, this method adds in a field
-	 * mapping and direct relationship between this model and $model_alias.
-	 * The field mapping maps the current model and field context to the foreign
-	 * model's field ($foreign_field).
-	 */
-	public function mapsTo($model_alias, $foreign_field) {
-		
-		if(NULL === $this->_context) {
-			throw new InvalidMethodCallException(
-				"ModelDefinition::mapsTo() can only be called after ".
-				"ModelDefinition::__get()."
-			);
-		}
-		
-		// add a mapping (this also adds a direct relationship)
-		$this->_relations->addMapping(
-			$this->_external_name, $this->_context,
-			strtolower($model_alias), $foreign_field
-		);
-		
-		return $this;
-	}
 	
-	/**
-	 * $d->relatesTo(string $model_alias[, array $through]) -> ModelDefinition
-	 *
-	 * Relate this model to another one, possibly through intermediate models.
-	 * The intermediate $through models is an array of external model names.
-	 * The model names need to be in order but they do not need to be a direct
-	 * path. As long as relationships exist between the models in the through
-	 * array the path can be satisfied. If the $through array is not supplied,
-	 * ie: it's empty, then a direct relationship will be created between this
-	 * model and $model_alias.
-	 */
-	public function relatesTo($model_alias, array $through = array()) {
-		$this->_relations->addRelation(
-			$this->_external_name,
-			strtolower($model_alias),
-			$through
-		);
-		
-		return $this;
-	}
 	
 	/**
 	 * $d->hasField(string) -> bool
@@ -532,5 +480,82 @@ abstract class ModelDefinition {
 		return class_exists($class, FALSE) 
 		       ? $class 
 		       : $this->getDefaultRecordClass();
+	}
+}
+
+/**
+ * Class representing a model that relates to other models.
+ *
+ * @author Peter Goodman
+ */
+abstract class RelationalModelDefinition extends ModelDefinition {
+	
+	protected $_relations;
+	
+	/**
+	 * RelationalModelDefinition(string $name, ModelRelations)
+	 */
+	public function __construct($name, ModelRelations $relations) {
+		
+		// relations stuff
+		$this->_relations = $relations;
+		$relations->registerModel($name);
+		
+		parent::__construct($name);
+	}
+
+	/**
+	 */
+	public function __destruct() {
+		parent::__destruct();
+		unset($this->_relations);
+	}
+	
+	/**
+	 * $d->mapsTo(string $model_alias, string $foreign_field) -> ModelDefinition
+	 *
+	 * This function must be called after a call to __get() such that a field
+	 * context is set. With that field context, this method adds in a field
+	 * mapping and direct relationship between this model and $model_alias.
+	 * The field mapping maps the current model and field context to the foreign
+	 * model's field ($foreign_field).
+	 */
+	public function mapsTo($model_alias, $foreign_field) {
+		
+		if(NULL === $this->_context) {
+			throw new InvalidMethodCallException(
+				"ModelDefinition::mapsTo() can only be called after ".
+				"ModelDefinition::__get()."
+			);
+		}
+		
+		// add a mapping (this also adds a direct relationship)
+		$this->_relations->addMapping(
+			$this->_external_name, $this->_context,
+			strtolower($model_alias), $foreign_field
+		);
+		
+		return $this;
+	}
+	
+	/**
+	 * $d->relatesTo(string $model_alias[, array $through]) -> ModelDefinition
+	 *
+	 * Relate this model to another one, possibly through intermediate models.
+	 * The intermediate $through models is an array of external model names.
+	 * The model names need to be in order but they do not need to be a direct
+	 * path. As long as relationships exist between the models in the through
+	 * array the path can be satisfied. If the $through array is not supplied,
+	 * ie: it's empty, then a direct relationship will be created between this
+	 * model and $model_alias.
+	 */
+	public function relatesTo($model_alias, array $through = array()) {
+		$this->_relations->addRelation(
+			$this->_external_name,
+			strtolower($model_alias),
+			$through
+		);
+		
+		return $this;
 	}
 }
