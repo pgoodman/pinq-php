@@ -9,7 +9,7 @@
  * SQL query.
  * @author Peter Goodman
  */
-class DatabaseQueryCompiler extends QueryCompiler {
+class PinqDatabaseQueryCompiler extends QueryCompiler {
 	
 	// needed in query compilation for immediate constants
 	protected $db;
@@ -99,7 +99,7 @@ class DatabaseQueryCompiler extends QueryCompiler {
 			// by the model names which we know from the delimiters to avoid
 			// having to find the conflicting items in the first place. Thus,
 			// we get EXTRA info from the delimiters: the model name, which
-			// we can then use in DatabaseRecord to allow the programmer to
+			// we can then use in PinqDatabaseRecord to allow the programmer to
 			// access the information from the joined tables separately.
 			$select[] = "1 AS __{$model_name}";
 						

@@ -444,7 +444,7 @@ class Query {
 		// boring type casts
 		$flags = (int)$flags;
 		$left_alias = (string)$left_alias;
-		$right_alais = (string)$right_alias;
+		$right_alias = (string)$right_alias;
 		
 		// common error
 		$error = "The model [%s] has does not exist (yet?) in the PQL query ".

@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-class UsersDefinition extends DatabaseModelDefinition {
+class UsersDefinition extends PinqDatabaseModelDefinition {
 	
 	public function describe() {
 		
@@ -43,12 +43,12 @@ class UsersDefinition extends DatabaseModelDefinition {
 	}
 }
 
-class UsersGateway extends DatabaseModelGateway {
+class UsersGateway extends PinqDatabaseModelGateway {
 	public function register(Dictionary $post) {
 		
 		$errors = array();
 		
-		if($this->getBy('email', $_POST['email'])) {
+		if($this->selectBy('email', $_POST['email'])) {
 			$errors['email']['unique'] = (
 				'Someone is already registered with this email.'
 			);
@@ -58,7 +58,7 @@ class UsersGateway extends DatabaseModelGateway {
 	}
 }
 
-class UsersRecord extends DatabaseRecord {
+class UsersRecord extends PinqDatabaseRecord {
 	public function __init__() {
 		$this['display_id'] = base36_encode($this['id']);
 		$this['perma_link'] = url('users', $this['display_id']);

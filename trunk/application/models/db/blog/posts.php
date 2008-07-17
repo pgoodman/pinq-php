@@ -7,7 +7,7 @@
  *
  * @author Peter Goodman
  */
-class PostsDefinition extends DatabaseModelDefinition {
+class PostsDefinition extends PinqDatabaseModelDefinition {
 	
 	const DRAFT = 0,
 		  PUBLISHED = 1,
@@ -68,7 +68,7 @@ class PostsDefinition extends DatabaseModelDefinition {
  *
  * @author Peter Goodman
  */
-class PostsRecord extends DatabaseRecord {
+class PostsRecord extends PinqDatabaseRecord {
 	
 	/**
 	 * Constructor hook.
@@ -93,28 +93,19 @@ class PostsRecord extends DatabaseRecord {
  *
  * @author Peter Goodman
  */
-class PostsGateway extends DatabaseModelGateway {
+class PostsGateway extends PinqDatabaseModelGateway {
 	
 	/**
 	 * Extend the partial query of the model gateway. This lets us do some
 	 * awesome magic.
 	 */
-	public function getPartialQuery() {
+	public function createPqlQuery() {
 		return (
-			parent::getPartialQuery()->
+			parent::createPqlQuery()->
 			from('users', 'u')->select(ALL)->
 			link('posts', 'u')->
 			order()->posts('created')->desc->
 			where()->posts('status')->is(PostsDefinition::PUBLISHED)
 		);
-	}
-	
-	/**
-	 * $p->getNewest(void) -> Record
-	 *
-	 * Return the newest blog post.
-	 */
-	public function getNewest() {
-		return $this->get($this->getPartialQuery());
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-class SqliteQueryCompiler extends DatabaseQueryCompiler {
+class SqliteQueryCompiler extends PinqDatabaseQueryCompiler {
 	
 	/**
 	 * Compile an INSERT query. SQLite doesn't allow us to use SET syntax for

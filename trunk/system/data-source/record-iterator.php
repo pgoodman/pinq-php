@@ -239,19 +239,19 @@ class OuterRecordIterator extends PinqIteratorIterator implements RecordIterator
  */
 abstract class GatewayRecordIterator extends OuterRecordIterator {
 	
-	protected $gateway;
+	protected $_gateway;
 	
 	/**
 	 * GatewayRecordIterator(RecordIterator, Gateway)
 	 */
 	public function __construct(RecordIterator $it, Gateway $gateway) {
 		parent::__construct($it);
-		$this->gateway = $gateway;
+		$this->_gateway = $_gateway;
 	}
 	
 	/**
 	 */
 	public function __destruct() {
-		unset($this->gateway);
+		unset($this->_gateway);
 	}
 }

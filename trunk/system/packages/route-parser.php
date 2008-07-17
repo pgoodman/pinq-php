@@ -86,7 +86,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 				
 		// get the router. this could be this class or an extending class,
 		// hence the new $class
-		$router =  new $class($controller_dir, $file_extension);
+		$router = new $class($controller_dir, $file_extension);
 		
 		// load the router configuration file, and pass it the router as
 		// context

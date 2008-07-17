@@ -11,7 +11,7 @@ class PostsLocalResource extends AppLocalResource {
 	public function GET_index($nice_title = '') {
 		
 		// get the post and if it doesn't exist or is a comment then error
-		$post = $this->db->posts->getBy('nice_title', $nice_title);
+		$post = $this->db->posts->selectBy('nice_title', $nice_title);
 		
 		if(!$post || $post['parent_id'] > 0)
 			yield(ERROR_404);
@@ -19,13 +19,13 @@ class PostsLocalResource extends AppLocalResource {
 		// get the comments
 		$comments = NULL;
 		if($post['num_children'] > 0)
-			$comments = $this->db->posts->getAll($post->posts);
+			$comments = $this->db->posts->selectAll($post->posts);
 		
 		// set data to the view
 		$this->layout['title'] = $post['title'];
 		$this->view[] = array(
 			'post' => $post,
-			'tags' => $this->db->tags->getAll($post->posts),
+			'tags' => $this->db->tags->selectAll($post->posts),
 			'comments' => $comments,
 		);
 	}
@@ -35,7 +35,7 @@ class PostsLocalResource extends AppLocalResource {
 	 */
 	public function POST_index($nice_title = '') {
 		
-		$post = $this->db->posts->getBy('nice_title', $nice_title);
+		$post = $this->db->posts->selectBy('nice_title', $nice_title);
 		
 		// people aren't (currently) allowed to post to sub-level posts
 		if(!$post || $post['parent_id'] != 0)

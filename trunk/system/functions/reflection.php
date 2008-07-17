@@ -54,7 +54,7 @@ function help($thing, $method = NULL) {
 	}
 	
 	if(!empty($str))
-		echo "<pre>$str</pre>";
+		out("<pre>$str</pre>");
 }
 
 /**

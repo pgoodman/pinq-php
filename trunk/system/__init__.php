@@ -53,16 +53,17 @@ define('ERROR_500', '/error/500');
 // exceptions
 require_once DIR_SYSTEM .'/general-exceptions.php';
 require_once DIR_SYSTEM .'/control-flow-exceptions.php';
+require_once DIR_SYSTEM .'/interfaces.php';
 
 // core classes that stand on their own without pinq-defined interfaces/
 // abstract classes
 require_once DIR_SYSTEM .'/stack.php';
 require_once DIR_SYSTEM .'/queue.php';
 require_once DIR_SYSTEM .'/dictionary.php';
-
-// interfaces and abstract classes
+require_once DIR_SYSTEM .'/gateway.php';
+require_once DIR_SYSTEM .'/type-handler.php';
 require_once DIR_SYSTEM .'/loader.php';
-require_once DIR_SYSTEM .'/interfaces.php';
+
 
 // bring in the core stuff that's used everywhere
 require_once DIR_SYSTEM .'/spl/__init__.php';
@@ -93,10 +94,10 @@ function pinq($script_file, $app_dir) {
 	// fix the app dir
 	$app_dir = realpath(dirname($script_file) .'/'. $app_dir) .'/';
 	
-	// by these constant definitions we can only call this function once
-	define('EXT', '.'. pathinfo($script_file, PATHINFO_EXTENSION));
-	define('PINQ_SCRIPT_FILENAME', $script_file);
-	define('DIR_APPLICATION', $app_dir);
+	!defined('DIR_APPLICATION')
+	 && define('EXT', '.'. pathinfo($script_file, PATHINFO_EXTENSION))
+	 && define('PINQ_SCRIPT_FILENAME', $script_file)
+	 && define('DIR_APPLICATION', $app_dir);
 		
 	try {
 		// set things up!
@@ -104,7 +105,10 @@ function pinq($script_file, $app_dir) {
 		$config->load('config');
 
 		// a pattern for what we expect the host to be
-		define('PINQ_HTTP_HOST', preg_quote($config['config']['host_name']));
+		!defined('PINQ_HTTP_HOST') && define(
+			'PINQ_HTTP_HOST', 
+			preg_quote($config['config']['host_name'])
+		);
 		
 		// put restrictions on the use of the $GLOBALS array and the other 
 		// super-globls arrays. The require is in here because it's possible 
@@ -113,19 +117,14 @@ function pinq($script_file, $app_dir) {
 
 		// bring in the package loader
 		$packages = new PackageLoader($config);
-
-		// bring a page controller class. the page controller doesn't actually 
-		// install itself into the packages dictionary
 		$packages->load('local-resource');
-
-		// bring in and configure the route parser with a context.
+		$packages->load('input-dictionary');
 		$router = $packages->load('route-parser', array(
 			'controller_dir' => DIR_APPLICATION .'/resources/',
 			'file_extension' => EXT,
 		));
-
-		// set some of the global variables
-		$packages->load('input-dictionary');
+		
+		// set up the GET and POST superglobals as read-only dictionaries
 		$_POST = PinqInputDictionary::factory($_POST);
 		$_GET = PinqInputDictionary::factory($_GET);
 
@@ -139,7 +138,9 @@ function pinq($script_file, $app_dir) {
 		// maintain a stack of controllers
 		$events = new Stack;
 		$event = NULL;
-
+		
+		ob_start();
+		
 		do {
 			// look for a yield or a flush buffer
 			try {
@@ -181,11 +182,9 @@ function pinq($script_file, $app_dir) {
 					$events->push(new $class($packages, $file));
 				}
 				
-				// figure out what method to call
+				// figure out what method to call and call it
 				$event = $events->top();
 				$method = $event->getMethod($request_method, $method);
-				
-				// call the method
 				$event->beforeAction($method);
 				call_user_func_array(array($event, $method), $arguments);
 			
@@ -223,7 +222,7 @@ function pinq($script_file, $app_dir) {
 			
 		} while(TRUE);
 		
-		// flush the output buffer
+		ob_end_flush();
 		OutputBuffer::flush('out');
 		
 	// HTTP redirect exception, this is so that we adequately shut down
@@ -241,7 +240,7 @@ function pinq($script_file, $app_dir) {
 	} catch(Exception $e) {
 		echo $e->getMessage();
 		echo '<pre>';
-		print_r($e->getTrace());
+		print_r(array_slice($e->getTrace(), 0, 3));
 		echo '</pre>';
 	}
 	
@@ -263,6 +262,7 @@ function pinq($script_file, $app_dir) {
 		$packages
 	);
 	
-	if(isset($redirect_to))
+	// redirect if necessary
+	if(isset($redirect_to) && !headers_sent())
 		header("Location: {$redirect_to}");
 }

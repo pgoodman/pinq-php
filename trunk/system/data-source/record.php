@@ -19,7 +19,7 @@ interface Record extends ArrayAccess {
  *
  * @author Peter Goodman
  */
-class InnerRecord extends Dictionary implements Record {
+class InnerRecord extends Dictionary implements Record, Named {
 	
 	protected $_name,
 	          $_sub_records,
@@ -30,17 +30,17 @@ class InnerRecord extends Dictionary implements Record {
 	 *
 	 * Set the model name of this record.
 	 */
-	public function setModelName($name) {
+	public function setName($name) {
 		$this->_name = $name;
 	}
 	
 	/**
-	 * $r->getModelName(void) -> mixed
+	 * $r->getName(void) -> mixed
 	 *
 	 * Get the model name of this record. If this record has not been assigned
 	 * a model name then this will return NULL.
 	 */
-	public function getModelName() {
+	public function getName() {
 		return $this->_name;
 	}
 	

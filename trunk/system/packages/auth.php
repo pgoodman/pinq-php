@@ -176,7 +176,7 @@ class PinqAuth implements ConfigurablePackage {
 			return;
 		
 		// find the user
-		$user = $this->_gateway->get(
+		$user = $this->_gateway->select(
 			where()->{$config['field_login_key']}->eq($login_key)
 		);
 		
@@ -215,7 +215,7 @@ class PinqAuth implements ConfigurablePackage {
 		$config = $this->_config;
 		
 		// find the user
-		$user = $this->_gateway->get(
+		$user = $this->_gateway->select(
 			where()->{$config['field_login']}->eq($login)->and->
 			{$config['field_pass']}->eq($this->hash($pass))
 		);
