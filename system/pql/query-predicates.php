@@ -49,11 +49,11 @@ function group() {
  *         from('model_name')->select(ALL)->where(){->id->neq->_};
  *     
  *     Instance of QueryPredicates being passed directly into a model gateway:
- *         Not Valid: $gateway->getAll(limit(10));
- *         Valid:     $gateway->posts->getAll(limit(10));
+ *         Not Valid: $gateway->selectAll(limit(10));
+ *         Valid:     $gateway->posts->selectAll(limit(10));
  *         
- *         Not Valid: $gateway->getAll(where()->created_time->gt->_);
- *         Valid:     $gateway->posts->getAll(where()->created_time->gt->_);
+ *         Not Valid: $gateway->selectAll(where()->created_time->gt->_);
+ *         Valid:     $gateway->posts->selectAll(where()->created_time->gt->_);
  *
  * @author Peter Goodman
  */

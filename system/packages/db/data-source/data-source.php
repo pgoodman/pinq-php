@@ -4,7 +4,9 @@
 
 !defined('DIR_SYSTEM') && exit();
 
-abstract class Database implements DataSource {
+abstract class PinqDatabase implements DataSource {
+	
+	protected $_tokens = array();
 	
 	/**
 	 * The bare bones of what's needed to abstract a database.
@@ -29,9 +31,9 @@ abstract class Database implements DataSource {
 	 * Get the query compiler.
 	 */
 	public function getQueryCompiler(Dictionary $models, 
-		                             ModelRelations $relations) {
+	                             ModelRelations $relations) {
 		
-		return new DatabaseQueryCompiler(
+		return new PinqDatabaseQueryCompiler(
 			$models,
 			$relations,
 			$this
@@ -53,7 +55,19 @@ abstract class Database implements DataSource {
 		return (bool)$this->query($query, $args);
 	}
 	
-	protected $_tokens = array();
+	/**
+	 * Get the default class for a record.
+	 */
+	public function getDefaultRecordClass() {
+		return 'DatabaseRecord';
+	}
+	
+	/**
+	 * Get the default class for a record iterator.
+	 */
+	public function getDefaultRecordIteratorClass() {
+		return 'DatabaseRecordIterator';
+	}
 	
 	/**
 	 * $d->tokenizeSqlStatement(array) -> string
@@ -67,7 +81,6 @@ abstract class Database implements DataSource {
 	final public function tokenizeSqlStatement(array $matches) {
 		$token = md5($matches[0]);
 		$this->_tokens[$token] = $matches[0];
-		
 		return $token;
 	}
 	
@@ -93,13 +106,11 @@ abstract class Database implements DataSource {
 		// tokenize the statement so that we don't replace anything inside
 		// any of the existing values in the query. this pattern is a bit
 		// ugly because back references can't be inside character classes.
-		$token_count = 0;
+		//$token_count = 0;
 		$stmt = preg_replace_callback(
 			"~('(([^']|((?<=\\\)'))*)')|(\"(([^\"]|((?<=\\\)\"))*)\")~ix",
 			array($this, 'tokenizeSqlStatement'),
-			$stmt,
-			-1,
-			$token_count
+			$stmt
 		);
 		
 		// only allow one sql statement per query. This is reasonably safe to
@@ -107,14 +118,14 @@ abstract class Database implements DataSource {
 		$stmt = preg_replace('~;(.*)$~s', '', $stmt);
 		
 		// the arguments array is associative. assume then that the substitutes
-		// in the query are also associative and turn them into question marks
-		if(is_string(key($args))) {
-			
+		// in the query are also associative and turn them into question marks		
+		while(is_string(key($args))) {
+
 			$key_pattern = '~:([^:\s\b\W]+)~';
 			$matches = array();
 			
 			if(!preg_match_all($key_pattern, $stmt, $matches))
-				return $stmt;
+				break;
 			
 			// replace all key patterns with question marks
 			$stmt = preg_replace($key_pattern, '?', $stmt);
@@ -142,59 +153,61 @@ abstract class Database implements DataSource {
 				$matches[1], 
 				$intersection
 			));
+			
+			break;
 		}
 		
 		// how many of these are we working with?
 		$count = substr_count($stmt, '?');
 		
 		// don't need to substitute anything in
-		if(!$count)
-			return $stmt;
+		if($count) {
 		
-		// make sure our args array isn't too big
-		if($count < count($args))
-			$args = array_slice($args, 0, $count);
+			// make sure our args array isn't too big
+			if($count < count($args))
+				$args = array_slice($args, 0, $count);
 		
-		// finalize the args array by padding its end with NULL's if there
-		// aren't enough items in it
-		if(0 < ($padding = $count - count($args)))
-			$args = array_merge($args, array_fill(0, $padding, NULL));
+			// finalize the args array by padding its end with NULL's if there
+			// aren't enough items in it
+			if(0 < ($padding = $count - count($args)))
+				$args = array_merge($args, array_fill(0, $padding, NULL));
 				
-		// if we're dealing with a SQL LIKE statement then we don't want to
-		// risk overwriting anything within them
-		$stmt = str_replace(array('%', '?'), array('-%-', '%s'), $stmt);
+			// if we're dealing with a SQL LIKE statement then we don't want
+			// to risk overwriting anything within them
+			$stmt = str_replace(array('%', '?'), array('-%-', '%s'), $stmt);
 		
-		// format the incoming arguments for insertion into the query
-		foreach($args as $key => $val) {
+			// format the incoming arguments for insertion into the query
+			foreach($args as $key => $val) {
 			
-			// if this is not an integer value, put quotes
-			// around it
-			if(is_int($val) || is_float($val) || is_numeric($val)) {
-				if(ctype_digit($val)) {
-					$args[$key] = (string)(int)$val;
+				// if this is not an integer value, put quotes
+				// around it
+				if(is_int($val) || is_float($val) || is_numeric($val)) {
+					if(ctype_digit($val)) {
+						$args[$key] = (string)(int)$val;
+					} else {
+						$args[$key] = (string)(float)$val;
+					}
+			
+				// booleans, convert to int
+				} else if(is_bool($val)) {
+					$args[$key] = (int)$val;
+			
+				// null values
+				} else if(is_null($val) || strtoupper($val) == 'NULL') {
+					$args[$key] = 'NULL';
+			
+				// just escape it
 				} else {
-					$args[$key] = (string)(float)$val;
+					$args[$key] = "'". $this->quote($val) ."'";
 				}
-			
-			// booleans, convert to int
-			} else if(is_bool($val)) {
-				$args[$key] = (int)$val;
-			
-			// null values
-			} else if(is_null($val) || strtoupper($val) == 'NULL') {
-				$args[$key] = 'NULL';
-			
-			// just escape it
-			} else {
-				$args[$key] = "'". $this->quote($val) ."'";
 			}
+		
+			// sub in the variables, fix the %'s
+			$stmt = str_replace('-%-', '%', vsprintf($stmt, $args));
 		}
 		
-		// sub in the variables, fix the %'s
-		$stmt = str_replace('-%-', '%', vsprintf($stmt, $args));
-		
 		// replace tokens
-		if($token_count > 0) {
+		if(count($this->_tokens)) {
 			$stmt = str_replace(
 				array_keys($this->_tokens),
 				array_values($this->_tokens),

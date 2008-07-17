@@ -5,6 +5,6 @@
  *
  * @author Peter Goodman
  */
-class DatabaseRecord extends InnerRecord {
+class PinqDatabaseRecord extends InnerRecord {
 	
 }

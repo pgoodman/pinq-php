@@ -1,12 +1,5 @@
 <?php
 
-abstract class DatabaseModelDefinition extends RelationalModelDefinition {
+abstract class PinqDatabaseModelDefinition extends RelationalModelDefinition {
 	
-	protected function getDefaultGatewayClass() {
-		return 'DatabaseModelGateway';
-	}
-
-	protected function getDefaultRecordClass() {
-		return 'DatabaseRecord';
-	}	
 }

@@ -143,7 +143,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage, Session {
 					
 					// get an existing session record from before or the one
 					// we just created
-					$record = $gateway->get($query, array($current_id));
+					$record = $gateway->select($query, array($current_id));
 					
 					// bad record, will only happen after not creating a record
 					if($record === NULL) {

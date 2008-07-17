@@ -8,7 +8,7 @@
  * An instance of a SQLite database connection.
  * @author Peter Goodman
  */
-class SqliteDataSource extends Database {
+class SqliteDataSource extends PinqDatabase {
 	
 	protected $conn;
 	
@@ -19,7 +19,7 @@ class SqliteDataSource extends Database {
 	public function __construct($host) {
 		
 		if(!class_exists('SQLiteDatabase', FALSE)) {
-			throw new DatabaseException(
+			throw new PinqDatabaseException(
 				"SQLite does not appear to be installed or configured  on ".
 				"this server."
 			);
@@ -28,7 +28,7 @@ class SqliteDataSource extends Database {
 		if(!file_exists($host)) {
 			
 			if(!($fp = fopen($host, "w"))) {
-				throw new DatabaseException(
+				throw new PinqDatabaseException(
 					"SQLite database file [{$host}] could not be ".
 					"automatically created. Please check folder permissions."
 				);
@@ -41,7 +41,7 @@ class SqliteDataSource extends Database {
 		
 		// the db file isnt readable/writable
 		if(!is_readable($host) || !is_writable($host)) {
-			throw new DatabaseException(
+			throw new PinqDatabaseException(
 				"SQLite database file [{$host}] cannot be read."
 			);
 		}
@@ -57,7 +57,7 @@ class SqliteDataSource extends Database {
 		
 		// connection failed
 		if(!empty($error)) {
-			throw new DatabaseException(
+			throw new PinqDatabaseException(
 				"Unable to connect to the SQLite database [{$error}]."
 			);
 		}
@@ -88,7 +88,7 @@ class SqliteDataSource extends Database {
 		// usually the result of a malformed query. This won't reveal too much
 		// assuming proper use of the $args array because the query has not
 		// had its substitutes replaced
-		throw new DatabaseException(
+		throw new PinqDatabaseException(
 			"The following database query failed:".
 			"<pre>{$query}</pre>".
 			"The error reported was: ".

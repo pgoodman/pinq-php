@@ -25,22 +25,6 @@ interface Printer {
 }
 
 /**
- * Interface for a gateway to a data source. A gateway is what brings together
- * models and data sources.
- *
- * @author Peter Goodman
- */
-interface Gateway {
-	public function get($query, array $args = array());
-	public function delete($what, array $args = array());
-	public function insert($query, array $args = array());
-	public function update($query, array $args = array());
-	public function createRecord(array $data = array());
-	public function __get($model_name);
-	public function __call($model_name, array $select = array(ALL));
-}
-
-/**
  * Interface for classes that have a factory method.
  *
  * @author Peter Goodman
@@ -90,6 +74,15 @@ interface Compiler {
 	 */
 	public function compile($flags = 0);
 }
+
+interface Named {
+	public function getName();
+	public function setName($name);
+}
+
+interface Handler { }
+interface IntermediateHandler extends Handler { }
+interface EndpointHandler extends Handler { }
 
 /**
  * An interface for any type of filtering class, state machine, etc. This is

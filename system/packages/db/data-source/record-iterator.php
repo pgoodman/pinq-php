@@ -5,14 +5,14 @@
  * out individual model information (if a PQL query was performed).
  * @author Peter Goodman
  */
-class DatabaseRecordIterator extends GatewayRecordIterator {
+class PinqDatabaseRecordIterator extends OuterRecordIterator {
 	
 	/**
-	 * Return a single record that possibly has multipel sub-records in it.
+	 * Return a single record that possibly has multiple sub-records in it.
 	 */
 	public function current() {
 		$data = parent::current();
-		
+				
 		if(FALSE === $data)
 			return;
 		
@@ -72,10 +72,14 @@ class DatabaseRecordIterator extends GatewayRecordIterator {
 				
 				// get the record, stored as $record so that if there is only
 				// one record it will carry down nicely to the return
-				$record = $this->gateway->createRecord(
-					$record_data,
-					$model_name
-				);
+				//
+				// TODO: move this logic out to somewhere else
+				$class = class_name("{$model_name} record");
+				if(!class_exists($class, FALSE))
+					$class = 'PinqDatabaseRecord';
+								
+				$record = new $class($record_data);
+				$record->setName($model_name);
 				
 				$records[$model_name] = $record;
 				
@@ -87,7 +91,7 @@ class DatabaseRecordIterator extends GatewayRecordIterator {
 						
 			// dealing with multple records, create the base one
 			if(count($records) > 1) {
-				$record = new DatabaseRecord($data);
+				$record = new PinqDatabaseRecord($data);
 				$record->setSubRecords($records);
 			
 			// no longer needed, $record will fall through nicely thanks to
@@ -97,7 +101,7 @@ class DatabaseRecordIterator extends GatewayRecordIterator {
 		
 		// the default one, unnamed and with no bells & whistles :P
 		} else
-			$record = new DatabaseRecord($data);
+			$record = new PinqDatabaseRecord($data);
 		
 		// note: $record falls through nicely from the splitting up of models
 		//       when parsing a pql query if there is only one record to

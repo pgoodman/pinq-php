@@ -40,4 +40,14 @@ interface DataSource {
 	 * substituted in for ?'s and keyed subsitiuted (eg: :key) in the query.
 	 */
 	public function update($query, array $args = array());
+	
+	/**
+	 * $d->getDefaultRecordClass(void) -> string
+	 */
+	public function getDefaultRecordClass();
+	
+	/**
+	 * $d->getDefaultRecordIteratorClass(void) -> string
+	 */
+	public function getDefaultRecordIteratorClass();
 }

@@ -85,7 +85,7 @@ class PinqDb implements ConfigurablePackage {
 		require_once $file;
 
 		// figure out the class name for this database. It's not suffixed with
-		// Database because that caused problems for SQLite.
+		// PinqDatabase because that caused problems for SQLite.
 		$class = class_name($driver) . 'DataSource';
 
 		// connect to the database
@@ -93,16 +93,43 @@ class PinqDb implements ConfigurablePackage {
 		$database->open($name);
 		
 		$relations = new ModelRelations;
+		$gateway = new PinqDatabaseModelGateway(
+			$database, 
+			self::createTypeHandlers()
+		);		
 		
-		// return the database model gateway to the package
-		return new DatabaseModelGateway(
-			$relations,
-			new RelationalModelDictionary(
-				DIR_APPLICATION ."/models/db/{$argv[0]}", 
-				$relations
-			),
-			$database,
-			NULL
+		$gateway->setRelations($relations);
+		$gateway->setModelDictionary(new RelationalModelDictionary(
+			DIR_APPLICATION ."/models/db/{$argv[0]}", 
+			$relations
+		));
+		
+		return $gateway;
+	}
+	
+	static protected function createTypeHandlers() {
+		$type_handlers = new TypeHandler;
+		
+		$type_handlers->handleClass(
+			'Query',
+			new RelationalGatewayQueryHandler
 		);
+		
+		$type_handlers->handleClass(
+			'QueryPredicates',
+			new RelationalGatewayQueryPredicatesHandler
+		);
+		
+		$type_handlers->handleInterface(
+			'Record',
+			new RelationalGatewayRecordHandler
+		);
+		
+		$type_handlers->handleScalar(
+			'string',
+			new GatewayStringHandler
+		);
+		
+		return $type_handlers;
 	}
 }

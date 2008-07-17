@@ -8,7 +8,7 @@
  * An instance of a MySQL database connection.
  * @author Peter Goodman
  */
-class MysqlDataSource extends Database {
+class MysqlDataSource extends PinqDatabase {
 	
 	protected $conn;
 	
@@ -17,7 +17,7 @@ class MysqlDataSource extends Database {
 	 */
 	public function __construct($host, $user = '', $pass = '') {
 		if(!($this->conn = mysql_connect($host, $user, $pass, FALSE)))
-			throw new DatabaseException("Could not connect to the database.");
+			throw new PinqDatabaseException("Could not connect to the database.");
 	}
 	
 	/**
@@ -25,7 +25,7 @@ class MysqlDataSource extends Database {
 	 */
 	public function open($name) {
 		if(!mysql_select_db($name, $this->conn)) {
-			throw new DatabaseException(
+			throw new PinqDatabaseException(
 				"Could not connect to the database [{$name}]. ".
 				$this->error()
 			);
@@ -52,7 +52,7 @@ class MysqlDataSource extends Database {
 		// assuming proper use of the $args array because the query has not
 		// had its substitutes replaced
 		if(FALSE === $result) {
-			throw new DatabaseException(
+			throw new PinqDatabaseException(
 				"The following database query failed:".
 				"<pre>{$query}</pre>".
 				"The error reported was: ".

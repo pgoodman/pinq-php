@@ -62,15 +62,14 @@ class ModelDictionary extends Dictionary {
 		// look for the definition file, get the class name and instantiate
 		// it with its model name as the only parameter
 		$class = class_name($model_name) .'Definition';
+		$definition = TRUE;
 		
-		if(!class_exists($class, FALSE)) {
-			throw new InvalidArgumentException(
-				"Class [{$class}] does not exist."
-			);
+		// if there is a model definition then instanciate it and load up its
+		// fields.
+		if(class_exists($class, FALSE)) {
+			$definition = $this->getDefinition($model_name, $class);
+			$definition->describe();
 		}
-		
-		$definition = $this->getDefinition($model_name, $class);		
-		$definition->describe();
 		
 		// store it
 		$this->offsetSet($model_name, $definition);
@@ -78,15 +77,8 @@ class ModelDictionary extends Dictionary {
 		return parent::offsetGet($model_name);
 	}
 	
-	/**
-	 * $d->getDefinition(string $model_name, string $class) -> ModelDefinition
-	 *
-	 * Get the model definition.
-	 *
-	 * @internal
-	 */
 	protected function getDefinition($model_name, $class) {
-		$definition = new $class($this->_model_name);
+		$definition = new $class($model_name);
 		
 		if(!($definition instanceof ModelDefinition)) {
 			throw new DomainException(

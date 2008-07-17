@@ -10,7 +10,7 @@
  *
  * @author Peter Goodman
  */
-abstract class ModelDefinition {
+abstract class ModelDefinition implements Named {
 	
 	// field types
 	const TYPE_UNKNOWN = 0,
@@ -30,10 +30,7 @@ abstract class ModelDefinition {
 	          // starts off as the externam name, but, for example with
 	          // databases, the internal name would be the table name, the
 	          // external name would be the file name sans extension
-	          $_internal_name,
-	          
-	          // cached version of external name run through class_name()
-	          $_extenal_name_as_class;
+	          $_internal_name;
 	
 	private $_field_validators = array(
 		'default' => 1, 
@@ -78,7 +75,6 @@ abstract class ModelDefinition {
 	public function __construct($name) {
 		
 		// naming things
-		$this->_extenal_name_as_class = class_name($name);
 		$this->_external_name = $this->_internal_name = strtolower($name);
 		
 		// hook
@@ -116,6 +112,24 @@ abstract class ModelDefinition {
 	protected function __del__() { }
 	
 	/**
+	 * $d->getName(void) -> string
+	 *
+	 * Get the external name of this model.
+	 */
+	final public function getName() {
+		return $this->_external_name;
+	}
+	
+	/**
+	 * $d->setName(string) -> void
+	 *
+	 * Set the external name of this model.
+	 */
+	final public function setName($name) {
+		$this->_external_name = $name;
+	}
+	
+	/**
 	 * $d->setInternalName(string) -> void
 	 *
 	 * Change the internal name of this model. By default the internal name is
@@ -123,15 +137,6 @@ abstract class ModelDefinition {
 	 */
 	final public function setInternalName($name) {
 		$this->_internal_name = $name;
-	}
-	
-	/**
-	 * $d->getExternalName(void) -> string
-	 *
-	 * Get the external name of this model.
-	 */
-	final public function getExternalName() {
-		return $this->_external_name;
 	}
 	
 	/**
@@ -430,35 +435,6 @@ abstract class ModelDefinition {
 	 */
 	public function hasField($field) {
 		return isset($this->_fields[$field]);
-	}
-	
-	/**
-	 * $d->getDefaultGatewayClass(void) -> string
-	 */
-	abstract protected function getDefaultGatewayClass();
-	
-	/**
-	 * $d->getDefaultRecordClass(void) -> string
-	 */
-	abstract protected function getDefaultRecordClass();
-	
-	/**
-	 * $d->getGatewayClass(void) -> string
-	 *
-	 * Get the class name of the model gateway that will be used to query for
-	 * records. This method first tries to find model-specific gateway, 
-	 * identified by the mixed-case version of the external model name with
-	 * 'Gateway' appended on the end. For example:
-	 *     model_name -> ModelNameGateway
-	 * If a custom model gateway class does not exist then this method will
-	 * use the gateway class name returned from getDefaultGatewayClass().
-	 * @internal
-	 */
-	final public function getGatewayClass() {
-		$class = $this->_extenal_name_as_class .'Gateway';
-		return class_exists($class, FALSE) 
-		       ? $class 
-		       : $this->getDefaultGatewayClass();
 	}
 	
 	/**

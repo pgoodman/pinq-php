@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-class TagsDefinition extends DatabaseModelDefinition {
+class TagsDefinition extends PinqDatabaseModelDefinition {
 	
 	public function describe() {
 		
@@ -29,10 +29,10 @@ class TagsDefinition extends DatabaseModelDefinition {
 	}
 }
 
-class TagsGateway extends DatabaseModelGateway {
+class TagsGateway extends PinqDatabaseModelGateway {
 	
 	public function getPopular() {
-		return $this->getAll(
+		return $this->selectAll(
 			$this->getPartialQuery()->
 			       order()->num_posts->desc->
 			       limit(6)
@@ -40,7 +40,7 @@ class TagsGateway extends DatabaseModelGateway {
 	}
 }
 
-class TagsRecord extends DatabaseRecord {
+class TagsRecord extends PinqDatabaseRecord {
 	public function __init__() {
 		$this['perma_link'] = url('tags', $this['name']);
 	}

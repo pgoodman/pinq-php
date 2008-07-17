@@ -14,6 +14,6 @@
  *
  * @author Peter Goodman
  */
-class DatabaseException extends ModelException {
+class PinqDatabaseException extends ModelException {
 	
 }

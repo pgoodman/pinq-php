@@ -10,7 +10,7 @@ class IndexLocalResource extends AppLocalResource {
 	 */
 	public function ANY_index() {
 		
-		$posts = $this->db->posts->getAll(limit(11));
+		$posts = $this->db->posts->selectAll(limit(11));
 		
 		$view = array(
 			'post' => NULL,
@@ -21,12 +21,9 @@ class IndexLocalResource extends AppLocalResource {
 		if(count($posts)) {
 			$view['post'] = $posts->shift();
 			$view['posts'] = $posts;
-			$view['tags'] = $this->db->tags->getAll($view['post']->posts);
+			$view['tags'] = $this->db->tags->selectAll($view['post']->posts);
 		}
-		
-		//$akismet = $this->import('http.akismet');
-		//$akismet->get(from('comment-check')->set($_POST));
-		
+				
 		$this->layout['title'] = 'Curious About Programming';
 		$this->view[] = $view;
 	}
@@ -55,12 +52,12 @@ class IndexLocalResource extends AppLocalResource {
 	
 	public function ANY_dump($table) {
 		//$this->db->delete(from($table));
-		$rows = $this->db->getAll(from($table)->select(ALL));
+		/*$rows = $this->db->selectAll(from($table)->select(ALL));
 		foreach($rows as $row) {
 			echo '<pre>';
 			print_r($row);
 			echo '</pre>';
-		}
+		}*/
 		
 		out(count($rows), 'rows');
 	}

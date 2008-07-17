@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-class SessionDefinition extends DatabaseModelDefinition {
+class SessionDefinition extends PinqDatabaseModelDefinition {
 	public function describe() {
 		$this->id = array(
 			'type' => 'string',
@@ -13,7 +13,7 @@ class SessionDefinition extends DatabaseModelDefinition {
 	}
 }
 
-class SessionRecord extends DatabaseRecord {
+class SessionRecord extends PinqDatabaseRecord {
 	public function __init__() {
 		
 		if(NULL === $this['data'])		

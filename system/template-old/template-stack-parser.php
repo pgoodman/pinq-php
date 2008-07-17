@@ -37,7 +37,7 @@ final class TemplateTagStack extends Stack implements Printer {
 		$tag_name = (string)$tag_name;
 		
 		// get the tag handler, and make sure we've got something
-		if(NULL === ($tag = $this->tag_handler->get($tag_name)))
+		if(NULL === ($tag = $this->tag_handler->select($tag_name)))
 			throw new HandlerException("Unable to handle template tag with ". 
 									   "name [{$tag_name}].");
 		
