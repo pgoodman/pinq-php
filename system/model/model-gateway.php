@@ -4,28 +4,26 @@
 
 !defined('DIR_SYSTEM') && exit();
 
+/**
+ * Class for handling gateways that have access to the model layer.
+ *
+ * @author Peter Goodman
+ */
 abstract class ModelGateway extends GatewayGateway {
 	
-	protected $_data,
-	          $_compiler,
-	          $_model_dict;
+	protected $_model_dict;
 	
-	public function setData(array $data) {
-		$this->_data = $data;
-	}
-	
-	public function getData() {
-		return $this->_data;
-	}
-	
+	/**
+	 * $g->setModelDictionary(ModelDictionary) -> void
+	 *
+	 * Give this gateway access to all models.
+	 */
 	public function setModelDictionary(Dictionary $models) {
 		$this->_model_dict = $models;
 	}
 	
 	/**
-	 * $d->createGateway(void) -> Gateway
-	 *
-	 * @internal
+	 * @see GatewayGateway::createGateway(...)
 	 */
 	protected function createGateway($name) {		
 		$gateway = parent::createGateway($name);
@@ -35,13 +33,16 @@ abstract class ModelGateway extends GatewayGateway {
 }
 
 /**
- * Class for handling relational models.
+ * Class for handling relational models. The relational model gateway is
+ * coupled to the PQL classes because they are the only way to express
+ * relations between models when querying the data source.
  *
  * @author Peter Goodman
  */
 abstract class RelationalModelGateway extends ModelGateway {
 	
-	protected $_relations;
+	protected $_relations,
+	          $_compiler;
 	
 	/**
 	 */
@@ -50,11 +51,17 @@ abstract class RelationalModelGateway extends ModelGateway {
 		unset($this->_relations);
 	}
 	
+	/**
+	 * $g->setRelations(ModelRelations) -> void
+	 *
+	 * Set the relations dictionary for this gateway.
+	 */
 	public function setRelations(ModelRelations $relations) {
 		$this->_relations = $relations;
 	}
 	
 	/**
+	 * @see GatewayGateway::createGateway(...)
 	 */
 	protected function createGateway($gateway_name) {
 		$gateway = parent::createGateway($gateway_name);
@@ -63,12 +70,15 @@ abstract class RelationalModelGateway extends ModelGateway {
 		return $gateway;
 	}
 	
+	/**
+	 * $g->createPqlQuery(void) -> void
+	 *
+	 * Create a PQL query for this named gateway.
+	 */
 	public function createPqlQuery() {
-		
-		$gateway_name = $this->getName();
-		
+				
 		// set the partial query to this query predicates object
-		if(NULL === $gateway_name)
+		if(NULL === ($gateway_name = $this->getName()))
 			return new Query;
 				
 		$data = $this->getData();
@@ -77,7 +87,14 @@ abstract class RelationalModelGateway extends ModelGateway {
 		);
 	}
 	
+	/**
+	 * $g->getPqlQueryCompiler(void) -> QueryCompiler
+	 *
+	 * Get the data-source specific query compiler for PQL queries handled by
+	 * this gateway.
+	 */
 	public function getPqlQueryCompiler() {
+		
 		if($this->_compiler === NULL) {
 			$this->_compiler = $this->_data_source->getQueryCompiler(
 				$this->_model_dict,
