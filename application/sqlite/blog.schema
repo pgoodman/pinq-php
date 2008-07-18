@@ -28,9 +28,9 @@ CREATE TABLE users (
 	url varchar(50),
 	password varchar(32),
 	login_key varchar(32),
-	
 	UNIQUE(email)
 );
+CREATE INDEX user_pass ON users(password);
 
 CREATE TABLE post_tags (
 	post_id integer unsigned,

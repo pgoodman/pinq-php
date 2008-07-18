@@ -1,6 +1,10 @@
 <?php
 
-class GatewayIdentityHandler implements EndpointHandler {
+/* $Id$ */
+
+!defined('DIR_SYSTEM') && exit();
+
+abstract class GatewayIdentityHandler implements EndpointHandler {
 	final public function handle($item) { 
 		return $item; 
 	}
