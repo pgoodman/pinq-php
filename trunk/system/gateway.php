@@ -216,6 +216,24 @@ abstract class GatewayGateway extends Gateway implements Named {
 	}
 	
 	/**
+	 * $g->setData(array) -> void
+	 *
+	 * Set context-specific data for this gateway.
+	 */
+	public function setData(array $data) {
+		$this->_data = $data;
+	}
+	
+	/**
+	 * $g->getData(void) -> array
+	 *
+	 * Get the context-specific data for this gateway.
+	 */
+	public function getData() {
+		return $this->_data;
+	}
+	
+	/**
 	 * $g->__get(string $gateway_name) <==> $g->$gateway_name -> Gateway
 	 *
 	 * Get a named gateway.
