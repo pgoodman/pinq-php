@@ -1,6 +1,13 @@
 <?php
 
+/* $Id$ */
+
+!defined('DIR_SYSTEM') && exit();
+
 /**
+ * Class that encompasses the general operations that can be performed on a
+ * data source.
+ *
  * @author Peter Goodman
  */
 abstract class Gateway {
@@ -8,12 +15,17 @@ abstract class Gateway {
 	protected $_type_handler,
 	          $_data_source;
 	
+	/**
+	 * Gateway(DataSource, TypeHandle)
+	 */
 	public function __construct(DataSource $ds, TypeHandler $types) {
 		$this->_type_handler = $types;
 		$this->_data_source = $ds;
 		$this->__init__();
 	}
 	
+	/**
+	 */
 	public function __destruct() {
 		$this->__del__();
 		unset(
@@ -22,10 +34,18 @@ abstract class Gateway {
 		);
 	}
 	
+	/**
+	 * $g->handleInput(mixed $input, string $query_type[, array &$args])
+	 * -> mixed
+	 * ! InvalidArgumentException
+	 * 
+	 * Given input, find handlers within the TypeHandler that can transform
+	 * it. The input will be transformed until an EndpointHandler is used.
+	 */
 	protected function handleInput($input, $query_type, array &$args = array()) {
-	
-		while(NULL !== ($handler = $this->_type_handler->getHandler($input))) {
 		
+		while(NULL !== ($handler = $this->_type_handler->getHandler($input))) {
+			
 			if($handler instanceof GatewayTypeHandler)
 				$handler->setGateway($this);
 		
@@ -34,12 +54,18 @@ abstract class Gateway {
 			if($handler instanceof EndpointHandler)
 				return $input;
 		}
-	
+		
+		// endpoint wasn't found
 		throw new InvalidArgumentException(
 			"Unsupported type passed as argument to Gateway::{$query_type}()."
 		);
 	}
 	
+	/**
+	 * $g->select(mixed $what[, array $using]) -> {Record, NULL}
+	 *
+	 * Get a single record from the data source.
+	 */
 	public function select($what, array $using = array()) {
 		return $this->getRecord($this->_data_source->select(
 			$this->handleInput($what, 'select', $using),
@@ -47,6 +73,11 @@ abstract class Gateway {
 		));
 	}
 	
+	/**
+	 * $g->selectAll(mixed $what[, array $using]) -> RecordIterator
+	 *
+	 * Get a record set from the data source and wrap it in a record iterator.
+	 */
 	public function selectAll($what, array $using = array()) {
 		return $this->getRecordIterator($this->_data_source->select(
 			$this->handleInput($what, 'selectAll', $using),
@@ -54,6 +85,11 @@ abstract class Gateway {
 		));
 	}
 	
+	/**
+	 * $g->delete(mixed $what[, array $using]) -> mixed
+	 *
+	 * Delete a record from the data source.
+	 */
 	public function delete($what, array $using = array()) {
 		return $this->_data_source->update(
 			$this->handleInput($what, 'delete', $using),
@@ -61,6 +97,11 @@ abstract class Gateway {
 		);
 	}
 	
+	/**
+	 * $g->insert(mixed $what[, array $using]) -> mixed
+	 *
+	 * Insert a record into the data source.
+	 */
 	public function insert($what, array $using = array()) {
 		return $this->_data_source->update(
 			$this->handleInput($what, 'insert', $using),
@@ -68,6 +109,11 @@ abstract class Gateway {
 		);
 	}
 	
+	/**
+	 * $g->update(mixed $what[, array $using]) -> mixed
+	 *
+	 * Modify a record in the data source.
+	 */
 	public function update($what, array $using = array()) {
 		return $this->_data_source->update(
 			$this->handleInput($what, 'update', $using),
@@ -140,24 +186,50 @@ abstract class Gateway {
 	protected function __del__() { }
 }
 
+/**
+ * Class that can also access named gateways with context specific data.
+ *
+ * @author Peter Goodman
+ */
 abstract class GatewayGateway extends Gateway implements Named {
 	
 	protected $_gateways = array(),
 	          $_name,
 	          $_data;
 	
+	/**
+	 * $g->getName(void) -> string
+	 *
+	 * Get the name of this gateway.
+	 */
 	public function getName() {
 		return $this->_name;
 	}
-
+	
+	/**
+	 * $g->setName(string) -> void
+	 *
+	 * Set the name of this gateway.
+	 */
 	public function setName($name) {
-		$this->_name = $name;
+		$this->_name = (string)$name;
 	}
 	
+	/**
+	 * $g->__get(string $gateway_name) <==> $g->$gateway_name -> Gateway
+	 *
+	 * Get a named gateway.
+	 */
 	public function __get($gateway_name) {
 		return $this->__call($gateway_name);
 	}
 	
+	/**
+	 * $g->__call(string $gateway_name[, array $data]) 
+	 * <==> $g->$gateway_name(**$data) -> Gateway
+	 *
+	 * Get a named gateway with context specific data.
+	 */
 	public function __call($gateway_name, array $data = array()) {
 		
 		if(isset($this->_gateways[$gateway_name]))
@@ -173,6 +245,11 @@ abstract class GatewayGateway extends Gateway implements Named {
 		return $this->_gateways[$gateway_name] = $gateway;
 	}
 	
+	/**
+	 * $g->createGateway(string $name) -> Gateway
+	 *
+	 * Create a new instance of a named gateway class or this class.
+	 */
 	protected function createGateway($name) {
 		$class = get_class($this);
 		
