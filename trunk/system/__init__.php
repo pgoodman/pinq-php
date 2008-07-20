@@ -51,7 +51,7 @@ define('ERROR_405', '/error/405');
 define('ERROR_500', '/error/500');
 
 // exceptions
-require_once DIR_SYSTEM .'/general-exceptions.php';
+require_once DIR_SYSTEM .'/exceptions.php';
 require_once DIR_SYSTEM .'/interfaces.php';
 require_once DIR_SYSTEM .'/response.php';
 
