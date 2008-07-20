@@ -16,15 +16,14 @@
 // fix some things in php's _SERVER array that aren't necessarily consistent
 // across platforms or that might be open to manipulation (such as HTTP_HOST)
 // by the client
-$server = array_merge($_SERVER, array(
-	'HTTP_HOST' => get_http_host(),
-	'REQUEST_URI' => get_uri(),
-	'DOCUMENT_ROOT' => get_document_root(),
-	'SCRIPT_FILENAME' => get_script_filename(),
-	'HTTPS' => (get_http_scheme() == 'https' ? 'on' : 'off'),
-	'REMOTE_ADDR' => get_user_ip(),
-	'REQUEST_METHOD' => get_request_method(),
-));
+$_SERVER['HTTP_HOST'] = Http::getHost();
+$_SERVER['REQUEST_URI'] = get_uri();
+$_SERVER['DOCUMENT_ROOT'] = get_document_root();
+$_SERVER['SCRIPT_FILENAME'] = get_script_filename();
+$_SERVER['HTTPS'] = (Http::getScheme() == 'https' ? 'on' : 'off');
+$_SERVER['REMOTE_ADDR'] = get_user_ip();
+$_SERVER['REQUEST_METHOD'] = get_request_method();
+$_SERVER['HTTP_ACCEPT'] = Http::getAcceptContentType();
 
 // overwrite the $GLOBALS array, then extract the new super globals by
 // reference into the current scope, overwriting the shorthand to the
@@ -34,7 +33,6 @@ unset($GLOBALS);
 
 extract(
 	array(
-		'_SERVER' => $server,
 		'_FILES' => new ReadOnlyDictionary($_FILES),
 		'_REQUEST' => NULL,
 	), 

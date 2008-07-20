@@ -9,7 +9,8 @@
  *
  * @author Peter Goodman
  */
-class PinqScopeStack extends StackOfDictionaries implements InstantiablePackage, Factory {
+class PinqScopeStack extends StackOfDictionaries 
+                     implements InstantiablePackage, Factory {
 	
 	static public $_class;
 	

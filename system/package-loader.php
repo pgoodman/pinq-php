@@ -35,6 +35,7 @@ interface ConfigurablePackage extends Package {
  * @author Peter Goodman
  */
 interface InstantiablePackage extends Package {
+	
 }
 
 /**
@@ -44,6 +45,7 @@ interface InstantiablePackage extends Package {
  * @author Peter Goodman
  */
 class InvalidPackageException extends InternalErrorResponse {
+	
 }
 
 /**

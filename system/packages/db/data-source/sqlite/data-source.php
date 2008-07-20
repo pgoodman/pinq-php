@@ -104,7 +104,7 @@ class SqliteDataSource extends PinqDatabase {
 		$error = '';
 		$query = $this->substituteArgs($query, $args);
 		
-		out('<pre>', $query, '</pre>');
+		echo '<pre>'. $query .'</pre>';
 		
 		$result = $this->conn->query(
 			$query,
@@ -126,7 +126,7 @@ class SqliteDataSource extends PinqDatabase {
 		$error = '';
 		$query = $this->substituteArgs($query, $args);
 		
-		out('<pre>', $query, '</pre>');
+		echo '<pre>'. $query .'</pre>';
 		
 		$result = $this->conn->queryExec(
 			$query,

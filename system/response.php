@@ -11,7 +11,7 @@ abstract class Response extends Exception {
 abstract class HttpResponse extends Response {
 	public function __construct($http_status_code) {
 		parent::__construct(NULL, $http_status_code);
-		set_http_status($http_status_code);
+		Http::setStatus($http_status_code);
 	}
 }
 
@@ -89,3 +89,19 @@ class InternalErrorResponse extends MetaResponse {
 function yield($route, $request_method = NULL) {
 	throw new MetaResponse($route, $request_method);
 }
+
+/**
+ * redirect(string $location) ! HttpRedirectResponse
+ *
+ * Do a HTTP redirect. If $as_url is TRUE then it means we're redirecting to
+ * a url and not a route.
+ *
+ * @author Peter Goodman
+ */
+function redirect($location) {
+	
+	// we throw an exception instead of redirecting so that when the exception
+	// is caught we can tear down any existing resources properly
+	throw new HttpRedirectResponse($location);
+}
+

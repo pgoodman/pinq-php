@@ -9,16 +9,16 @@
  *
  * @author Peter Goodman
  */
-class ErrorLocalResource extends AppLocalResource {	
+class ErrorResourceText extends AppResourceText {	
 	
 	//public $layout_file = 'error';
 	
-	public function ANY_401() { set_http_status(401); return $this->render(); }
-	public function ANY_403() { set_http_status(403); return $this->render(); }
-	public function ANY_404() { set_http_status(404); return $this->render(); }
-	public function ANY_405() { set_http_status(405); return $this->render(); }
-	public function ANY_500() { set_http_status(500); return $this->render(); }
+	public function ANY_401() { Http::setStatus(401); return $this->render(); }
+	public function ANY_403() { Http::setStatus(403); return $this->render(); }
+	public function ANY_404() { Http::setStatus(404); return $this->render(); }
+	public function ANY_405() { Http::setStatus(405); return $this->render(); }
+	public function ANY_500() { Http::setStatus(500); return $this->render(); }
 	public function ANY_validation() { 
-		set_http_status(500); return $this->render();
+		Http::setStatus(500); return $this->render();
 	}
 }

@@ -3,7 +3,7 @@
 /**
  * Install controller.
  */
-class InstallLocalResource extends PinqLocalResource {
+class InstallResourceText extends PinqResourceText {
 	
 	/**
 	 * Install the database tables.
@@ -22,7 +22,7 @@ class InstallLocalResource extends PinqLocalResource {
 			if(empty($query))
 				continue;
 			
-			out('<pre>', $query, '</pre>');
+			//out('<pre>', $query, '</pre>');
 			$this->db->insert($query);
 		}
 		

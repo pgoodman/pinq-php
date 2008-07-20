@@ -1,6 +1,6 @@
 <?php
 
-class AppLocalResource extends PinqLocalResource {
+class AppResourceText extends PinqResourceText {
 	
 	protected $db,
 	          $auth,
@@ -10,7 +10,6 @@ class AppLocalResource extends PinqLocalResource {
 	/**
 	 */
 	protected function __init__() {
-		
 		parent::__init__();
 		
 		// set up the basic template stuff
@@ -57,7 +56,6 @@ class AppLocalResource extends PinqLocalResource {
 			$this->history, 
 			$this->db
 		);
-		
 		parent::__del__();
 	}
 }

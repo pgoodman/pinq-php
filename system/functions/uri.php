@@ -80,7 +80,7 @@ function get_uri() {
  * @author Peter Goodman
  */
 function get_url() {
-	return get_http_scheme() .'://'. get_http_host() . get_uri();
+	return Http::getScheme() .'://'. Http::getHost() . get_uri();
 }
 
 /**

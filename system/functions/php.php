@@ -128,7 +128,7 @@ function set_http_cookie($name, $value, $expiry, $path = '/') {
 		);
 	}
 	
-	$host = trim(get_http_host(), '.');
+	$host = trim(Http::getHost(), '.');
 	
 	@setcookie(
 		(string)$name, 
@@ -136,7 +136,7 @@ function set_http_cookie($name, $value, $expiry, $path = '/') {
 		(int)$expiry, 
 		$path,
 		strpos($host, '.') !== FALSE ? ".{$host}" : '',
-		get_http_scheme() == 'https',
+		Http::getScheme() == 'https',
 		TRUE
 	);
 }

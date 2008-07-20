@@ -3,11 +3,7 @@
 /**
  * Admin post controller.
  */
-class AdminPostLocalResource extends AppLocalResource {
-	
-	public function ANY_index() {
-		out('nothing to see here...');
-	}
+class AdminPostResourceText extends AppResourceText {
 	
 	/**
 	 * Show the form to create a new blog post.
@@ -20,9 +16,7 @@ class AdminPostLocalResource extends AppLocalResource {
 	 * Validate the form data and create the blog post.
 	 */
 	public function POST_create() {
-		
-		out('you posted to create!');
-		
+				
 		try {
 			$_POST->require('title', 'body', 'tags');
 			

@@ -10,15 +10,13 @@ error_reporting(E_ALL | E_STRICT | E_RECOVERABLE_ERROR);
 date_default_timezone_set('GMT');
 setlocale(LC_CTYPE, 'C');
 
-// no need for this stuff
-ini_set('register_argc_argv', 0);
-
-// hide php
+// hide the PHP version 
 header("Server: Sparta", TRUE);
-header("X-Powered-By: Spartans", TRUE); // mwahahahahaha
-ini_set('expose_php', 0); // sometimes this does nothing, hence the above
+header("X-Powered-By: Spartans", TRUE);
+ini_set('expose_php', 0);
 
-// get rid of this crap
+// get rid of this stuff
+ini_set('register_argc_argv', 0);
 ini_set('register_globals', 0);
 ini_set('register_long_arrays', 0);
 set_magic_quotes_runtime(0);
@@ -29,9 +27,8 @@ ignore_user_abort(FALSE);
 
 // should some of the libraries in pinq operate in debug mode?
 define('PINQ_DEBUG', TRUE);
-
-// are we in IIS?
 define('PINQ_IN_IIS', defined('SERVER_IIS') && TRUE === SERVER_IIS);
+define('PINQ_MAX_META_RESPONSES', 2);
 
 // some core directories
 define('DIR_SYSTEM', dirname(__FILE__));
@@ -116,7 +113,6 @@ function pinq($script_file, $app_dir) {
 
 		// bring in the package loader
 		$packages = new PackageLoader($config);
-		$packages->load('local-resource');
 		$packages->load('input-dictionary');
 		$router = $packages->load('route-parser', array(
 			'controller_dir' => DIR_APPLICATION .'/resources/',
@@ -140,6 +136,7 @@ function pinq($script_file, $app_dir) {
 		
 		ob_start();
 		
+		$i = 0;
 		do {
 			// look for a yield or a flush buffer
 			try {
@@ -152,8 +149,11 @@ function pinq($script_file, $app_dir) {
 				// parser
 				list($dir, $pdir, $controller, $action, $arguments) = $path_info;
 				
+				$type = Resource::getMediaGroup();
+								
 				// get the class name and clean up the method name
-				$class = class_name("{$pdir} {$controller} local resource");
+				$packages->load("resource.{$type}");
+				$class = class_name("{$pdir} {$controller} resource {$type}");
 				
 				// bring in the controller file, we know it exists because the 
 				// route parser figured that out.
@@ -165,7 +165,8 @@ function pinq($script_file, $app_dir) {
 					require_once $dir .'/'. $controller . EXT;
 				
 					// if we're not working with a valid controller then error
-					if(!is_subclass_of($class, 'PinqLocalResource'))
+					if(!class_exists($class, FALSE) || 
+					   !is_subclass_of($class, 'Resource'))
 						yield(ERROR_404);
 				}
 				
@@ -212,8 +213,9 @@ function pinq($script_file, $app_dir) {
 			// all other exceptions will bubble up
 			break;
 			
-		} while(TRUE);
-		ob_end_clean();
+		} while(++$i < PINQ_MAX_META_RESPONSES);
+		
+		ob_flush(); // TODO: replace with ob_end_clean() later on
 		
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.
@@ -255,5 +257,5 @@ function pinq($script_file, $app_dir) {
 		exit;
 	}
 	
-	echo $output;
+	echo (string)$output;
 }
