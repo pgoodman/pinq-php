@@ -164,6 +164,7 @@ class Http {
 	 * Parse one of the HTTP_ACCEPT_* fields into an array.
 	 */
 	static protected function parseAccept($str) {
+		
 		$matches = array();
 		preg_match_all(
 			'~'.		
@@ -175,7 +176,7 @@ class Http {
 				'/'.
 				'(?P<subtype>'.
 					'[^+;,]+'. // main subtype
-					'(\+ [^;,]* )? '. // wbxml / xml
+					'(\+ [^;,]* )? '. // +wbxml / +xml / +
 				') '.
 			')'.
 
@@ -237,12 +238,6 @@ class Http {
 		// of the array and low quality being at the end.
 		arsort($accept);
 		$accept = array_keys($accept);
-		
-		/*
-		echo '<pre>';
-		print_r($accept);
-		echo '</pre>';
-		exit;*/
 
 		return $accept;
 	}

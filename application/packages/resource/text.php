@@ -50,7 +50,7 @@ class AppResourceText extends PinqResourceText {
 	/**
 	 */
 	protected function __del__() {
-		$this->history->push(get_url());
+		$this->history->push(Url::get());
 		unset(
 			$this->auth, 
 			$this->history, 

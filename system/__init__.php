@@ -127,7 +127,7 @@ function pinq($script_file, $app_dir) {
 		// do-while loop because if any controllers yield to another
 		// controller then the route to go to is passed in through the yield-
 		// control exception and set in the catch() block.
-		$route = get_route();
+		$route = Uri::getRoute();
 		$request_method = get_request_method();
 
 		// maintain a stack of controllers
@@ -215,7 +215,7 @@ function pinq($script_file, $app_dir) {
 			
 		} while(++$i < PINQ_MAX_META_RESPONSES);
 		
-		ob_flush(); // TODO: replace with ob_end_clean() later on
+		$output .= ob_get_clean(); // TODO: replace with ob_end_clean() later on
 		
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.
