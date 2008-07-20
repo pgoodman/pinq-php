@@ -14,6 +14,10 @@ function states() {
 }
 
 /**
+ */
+class InvalidStateException extends PinqException { }
+
+/**
  * A state machine-like class for validating the order of states. It is linear
  * insofar as a states move in only one direction: forward. The state machine
  * works as a stack and a queue. States are added to the stack, then as they

@@ -6,6 +6,7 @@
 
 $dir = dirname(__FILE__);
 
+require_once $dir .'/validation.php';
 require_once $dir .'/model-gateway.php';
 require_once $dir .'/model-definition.php';
 require_once $dir .'/model-dictionary.php';

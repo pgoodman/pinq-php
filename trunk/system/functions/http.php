@@ -10,7 +10,7 @@
  * Attempt to get the current http host. This function first tries to find the
  * host and then validates it against the (partial) host given in the main
  * PINQ application configuration file. If the host fails to validate then
- * a YieldResourceException is thrown.
+ * a MetaResponse exception is thrown.
  */
 function get_http_host() {
 	static $host;
@@ -134,7 +134,7 @@ function set_http_status($code) {
 	}
 	
 	if(headers_sent()) {
-		throw new InternalErrorException(
+		throw new InternalErrorResponse(
 			"Can't set HTTP status after headers have been sent."
 		);
 	}
@@ -152,16 +152,16 @@ function set_http_status($code) {
 }
 
 /**
- * redirect(string $location[, bool $as_url]) ! HttpRedirectException
+ * redirect(string $location) ! HttpRedirectResponse
  *
  * Do a HTTP redirect. If $as_url is TRUE then it means we're redirecting to
  * a url and not a route.
  *
  * @author Peter Goodman
  */
-function redirect($location, $as_url = FALSE) {
+function redirect($location) {
 	
 	// we throw an exception instead of redirecting so that when the exception
 	// is caught we can tear down any existing resources properly
-	throw new HttpRedirectException($location, $as_url);
+	throw new HttpRedirectResponse($location);
 }

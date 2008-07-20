@@ -102,6 +102,6 @@ class InstallLocalResource extends PinqLocalResource {
 		)));
 		
 		// done installing the blog
-		out('installed');
+		echo 'installed';
 	}
 }

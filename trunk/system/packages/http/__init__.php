@@ -7,7 +7,7 @@
 class PinqHttp implements ConfigurablePackage {
 	
 	protected $_models,
-	          $_ds,
+	          $_data_source,
 	          $_gateway_name;
 	
 	static public function configure(Loader $loader, 
@@ -15,24 +15,23 @@ class PinqHttp implements ConfigurablePackage {
 	                                  array $args) {
 
 		extract($args);
-
-		if(0 === $argc) {
-			throw new InvalidPackageException(
-				""
-			);
-		}
 		
+		$argv[] = ''; // centinel
 		$dir = DIR_APPLICATION ."/models/http/{$argv[0]}";
 		
-		if(!is_dir($dir)) {
-			
+		if(0 === $argc || !is_dir($dir)) {
+			throw new InvalidArgumentException(
+				"No models exist for the HTTP gateway [{$argv[0]}] or no ".
+				"gateway was provided."
+			);
 		}
 		
 		return new $class($dir);
 	}
 	
-	public function __construct($dir) {
+	protected function __construct($dir, DataSource $ds) {
 		$this->_gateway_dir = $dir;
+		$this->_data_source = $ds;
 	}
 	
 	public function __get($model_name) {
@@ -46,6 +45,5 @@ class PinqHttp implements ConfigurablePackage {
 		if(isset($this->_models[$gateway_id]))
 			return $this->_models[$gateway_id];
 		
-		$file = DIR_APPLICATION ."/models/http//{$model_name}";
 	}
 }

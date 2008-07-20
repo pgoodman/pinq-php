@@ -33,7 +33,7 @@ class TagsGateway extends PinqDatabaseModelGateway {
 	
 	public function getPopular() {
 		return $this->selectAll(
-			$this->getPartialQuery()->
+			$this->createPqlQuery()->
 			       order()->num_posts->desc->
 			       limit(6)
 		);

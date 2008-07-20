@@ -12,10 +12,7 @@
  * @author Peter Goodman
  */
 function element_view($id) {
-	return  call_user_class_array('PinqView')->setFile(
-		(string)$id, 
-		PinqView::ELEMENT
-	);
+	return  PinqView::factory()->setFile("elements/{$id}");
 }
 
 /**
@@ -26,10 +23,7 @@ function element_view($id) {
  * @author Peter Goodman
  */
 function page_view($id) {
-	return call_user_class_array('PinqView')->setFile(
-		(string)$id, 
-		PinqView::PAGE
-	);
+	return PinqView::factory()->setFile("pages/{$id}");
 }
 
 /**
@@ -40,11 +34,15 @@ function page_view($id) {
  * @author Peter Goodman
  */
 function layout_view($id) {
-	return call_user_class_array('PinqView')->setFile(
-		(string)$id, 
-		PinqView::LAYOUT
-	);
+	return PinqView::factory()->setFile("layouts/{$id}");
 }
+
+/**
+ * view(PinqView) ~ OutputResponse
+ *
+ * Throw a new output response.
+ */
+
 
 /**
  * Represents a single view.
@@ -57,11 +55,6 @@ class PinqView extends Dictionary implements InstantiablePackage, Factory {
 	// the class name for this package, normally would be PinqView if the
 	// package is not being extended
 	static public $_class;
-	
-	// view types, nicer to get at than using the plural strings
-	const LAYOUT = 'layouts',
-	      ELEMENT = 'elements',
-	      PAGE = 'pages';
 	
 	/**
 	 * PinqView::factory(void) -> PinqView
@@ -76,14 +69,14 @@ class PinqView extends Dictionary implements InstantiablePackage, Factory {
 	}
 	
 	/**
-	 * $v->setFile(string $file, int $type) -> PinqView
+	 * $v->setFile(string $file) -> PinqView
 	 *
 	 * Set a file to the view. This is not part of the constructor so that
 	 * the views can be bound to a file after they've been created.
 	 */
-	public function setFile($file, $type) {
+	public function setFile($file) {
 		
-		$file = realpath(DIR_APPLICATION ."/views/{$type}/{$file}.html");
+		$file = realpath(DIR_APPLICATION ."/views/{$file}.html");
 		
 		// only set the file if it exists
 		if(is_readable($file))
@@ -116,8 +109,11 @@ class PinqView extends Dictionary implements InstantiablePackage, Factory {
 		extract($scope->top(), EXTR_REFS | EXTR_OVERWRITE);
 		
 		// bring in the view
+		ob_start();
 		include $this->file;
-		
+		$tpl = ob_get_clean();		
 		$scope->pop();
+		
+		return $tpl;
 	}
 }

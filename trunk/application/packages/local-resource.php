@@ -24,7 +24,6 @@ class AppLocalResource extends PinqLocalResource {
 		);
 		
 		try {
-			
 			// get the popular tags and add them as keywords for the HTML meta
 			// tag
 			$tags = $this->db->tags->getPopular();

@@ -23,7 +23,7 @@ function expect_array_keys($array, array $required_keys) {
 	// not all the keys were present, throw an exception, unfortunately this
 	// error is somewhat vague.
 	if(count(array_intersect_key($array, $keys)) < count($keys)) {
-		throw new UnsatisfiedDependencyException(
+		throw new DomainException(
 			"Dependency not satisfied. Expected [". implode(',', $required_keys).
 			"] keys in array but did not find them all."
 		);

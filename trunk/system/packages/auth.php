@@ -207,7 +207,7 @@ class PinqAuth implements ConfigurablePackage {
 		
 		// the user is already logged in, log them out
 		if($this->isLogged()) {
-			throw new InternalErrorException(
+			throw new InternalErrorResponse(
 				"User already logged in."
 			);
 		}

@@ -9,6 +9,6 @@
  *
  * @author Peter Goodman
  */
-class ModelException extends InternalErrorException {
+class ModelException extends InternalErrorResponse {
 	
 }

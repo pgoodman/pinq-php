@@ -28,6 +28,8 @@ class PostsLocalResource extends AppLocalResource {
 			'tags' => $this->db->tags->selectAll($post->posts),
 			'comments' => $comments,
 		);
+		
+		return $this->render();
 	}
 	
 	/**
@@ -85,5 +87,7 @@ class PostsLocalResource extends AppLocalResource {
 			$this->view['form_errors'] = $e->getErrors();
 			yield(get_route(), 'GET');
 		}
+		
+		return $this->render();
 	}
 }
