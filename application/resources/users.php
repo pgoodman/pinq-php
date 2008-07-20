@@ -11,6 +11,8 @@ class UsersLocalResource extends AppLocalResource {
 		
 		if($this->auth->isLogged())
 			yield(ERROR_500);
+		
+		return $this->render();
 	}
 	
 	/**

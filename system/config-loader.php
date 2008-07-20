@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-class ConfigurationException extends InternalErrorException {
+class ConfigurationException extends InternalErrorResponse {
 	
 }
 

@@ -103,7 +103,7 @@ class PinqDatabaseRecordIterator extends OuterRecordIterator {
 		} else
 			$record = new PinqDatabaseRecord($data);
 		
-		// note: $record falls through nicely from the splitting up of models
+		// @note $record falls through nicely from the splitting up of models
 		//       when parsing a pql query if there is only one record to
 		//       parse out.
 		return $record;

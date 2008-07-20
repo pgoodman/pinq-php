@@ -43,7 +43,7 @@ interface InstantiablePackage extends Package {
  *
  * @author Peter Goodman
  */
-class InvalidPackageException extends InternalErrorException {
+class InvalidPackageException extends InternalErrorResponse {
 }
 
 /**
@@ -222,9 +222,10 @@ class PackageLoader extends Loader {
 		
 		// if the class implements Factory then tell it what class its factory
 		// method should instantiate
-		if(in_array('Factory', $interfaces)) {
+		if(in_array('Factory', $interfaces) && property_exists($class, '_class')) {
 			$property = new ReflectionProperty($class, '_class');
-			$property->setValue(NULL, $class);
+			if($property->isStatic() && $property->isPublic())
+				$property->setValue(NULL, $class);
 		}
 		
 		$this->offsetSet($key, $package);		

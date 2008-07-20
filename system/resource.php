@@ -32,19 +32,19 @@ abstract class Resource {
 	}
 	
 	/**
-	 * $r->getMethod(string $request_method, string $method) 
+	 * $r->getMethod(string $request_method, string $action) 
 	 * -> string
-	 * ! YieldResourceException
+	 * ! MetaResponse
 	 *
 	 * Given an action name and a request method, figure out which method to
 	 * call or yield to a different resource if no method is found.
 	 */
-	final public function getMethod($request_method, $method) {
+	final public function getMethod($request_method, $action) {
 		
-		if(method_exists($this, "{$request_method}_{$method}"))
-			return "{$request_method}_{$method}";
-		else if(method_exists($this, "ANY_{$method}"))
-			return "ANY_{$method}";
+		if(method_exists($this, "{$request_method}_{$action}"))
+			return "{$request_method}_{$action}";
+		else if(method_exists($this, "ANY_{$action}"))
+			return "ANY_{$action}";
 		
 		yield(ERROR_405);
 	}

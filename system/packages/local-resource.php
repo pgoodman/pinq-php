@@ -16,7 +16,6 @@ abstract class PinqLocalResource extends Resource implements Package {
 	// package loader
 	protected $view, // page view
 	          $layout, // layout view
-	          $render_layout = TRUE,
 	          $layout_file = 'default';
 	
 	/**
@@ -31,22 +30,26 @@ abstract class PinqLocalResource extends Resource implements Package {
 	}
 	
 	/**
+	 * $r->render([string $layout_file]) -> string
+	 *
+	 * Render the layout view. If a $layout_file is provided then it will
+	 * override the class property $layout_file.
 	 */
-	protected function __del__() {		
+	protected function render($layout_file = NULL) {
 		
-		// set the layout file and render it
-		if(!$this->isAborted() && $this->render_layout) {
-			$this->layout->setFile(
-				dirname($this->_file) .'/'. $this->layout_file, 
-				PinqView::LAYOUT
-			);
-			$this->layout->render($this->import('scope-stack'));
-		}
+		if($this->isAborted())
+			return NULL;
 		
-		unset(
-			$this->layout,
-			$this->view
+		$layout_file = !$layout_file ? $this->layout_file : $layout_file;
+		$dir = dirname($this->_file);
+		$this->layout->setFile("{$dir}/layouts/{$layout_file}");
+		$ret = $this->layout->render(
+			$this->import('scope-stack')
 		);
+		
+		unset($this->view, $this->layout);
+		
+		return $ret;
 	}
 	
 	/**
@@ -56,6 +59,6 @@ abstract class PinqLocalResource extends Resource implements Package {
 	 * view will use.
 	 */
 	public function beforeAction($method) {
-		$this->view->setFile("{$this->_file}/{$method}", PinqView::PAGE);
+		$this->view->setFile("pages/{$this->_file}/{$method}");
 	}
 }

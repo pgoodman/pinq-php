@@ -52,8 +52,8 @@ define('ERROR_500', '/error/500');
 
 // exceptions
 require_once DIR_SYSTEM .'/general-exceptions.php';
-require_once DIR_SYSTEM .'/control-flow-exceptions.php';
 require_once DIR_SYSTEM .'/interfaces.php';
+require_once DIR_SYSTEM .'/response.php';
 
 // core classes that stand on their own without pinq-defined interfaces/
 // abstract classes
@@ -63,7 +63,6 @@ require_once DIR_SYSTEM .'/dictionary.php';
 require_once DIR_SYSTEM .'/gateway.php';
 require_once DIR_SYSTEM .'/type-handler.php';
 require_once DIR_SYSTEM .'/loader.php';
-
 
 // bring in the core stuff that's used everywhere
 require_once DIR_SYSTEM .'/spl/__init__.php';
@@ -137,7 +136,7 @@ function pinq($script_file, $app_dir) {
 
 		// maintain a stack of controllers
 		$events = new Stack;
-		$event = NULL;
+		$event = $method = $output = NULL;
 		
 		ob_start();
 		
@@ -151,7 +150,7 @@ function pinq($script_file, $app_dir) {
 				
 				// get the controller, method, and arguments form the route
 				// parser
-				list($dir, $pdir, $controller, $method, $arguments) = $path_info;
+				list($dir, $pdir, $controller, $action, $arguments) = $path_info;
 				
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} local resource");
@@ -184,20 +183,15 @@ function pinq($script_file, $app_dir) {
 				
 				// figure out what method to call and call it
 				$event = $events->top();
-				$method = $event->getMethod($request_method, $method);
+				$method = $event->getMethod($request_method, $action);
 				$event->beforeAction($method);
-				call_user_func_array(array($event, $method), $arguments);
+				$output = call_user_func_array(
+					array($event, $method), 
+					$arguments
+				);
 			
 			// the controller has yielded its control to another controller
-			} catch(YieldResourceException $y) {
-				
-				// clear the output buffer for the new action
-				OutputBuffer::clearAll();
-				
-				// put the message from the exception into the new output
-				// buffer. if there was no message, ie: this was not cause by
-				// an error that threw an exception
-				err($y->getMessage());
+			} catch(MetaResponse $y) {
 				
 				$new_route = $y->getRoute();
 				$new_request_method = $y->getRequestMethod();
@@ -212,26 +206,19 @@ function pinq($script_file, $app_dir) {
 				$route = $new_route;
 				$request_method = $new_request_method;
 				
-				continue;
-				
-			// output and stop, we catch this early 
-			} catch(FlushBufferException $e) { }
+				continue;				
+			}
 			
 			// all other exceptions will bubble up
 			break;
 			
 		} while(TRUE);
-		
-		ob_end_flush();
-		OutputBuffer::flush('out');
+		ob_end_clean();
 		
 	// HTTP redirect exception, this is so that we adequately shut down
 	// resources such as open database connections, etc.
-	} catch(HttpRedirectException $r) {
-		
-		set_http_status(303);
-		$redirect_to = $r->getLocation();
-		
+	} catch(HttpRedirectResponse $r) {		
+		$redirect_url = $r->getLocation();
 		if($event)
 			$event->abort();
 
@@ -263,6 +250,10 @@ function pinq($script_file, $app_dir) {
 	);
 	
 	// redirect if necessary
-	if(isset($redirect_to) && !headers_sent())
-		header("Location: {$redirect_to}");
+	if(isset($redirect_url) && !headers_sent()) {
+		header("Location: {$redirect_url}", TRUE, 303);
+		exit;
+	}
+	
+	echo $output;
 }

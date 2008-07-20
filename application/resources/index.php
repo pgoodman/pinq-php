@@ -26,6 +26,8 @@ class IndexLocalResource extends AppLocalResource {
 				
 		$this->layout['title'] = 'Curious About Programming';
 		$this->view[] = $view;
+		
+		return $this->render();
 	}
 	
 	/**
@@ -48,6 +50,8 @@ class IndexLocalResource extends AppLocalResource {
 		$this->view['original_route'] = $_GET['route'];
 		$this->layout['original_route'] = $_GET['route'];
 		$this->layout['title'] = 'View Source';
+		
+		return $this->render();
 	}
 	
 	public function ANY_dump($table) {
@@ -59,7 +63,7 @@ class IndexLocalResource extends AppLocalResource {
 			echo '</pre>';
 		}*/
 		
-		out(count($rows), 'rows');
+		//out(count($rows), 'rows');
 	}
 	
 	/**
@@ -67,5 +71,6 @@ class IndexLocalResource extends AppLocalResource {
 	 */
 	public function GET_about() {
 		$this->layout['title'] = 'About '. $this->layout['blog_author'];
+		return $this->render();
 	}
 }

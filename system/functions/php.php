@@ -123,7 +123,7 @@ function random_hash() {
 function set_http_cookie($name, $value, $expiry, $path = '/') {
 	
 	if(headers_sent()) {
-		throw new InternalErrorException(
+		throw new InternalErrorResponse(
 			"Can't set cookie after headers have been sent."
 		);
 	}
