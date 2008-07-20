@@ -70,7 +70,7 @@ class PostsResourceText extends AppResourceText {
 			
 			if(!empty($form_errors)) {
 				$this->view['form_errors'] = $form_errors;
-				yield(get_route(), 'GET');
+				yield(Uri::getRoute(), 'GET');
 			}
 		}
 		
@@ -85,7 +85,7 @@ class PostsResourceText extends AppResourceText {
 			
 		} catch(FailedValidationException $e) {
 			$this->view['form_errors'] = $e->getErrors();
-			yield(get_route(), 'GET');
+			yield(Uri::getRoute(), 'GET');
 		}
 		
 		return $this->render();

@@ -17,7 +17,7 @@
 // across platforms or that might be open to manipulation (such as HTTP_HOST)
 // by the client
 $_SERVER['HTTP_HOST'] = Http::getHost();
-$_SERVER['REQUEST_URI'] = get_uri();
+$_SERVER['REQUEST_URI'] = Uri::get();
 $_SERVER['DOCUMENT_ROOT'] = get_document_root();
 $_SERVER['SCRIPT_FILENAME'] = get_script_filename();
 $_SERVER['HTTPS'] = (Http::getScheme() == 'https' ? 'on' : 'off');

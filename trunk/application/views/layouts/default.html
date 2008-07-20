@@ -44,7 +44,7 @@
 					<?if(isset($original_route)):?>
 					<a href="<?=url($original_route)?>" title="View the page that this source represents">normal</a>
 					<?else:?>
-					<a href="<?=url('view-source').'?route='.get_route()?>" title="View this page's PHP source">source</a>
+					<a href="<?=url('view-source').'?route='.Uri::getRoute()?>" title="View this page's PHP source">source</a>
 					<?endif;?>
 				</li>
 				<li>
