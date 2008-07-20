@@ -96,7 +96,8 @@ class PinqView extends Dictionary implements InstantiablePackage, Factory {
 		if(NULL === $this->file)
 			return;
 		
-		// set the immediate vars
+		// set the immediate vars, these are variables to extract into the
+		// scope, along with whatever is on top of the scope stack.
 		$immediate_vars = array_merge(
 			$this->toArray(),
 			($vars instanceof Dictionary) ? $vars->toArray() : (array)$vars

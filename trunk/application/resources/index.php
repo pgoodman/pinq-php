@@ -3,7 +3,7 @@
 /**
  * Index controller.
  */
-class IndexLocalResource extends AppLocalResource {
+class IndexResourceText extends AppResourceText {
 	
 	/**
 	 * Main function for the index controller.
@@ -46,7 +46,6 @@ class IndexLocalResource extends AppLocalResource {
 			TRUE
 		);
 		
-		// send the original route to the layout view
 		$this->view['original_route'] = $_GET['route'];
 		$this->layout['original_route'] = $_GET['route'];
 		$this->layout['title'] = 'View Source';
@@ -62,8 +61,6 @@ class IndexLocalResource extends AppLocalResource {
 			print_r($row);
 			echo '</pre>';
 		}*/
-		
-		//out(count($rows), 'rows');
 	}
 	
 	/**
