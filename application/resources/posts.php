@@ -8,7 +8,7 @@ class PostsResource extends AppResource {
 	/**
 	 * View a single post and its comments.
 	 */
-	public function GET_index($nice_title = '') {
+	public function GET($nice_title = '') {
 		
 		// get the post and if it doesn't exist or is a comment then error
 		$post = $this->db->posts->selectBy('nice_title', $nice_title);
@@ -35,7 +35,7 @@ class PostsResource extends AppResource {
 	/**
 	 * Add a new comment.
 	 */
-	public function POST_index($nice_title = '') {
+	public function POST($nice_title = '') {
 		
 		$post = $this->db->posts->selectBy('nice_title', $nice_title);
 		

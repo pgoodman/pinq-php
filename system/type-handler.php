@@ -68,18 +68,9 @@ class TypeHandler {
 		$type = gettype($obj);
 		
 		if($type == 'object') {
-			
-			if(empty($this->_handlers['object']))
-				return NULL;
-			
 			foreach($this->_handlers['object'] as $class => $handler) {
-				if(get_class($obj) == $class || is_subclass_of($obj, $class))
+				if($obj instanceof $class)
 					return $handler;
-				else {
-					$interfaces = class_implements($obj, FALSE);
-					if(in_array($class, $interfaces))
-						return $handler;
-				}
 			}
 			
 			return NULL;

@@ -12,15 +12,13 @@
 abstract class Resource {
 	
 	protected $_packages,
-	          $_aborted = FALSE,
-	          $_file;
+	          $_aborted = FALSE;
 	
 	/**
-	 * Resource(Loader, string $file)
+	 * Resource(Loader)
 	 */
-	final public function __construct(Loader $packages, $file) {
+	public function __construct(Loader $packages) {
 		$this->_packages = $packages;
-		$this->_file = $file;
 		$this->__init__();
 	}
 	
@@ -41,10 +39,13 @@ abstract class Resource {
 	 */
 	final public function getMethod($request_method, $action) {
 		
-		if(method_exists($this, "{$request_method}_{$action}"))
-			return "{$request_method}_{$action}";
-		else if(method_exists($this, "ANY_{$action}"))
-			return "ANY_{$action}";
+		$action = empty($action) || $action == 'index' ? '' : "_{$action}";
+		
+		if(method_exists($this, "{$request_method}{$action}"))
+			return "{$request_method}{$action}";
+		
+		else if(method_exists($this, "ANY{$action}"))
+			return "ANY{$action}";
 		
 		yield(ERROR_405);
 	}

@@ -7,7 +7,7 @@
 /**
  * Represents a request to a certain subset of available events. Events are
  * represented by public methods prefixed with either a specific request type
- * (in uppercase) or ANY, followed by an underscore. For example: ANY_index().
+ * (in uppercase) or ANY, followed by an underscore. For example: ANY().
  *
  * @author Peter Goodman
  */
@@ -16,7 +16,16 @@ abstract class PinqResource extends Resource implements Package {
 	// package loader
 	protected $view, // page view
 	          $layout, // layout view
-	          $layout_file = 'default';
+	          $layout_file = 'default',
+	          $_file;
+	
+	/**
+	 * PinqResource(Loader, string $file)
+	 */
+	public function __construct(Loader $packages, $file) {
+		parent::__construct($packages);
+		$this->_file = $file;
+	}
 	
 	/**
 	 * $r->__init__(void) -> void

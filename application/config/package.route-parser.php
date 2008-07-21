@@ -16,4 +16,4 @@ $routes['/(:year)/(:month)/(:day)'] = '/archive/$1/$2/$3';
 $routes['/tags/(:alphanum)'] = '/tags/index/$1';
 
 // viewing single post
-$routes['/(:year)/(:month)/(:day)/([a-zA-Z0-9-]*)'] = '/posts/index/$4';
+$routes['/(:year)/(:month)/(:day)/([a-zA-Z0-9-]*)'] = '/posts/$4';

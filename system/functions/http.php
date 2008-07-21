@@ -176,7 +176,7 @@ class Http {
 	 * Parse one of the HTTP_ACCEPT_* fields into an array.
 	 */
 	static protected function parseAccept($str) {
-		
+	
 		$matches = array();
 		preg_match_all(
 			'~'.		
@@ -204,10 +204,10 @@ class Http {
 			$matches,
 			PREG_SET_ORDER
 		);
-		
+	
 		return $matches;
 	}
-	
+
 	/**
 	 * Http::getAcceptContentTypes(void) -> array
 	 *
@@ -227,10 +227,11 @@ class Http {
 
 		// default to firefox
 		if(!isset($_SERVER['HTTP_ACCEPT'])) {
-			$accept[] = 'text/html';
-			$accept[] = 'application/xhtml+xml';
-			$accept[] = 'application/xml';
-			return $accept;
+			return $accept = array(
+				'text/html',
+				'application/xhtml+xml',
+				'application/xml',
+			);
 		}
 
 		$matches = self::parseAccept($_SERVER['HTTP_ACCEPT']);
@@ -246,8 +247,7 @@ class Http {
 			);
 		}
 
-		// sort the types by their quality, with high quality being at the start
-		// of the array and low quality being at the end.
+		// sort the types by their quality, with high quality at the start
 		arsort($accept);
 		$accept = array_keys($accept);
 
