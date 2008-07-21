@@ -103,27 +103,6 @@ abstract class Resource {
 	}
 	
 	/**
-	 * Resource::getMediaGroup(void) -> {text, application, media}
-	 *
-	 * Get the top-level media type grouping.
-	 */
-	static public function getMediaGroup() {
-		$http_accept = Http::getAcceptContentType();
-		$type = 'text';
-		
-		if(!empty($http_accept)) {
-			if(preg_match('~text|xml|html|xhtml|soap~', $http_accept[0]))
-				$type = 'text';
-			else if(0 === strpos($http_accept[0], 'application'))
-				$type = 'application';
-			else
-				$type = 'media';
-		}
-		
-		return $type;
-	}
-	
-	/**
 	 * $r->importNew(string $package_name, string $alias) -> {Package, void}
 	 *
 	 * Import a new instance of a package, regardless of if it's been imported

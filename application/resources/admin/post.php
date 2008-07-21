@@ -3,7 +3,7 @@
 /**
  * Admin post controller.
  */
-class AdminPostResourceText extends AppResourceText {
+class AdminPostResource extends AppResource {
 	
 	/**
 	 * Show the form to create a new blog post.

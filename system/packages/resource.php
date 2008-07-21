@@ -11,7 +11,7 @@
  *
  * @author Peter Goodman
  */
-abstract class PinqResourceText extends Resource implements Package {
+abstract class PinqResource extends Resource implements Package {
 	
 	// package loader
 	protected $view, // page view

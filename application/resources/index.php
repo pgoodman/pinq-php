@@ -3,7 +3,7 @@
 /**
  * Index controller.
  */
-class IndexResourceText extends AppResourceText {
+class IndexResource extends AppResource {
 	
 	/**
 	 * Main function for the index controller.
@@ -26,6 +26,8 @@ class IndexResourceText extends AppResourceText {
 				
 		$this->layout['title'] = 'Curious About Programming';
 		$this->view[] = $view;
+		
+		var_dump(Http::getPreferredContentType('application/xhtml+xml', 'text/html'));
 		
 		return $this->render();
 	}

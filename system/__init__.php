@@ -115,9 +115,10 @@ function pinq($script_file, $app_dir) {
 		$packages = new PackageLoader($config);
 		$packages->load('input-dictionary');
 		$router = $packages->load('route-parser', array(
-			'controller_dir' => DIR_APPLICATION .'/resources/',
+			'resources_dir' => DIR_APPLICATION .'/resources/',
 			'file_extension' => EXT,
 		));
+		$packages->load("resource");
 		
 		// set up the GET and POST superglobals as read-only dictionaries
 		$_POST = PinqInputDictionary::factory($_POST);
@@ -128,7 +129,7 @@ function pinq($script_file, $app_dir) {
 		// controller then the route to go to is passed in through the yield-
 		// control exception and set in the catch() block.
 		$route = Uri::getRoute();
-		$request_method = get_request_method();
+		$request_method = Http::getRequestMethod();
 
 		// maintain a stack of controllers
 		$events = new Stack;
@@ -148,12 +149,9 @@ function pinq($script_file, $app_dir) {
 				// get the controller, method, and arguments form the route
 				// parser
 				list($dir, $pdir, $controller, $action, $arguments) = $path_info;
-				
-				$type = Resource::getMediaGroup();
-								
+												
 				// get the class name and clean up the method name
-				$packages->load("resource.{$type}");
-				$class = class_name("{$pdir} {$controller} resource {$type}");
+				$class = class_name("{$pdir} {$controller} resource");
 				
 				// bring in the controller file, we know it exists because the 
 				// route parser figured that out.
