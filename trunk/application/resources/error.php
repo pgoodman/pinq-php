@@ -17,7 +17,7 @@ class ErrorResource extends AppResource {
 			'text/html',
 			'application/xhtml+xml',
 			'application/xml',
-			'application/json',
+			'application/json'
 		);
 		
 		switch($type) {

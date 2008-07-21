@@ -36,7 +36,7 @@ function __sort_routes(array $a, array $b) {
  *     disirable to have methods other than index that are available. However,
  *     methods other than *_index of an application index controller are only
  *     accessible directly, as show:
- *         /                  -> IndexResource::ANY_index
+ *         /                  -> IndexResource::ANY
  *         /index/method      -> IndexResource::ANY_method
  *
  *     To be able to access /index/method instead as /method, one would add
@@ -55,7 +55,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	
 	protected $allowed_chars = "a-zA-Z0-9_+-",
 			  $default_resource = 'index',
-			  $default_method = 'index';
+			  $default_method = '';
 	
 	// some config stuff
 	protected $base_dir,
@@ -286,7 +286,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			$temp = substr($route, strlen($prefix)-1);
 			$routes = &$this->_dict[$prefix];
 			$matches = array();
-			
+						
 			// sort the routes in descending order of pattern length to 
 			// hopefully maximize our changes of matching the right route
 			// early
@@ -304,10 +304,10 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 				// match the routes from start to finish
 				if(!preg_match('~^'.$pattern.'$~', $temp, $matches))
 					continue;
-				
+								
 				// make sure we get the arguments in the right order
 				$arguments = $this->parseArguments($maps_to, $matches);
-				$path = trim($maps_to, '/');
+				$path = $maps_to;
 				break;
 			}
 		}
@@ -317,7 +317,6 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		// extra /'s act as centinels to make sure that controller and method
 		// will be found.
 		$path_parts = explode('/', ltrim($path, '/') .'///');
-		
 		$i = 0;
 		
 		// build up the directory to the controller, making sure to ignore
@@ -331,8 +330,11 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		if(!empty($path_parts[$i]))
 			$controller = $path_parts[$i++];
 		
-		//$first_arg = isset($arguments[0]) ? $arguments[0] : NULL;
-		if(!empty($path_parts[$i])/* && $path_parts[$i] != $first_arg*/)
+		// make sure that we can find the method and that what we expect to
+		// be the method is not the first argument. If it is the first argument
+		// then we keep with the default_method
+		$first_arg = isset($arguments[0]) ? $arguments[0] : NULL;
+		if(!empty($path_parts[$i]) && $path_parts[$i] != $first_arg)
 			$method = $path_parts[$i++];
 		
 		if(empty($arguments))
@@ -366,7 +368,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	 *
 	 * @note This method does not do argument concatenation
 	 */
-	protected function parseArguments($route, array $sub) {
+	protected function parseArguments(&$route, array $sub) {
 		
 		// find all the variables within the route (in order)
 		$matches = array();
@@ -380,6 +382,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		
 		// fill up the arguments array
 		$arguments = array_fill(0, $count, NULL);
+		$subs = array();
 		
 		// iterate over the found variables
 		while(isset($matches[1][++$i])) {
@@ -394,7 +397,11 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 			
 			// put the argument in order.
 			$arguments[$i] = $sub[$index];
+			$subs[$i] = "\${$index}";
 		}
+		
+		// put the arguments into the route, in their proper order
+		$route = str_replace($subs, $arguments, $route);
 		
 		return $arguments;
 	}

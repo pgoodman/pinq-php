@@ -127,8 +127,7 @@ class PinqDatabaseQueryCompiler extends QueryCompiler {
 	 */
 	protected function recursiveJoin($dependent_model_alias, 
 	                           array $graph = array(), 
-	                                 $prefix) {
-		
+	                                 $prefix) {		
 		$sql = '';
 		$comma = '';
 		$query = $this->query;

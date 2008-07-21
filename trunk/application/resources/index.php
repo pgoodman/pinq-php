@@ -8,7 +8,7 @@ class IndexResource extends AppResource {
 	/**
 	 * Main function for the index controller.
 	 */
-	public function ANY_index() {
+	public function ANY() {
 		
 		$posts = $this->db->posts->selectAll(limit(11));
 		
@@ -26,9 +26,7 @@ class IndexResource extends AppResource {
 				
 		$this->layout['title'] = 'Curious About Programming';
 		$this->view[] = $view;
-		
-		var_dump(Http::getPreferredContentType('application/xhtml+xml', 'text/html'));
-		
+				
 		return $this->render();
 	}
 	

@@ -8,7 +8,7 @@ class InstallResource extends PinqResource {
 	/**
 	 * Install the database tables.
 	 */
-	public function GET_index() {
+	public function GET() {
 		
 		$this->db = $this->import('db.blog');
 		

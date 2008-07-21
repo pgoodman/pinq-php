@@ -10,8 +10,8 @@
 class PostsDefinition extends PinqDatabaseModelDefinition {
 	
 	const DRAFT = 0,
-		  PUBLISHED = 1,
-		  SPAM = 2;
+	      PUBLISHED = 1,
+	      SPAM = 2;
 	
 	public function describe() {
 		
@@ -28,7 +28,7 @@ class PostsDefinition extends PinqDatabaseModelDefinition {
 		
 		$this->body = array('type' => 'string');
 		
-		$this->user_id = array('type' => 'int',);
+		$this->user_id = array('type' => 'int');
 		
 		$this->nice_title = array(
 			'type' => 'string',
