@@ -151,30 +151,3 @@ function get_user_ip() {
 	
 	return $ip;
 }
-
-/**
- * get_request_method(void) -> {GET, HEAD, PUT, POST, DELETE, OPTIONS, TRACE}
- *
- * Get the current request method, If it doesn't validate then return GET.
- *
- * @note This function returns the request method in uppercase.
- */
-function get_request_method() {
-	static $request_method;
-	
-	if(NULL !== $request_method)
-		return $request_method;
-	
-	$methods = array(
-		'GET', 'HEAD',
-		'PUT', 'POST', 'DELETE',
-		'OPTIONS', 'TRACE',
-	);
-	
-	// default to a GET request
-	$method = strtoupper(get_env('REQUEST_METHOD'));
-	if(!in_array($method, $methods))
-		$method = 'GET';
-	
-	return $request_method = strtoupper($method);
-}

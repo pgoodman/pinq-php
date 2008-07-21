@@ -1,6 +1,6 @@
 <?php
 
-class UsersResourceText extends AppResourceText {
+class UsersResource extends AppResource {
 	
 	/**
 	 * Show the user registration form.

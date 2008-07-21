@@ -3,7 +3,7 @@
 /**
  * Install controller.
  */
-class InstallResourceText extends PinqResourceText {
+class InstallResource extends PinqResource {
 	
 	/**
 	 * Install the database tables.

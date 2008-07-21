@@ -46,7 +46,7 @@ class MetaResponse extends Response {
 	 */
 	public function __construct($route, $request_method = NULL) {
 		$this->_route = $route;
-		$this->_request_method = !$request_method ? get_request_method() 
+		$this->_request_method = !$request_method ? Http::getRequestMethod() 
 		                                          : $request_method;
 	}
 	
