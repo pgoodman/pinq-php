@@ -12,6 +12,8 @@ class IndexResource extends AppResource {
 		
 		$posts = $this->db->posts->selectAll(limit(11));
 		
+		echo help($posts);
+		
 		$view = array(
 			'post' => NULL,
 			'posts' => NULL,
@@ -21,7 +23,9 @@ class IndexResource extends AppResource {
 		if(count($posts)) {
 			$view['post'] = $posts->shift();
 			$view['posts'] = $posts;
-			$view['tags'] = $this->db->tags->selectAll($view['post']->posts);
+			$view['tags'] = $this->db->tags('name', 'id')->selectAll(
+				$view['post']->posts
+			);
 		}
 				
 		$this->layout['title'] = 'Curious About Programming';
@@ -51,16 +55,6 @@ class IndexResource extends AppResource {
 		$this->layout['title'] = 'View Source';
 		
 		return $this->render();
-	}
-	
-	public function ANY_dump($table) {
-		//$this->db->delete(from($table));
-		/*$rows = $this->db->selectAll(from($table)->select(ALL));
-		foreach($rows as $row) {
-			echo '<pre>';
-			print_r($row);
-			echo '</pre>';
-		}*/
 	}
 	
 	/**

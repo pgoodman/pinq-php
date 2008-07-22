@@ -10,4 +10,3 @@ $dir = dirname(__FILE__);
 // know that it is also the name of the framework, I just really liked it!
 require_once $dir .'/query.php';
 require_once $dir .'/query-predicates.php';
-require_once $dir .'/query-compiler.php';

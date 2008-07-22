@@ -9,8 +9,7 @@
  * SQL query.
  * @author Peter Goodman
  */
-class PinqDbPqlQueryCompiler extends QueryCompiler 
-                             implements InstantiablePackage {
+class PinqDbPqlQueryCompiler extends PinqPqlQueryCompiler {
 	
 	// needed in query compilation for immediate constants
 	protected $db;
@@ -19,7 +18,7 @@ class PinqDbPqlQueryCompiler extends QueryCompiler
 	 * Constructor, redefined to bring in the database.
 	 */
 	public function __construct(Dictionary $models, 
-	          PinqModelRelationalManager $relations,
+	            PinqModelRelationalManager $relations,
 	                              Resource $db) {
 		
 		parent::__construct($models, $relations);
@@ -105,8 +104,13 @@ class PinqDbPqlQueryCompiler extends QueryCompiler
 			$select[] = "1 AS __{$model_name}";
 						
 			// we're getting multiple columns from this table
-			foreach($columns as $alias => $column)
+			foreach($columns as $alias => $column) {
+				
+				if(is_int($alias))
+					$alias = $column;
+				
 				$select[] = "{$table_alias}.{$column} AS {$model_name}_{$alias}";
+			}
 			
 			// if we're doing any counting the we need to include these columns
 			// as well
@@ -204,7 +208,7 @@ class PinqDbPqlQueryCompiler extends QueryCompiler
 	protected function compileReference($field, $model_alias = NULL) {
 		
 		$contexts = $this->query->getContexts();
-		$use_selects = $this->query_type === self::SELECT;
+		$use_selects = $this->query_type === Query::SELECT;
 		
 		// only one table is being used and we're not doing a select query,
 		// ie: there is no field aliasing
@@ -456,7 +460,7 @@ class PinqDbPqlQueryCompiler extends QueryCompiler
 		$this->compileRelationsAsPredicates();
 		$where = $this->compilePredicates('where');
 		
-		if($this->query_type != self::DELETE && !empty($set_sql))
+		if($this->query_type != Query::DELETE && !empty($set_sql))
 			$sql .= " SET {$set_sql} ";
 		
 		if(!empty($where)) $sql .= ' WHERE '. implode(' ', $where);

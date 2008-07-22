@@ -67,16 +67,9 @@ abstract class Gateway {
 	 * Get a single record from the data source.
 	 */
 	public function select($what, array $using = array()) {
-		$record_iterator = $this->_resource->GET(
-			$this->handleInput($what, 'select', $using),
-			$using
+		return $this->_resource->GET(
+			$this->handleInput($what, GatewayTypeHandler::GET_ONE, $using)
 		);
-		
-		if(0 === count($record_iterator))
-			return NULL;
-				
-		$record_iterator->rewind();
-		return $record_iterator->current();
 	}
 	
 	/**
@@ -86,44 +79,8 @@ abstract class Gateway {
 	 */
 	public function selectAll($what, array $using = array()) {
 		return $this->_resource->GET(
-			$this->handleInput($what, 'selectAll', $using)
+			$this->handleInput($what, GatewayTypeHandler::GET_MANY, $using)
 		);
-	}
-	
-	/**
-	 * $g->getValue(mixed $query[, array $args]) -> {string, int, void}
-	 *
-	 * Using the record returned from ModelGateway::get(), return the value of
-	 * the first selected field or NULL if no record could be found.
-	 *
-	 * @example
-	 *     pql query to get the number of rows in a model:
-	 *         $num_records = $g->getValue(
-	 *             from('model_name')->count('field_name')
-	 *         );
-	 */
-	public function selectValue($query, array $args = array()) {
-		$row = $this->select($query, $args);
-		
-		// oh well, no row to return
-		if(NULL === $row)
-			return NULL;
-
-		// dig deep into the record if we are dealing with an outer record
-		while($row instanceof OuterRecord)
-			$row = $row->getRecord();
-		
-		// we are now likely dealing with a InnerRecord that is also a dictionary
-		if($row instanceof Dictionary)
-			$row = $row->toArray();
-		
-		$row = array_values($row);
-		
-		// does no first element exist?
-		if(!isset($row[0]))
-			return NULL;
-		
-		return $row[0];
 	}
 	
 	/**
@@ -133,7 +90,7 @@ abstract class Gateway {
 	 */
 	public function delete($what, array $using = array()) {
 		return $this->_resource->DELETE(
-			$this->handleInput($what, 'delete', $using)
+			$this->handleInput($what, GatewayTypeHandler::DELETE, $using)
 		);
 	}
 	
@@ -144,7 +101,7 @@ abstract class Gateway {
 	 */
 	public function insert($what, array $using = array()) {
 		return $this->_resource->PUT(
-			$this->handleInput($what, 'update', $using)
+			$this->handleInput($what, GatewayTypeHandler::PUT, $using)
 		);
 	}
 	
@@ -155,7 +112,7 @@ abstract class Gateway {
 	 */
 	public function update($what, array $using = array()) {
 		return $this->_resource->POST(
-			$this->handleInput($what, 'insert', $using)
+			$this->handleInput($what, GatewayTypeHandler::POST, $using)
 		);
 	}
 	
@@ -192,7 +149,7 @@ abstract class Gateway {
  *
  * @author Peter Goodman
  */
-abstract class GatewayGateway extends Gateway implements Named {
+abstract class GatewayAggregate extends Gateway implements Named {
 	
 	protected $_gateways = array(),
 	          $_name,
@@ -251,8 +208,9 @@ abstract class GatewayGateway extends Gateway implements Named {
 	 */
 	public function __call($gateway_name, array $data = array()) {
 		
-		if(isset($this->_gateways[$gateway_name]))
-			return $this->_gateways[$gateway_name];
+		$sdata = serialize($data);
+		if(isset($this->_gateways[$gateway_name][$sdata]))
+			return $this->_gateways[$gateway_name][$sdata];
 		
 		$gateway = $this->getGateway($gateway_name);
 		
@@ -261,7 +219,7 @@ abstract class GatewayGateway extends Gateway implements Named {
 			$gateway->setData($data);
 		}
 		
-		return $this->_gateways[$gateway_name] = $gateway;
+		return $this->_gateways[$gateway_name][$sdata] = $gateway;
 	}
 	
 	/**
@@ -296,6 +254,12 @@ abstract class GatewayGateway extends Gateway implements Named {
  * @author Peter Goodman
  */
 abstract class GatewayTypeHandler implements IntermediateHandler {
+	
+	const GET_ONE = 1,
+	      GET_MANY = 2,
+	      PUT = 4,
+	      POST = 8,
+	      DELETE = 16;
 	
 	protected $_gateway;
 	

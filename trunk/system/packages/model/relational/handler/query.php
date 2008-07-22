@@ -12,11 +12,11 @@ class PinqModelRelationalHandlerQuery extends GatewayTypeHandler
 	
 	public function __construct() {
 		$this->_query_types = array(
-			'insert' => QueryCompiler::INSERT,
-			'update' => QueryCompiler::UPDATE,
-			'delete' => QueryCompiler::DELETE,
-			'select' => QueryCompiler::SELECT,
-			'selectAll' => QueryCompiler::SELECT,
+			self::PUT => Query::INSERT,
+			self::POST => Query::UPDATE,
+			self::DELETE => Query::DELETE,
+			self::GET_ONE => Query::SELECT,
+			self::GET_MANY => Query::SELECT,
 		);
 	}
 	
@@ -26,7 +26,7 @@ class PinqModelRelationalHandlerQuery extends GatewayTypeHandler
 		
 		$compile_type = $this->_query_types[$type];
 		$is_set_type = $compile_type & (
-			QueryCompiler::INSERT | QueryCompiler::UPDATE
+			Query::INSERT | Query::UPDATE
 		);
 		
 		// the query has already been compiled and cached, use it.
@@ -36,7 +36,7 @@ class PinqModelRelationalHandlerQuery extends GatewayTypeHandler
 		}
 		
 		// TODO: putting this here seems like a hack
-		if($type == 'select')
+		if($type & GatewayTypeHandler::GET_ONE)
 			$query->limit(1);
 		
 		// compile the query

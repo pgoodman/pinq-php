@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-class PinqModelGateway extends GatewayGateway 
+class PinqModelGateway extends GatewayAggregate 
                        implements InstantiablePackage {
 	
 	protected $_model_dict;
@@ -24,7 +24,7 @@ class PinqModelGateway extends GatewayGateway
 	}
 	
 	/**
-	 * @see GatewayGateway::getGateway(...)
+	 * @see GatewayAggregate::getGateway(...)
 	 */
 	protected function getGateway($name) {		
 		$gateway = parent::getGateway($name);

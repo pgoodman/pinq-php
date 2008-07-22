@@ -1,5 +1,17 @@
 <?php
 
+/* $Id$ */
+
+!defined('DIR_SYSTEM') && exit();
+
+/**
+ * Class to handle a stack of URLs in the session.
+ *
+ * @author Peter Goodman
+ * @note This isn't a complete solution to the problem of being able to
+ *       redirect to the previous page as it sees history as being strictly a
+ *       stack and not a graph.
+ */
 class PinqHistoryStack extends Stack implements ConfigurablePackage {
 	
 	/**
@@ -58,7 +70,6 @@ class PinqHistoryStack extends Stack implements ConfigurablePackage {
 		$this->_top = count($history)-1;
 		$this->_max_urls = (int)$max_urls_in_stack;
 		$this->_exclude = FALSE;
-		
 		$this->__init__();
 	}
 	
@@ -67,7 +78,6 @@ class PinqHistoryStack extends Stack implements ConfigurablePackage {
 	 *       effectively owns this stack.
 	 */
 	public function __destruct() {
-		
 		$this->__del__();
 		
 		// we need to slice off part of the stack.
@@ -90,13 +100,14 @@ class PinqHistoryStack extends Stack implements ConfigurablePackage {
 	/**
 	 * $h->pop(void) -> string
 	 *
-	 * Pop a url off the history stack.
+	 * Pop a url off the history stack. If the stack is empty then the base
+	 * url is returned.
 	 */
 	public function pop() {
 		if(!$this->isEmpty())
 			return parent::pop();
 		
-		return url();
+		return Url::getBase();
 	}
 	
 	/**

@@ -60,7 +60,6 @@ class UsersGateway extends PinqModelRelationalGateway {
 
 class UsersRecord extends InnerRecord {
 	public function __init__() {
-		$this['display_id'] = base36_encode($this['id']);
 		$this['perma_link'] = url('users', $this['display_id']);
 	}
 }

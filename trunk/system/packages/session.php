@@ -125,7 +125,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage, Session {
 			));
 			$query->where()->{$config['field_time']}->geq(time() - $gc_time)
 			               ->and->{$config['field_id']}->eq(_);
-						
+									
 			try {
 				do {
 					// create a session record
@@ -144,7 +144,7 @@ class PinqSession extends OuterRecord implements ConfigurablePackage, Session {
 					// get an existing session record from before or the one
 					// we just created
 					$record = $gateway->select($query, array($current_id));
-					
+
 					// bad record, will only happen after not creating a record
 					if($record === NULL) {
 						$create = TRUE;
