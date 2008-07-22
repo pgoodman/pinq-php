@@ -245,7 +245,7 @@ abstract class GatewayGateway extends Gateway implements Named {
 		if(isset($this->_gateways[$gateway_name]))
 			return $this->_gateways[$gateway_name];
 		
-		$gateway = $this->createGateway($gateway_name);
+		$gateway = $this->getGateway($gateway_name);
 		
 		if($gateway instanceof self) {
 			$gateway->setName($gateway_name);
@@ -256,11 +256,11 @@ abstract class GatewayGateway extends Gateway implements Named {
 	}
 	
 	/**
-	 * $g->createGateway(string $name) -> Gateway
+	 * $g->getGateway(string $name) -> Gateway
 	 *
 	 * Create a new instance of a named gateway class or this class.
 	 */
-	protected function createGateway($name) {
+	protected function getGateway($name) {
 		$class = get_class($this);
 		
 		if($name === $this->getName())

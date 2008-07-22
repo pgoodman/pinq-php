@@ -17,7 +17,7 @@ class MysqlDataSource extends PinqDatabase {
 	 */
 	public function __construct($host, $user = '', $pass = '') {
 		if(!($this->conn = mysql_connect($host, $user, $pass, FALSE)))
-			throw new PinqDatabaseException("Could not connect to the database.");
+			throw new PinqDbException("Could not connect to the database.");
 	}
 	
 	/**
@@ -25,7 +25,7 @@ class MysqlDataSource extends PinqDatabase {
 	 */
 	public function open($name) {
 		if(!mysql_select_db($name, $this->conn)) {
-			throw new PinqDatabaseException(
+			throw new PinqDbException(
 				"Could not connect to the database [{$name}]. ".
 				$this->error()
 			);
@@ -52,7 +52,7 @@ class MysqlDataSource extends PinqDatabase {
 		// assuming proper use of the $args array because the query has not
 		// had its substitutes replaced
 		if(FALSE === $result) {
-			throw new PinqDatabaseException(
+			throw new PinqDbException(
 				"The following database query failed:".
 				"<pre>{$query}</pre>".
 				"The error reported was: ".
