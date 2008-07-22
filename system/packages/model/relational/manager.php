@@ -22,7 +22,7 @@ function through() {
  *
  * @author Peter Goodman
  */
-class PinqModelRelationalRelations implements InstantiablePackage {
+class PinqModelRelationalManager implements InstantiablePackage {
 	
 	const DIRECT = 1,
 	      INDIRECT = 2;

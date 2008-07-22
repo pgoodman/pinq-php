@@ -153,7 +153,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 	 * Get the query compiler.
 	 */
 	public function getQueryCompiler(Dictionary $models, 
-	               PinqModelRelationalRelations $relations) {
+	               PinqModelRelationalManager $relations) {
 	
 		return $this->_packages->load('pql.query-compiler', array(
 			$models,

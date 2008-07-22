@@ -64,7 +64,7 @@ abstract class PinqDbResource extends Resource
 	 * Get the query compiler.
 	 */
 	public function getQueryCompiler(Dictionary $models, 
-	               PinqModelRelationalRelations $relations) {
+	               PinqModelRelationalManager $relations) {
 	
 		return new PinqDatabaseQueryCompiler(
 			$models,

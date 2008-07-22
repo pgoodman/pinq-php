@@ -62,14 +62,14 @@ class PinqDb implements ConfigurablePackage {
 		
 		// create a new package loader for this database driver
 		$packages = self::getPackageLoader($config, $driver);
+		$packages->load('model.relational.definition');
 
 		// connect to the database
-		$packages->load('model.relational.definition');
 		$database = $packages->loadNew('resource', array($packages));
 		$database->connect($host, $user, $pass, $name);
 		
 		// get a relations object, this stores up relations
-		$relations = $loader->loadNew('model.relational.relations');
+		$relations = $loader->loadNew('model.relational.manager');
 		
 		// set up the gateway
 		$gateway = $packages->loadNew('model.relational.gateway', array(

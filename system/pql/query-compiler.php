@@ -26,9 +26,9 @@ abstract class QueryCompiler {
 	          $query_type;
 	
 	/**
-	 * QueryCompiler(PinqModelDictionary, PinqModelRelationalRelations)
+	 * QueryCompiler(PinqModelDictionary, PinqModelRelationalManager)
 	 */
-	public function __construct(Dictionary $models, PinqModelRelationalRelations $relations) {
+	public function __construct(Dictionary $models, PinqModelRelationalManager $relations) {
 		$this->models = $models;
 		$this->relations = $relations;
 	}

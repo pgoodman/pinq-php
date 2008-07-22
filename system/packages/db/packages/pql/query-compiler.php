@@ -19,7 +19,7 @@ class PinqDbPqlQueryCompiler extends QueryCompiler
 	 * Constructor, redefined to bring in the database.
 	 */
 	public function __construct(Dictionary $models, 
-	          PinqModelRelationalRelations $relations,
+	          PinqModelRelationalManager $relations,
 	                              Resource $db) {
 		
 		parent::__construct($models, $relations);

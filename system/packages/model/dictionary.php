@@ -7,7 +7,7 @@
 /**
  * Manages all models for a specific data source (withough knowing what that
  * data source is). This class also manages all relations between the models
- * through an instance of the PinqModelRelationalRelations class. 
+ * through an instance of the PinqModelRelationalManager class. 
  *
  * @author Peter Goodman
  */

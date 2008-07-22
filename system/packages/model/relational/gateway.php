@@ -26,11 +26,11 @@ class PinqModelRelationalGateway extends PinqModelGateway {
 	}
 	
 	/**
-	 * $g->setRelations(PinqModelRelationalRelations) -> void
+	 * $g->setRelations(PinqModelRelationalManager) -> void
 	 *
 	 * Set the relations dictionary for this gateway.
 	 */
-	public function setRelations(PinqModelRelationalRelations $relations) {
+	public function setRelations(PinqModelRelationalManager $relations) {
 		$this->_relations = $relations;
 	}
 	
