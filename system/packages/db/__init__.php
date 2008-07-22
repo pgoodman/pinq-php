@@ -8,12 +8,6 @@ define('DIR_PACKAGE_DATABASE', dirname(__FILE__));
 
 // bring in the needed database files
 require_once DIR_PACKAGE_DATABASE .'/exceptions.php';
-require_once DIR_PACKAGE_DATABASE .'/data-source/data-source.php';
-require_once DIR_PACKAGE_DATABASE .'/data-source/record-iterator.php';
-require_once DIR_PACKAGE_DATABASE .'/data-source/record.php';
-require_once DIR_PACKAGE_DATABASE .'/model/model-gateway.php';
-require_once DIR_PACKAGE_DATABASE .'/model/model-definition.php';
-require_once DIR_PACKAGE_DATABASE .'/pql/query-compiler.php';
 
 /**
  * Class for the database package to configure itself.
@@ -24,15 +18,14 @@ class PinqDb implements ConfigurablePackage {
 	/**
 	 * Configure this package.
 	 */
-	static public function configure(Loader $loader, Loader $config, array $args) {
+	static public function configure(Loader $loader, 
+	                                 Loader $config, 
+	                                  array $args) {
 		
 		// make sure the arguments passed into this package from the loader
 		// has the information that we expect
 		PINQ_DEBUG && expect_array_keys($args, array(
-			'argv',
-			'argc',
-			'class',
-			'key',
+			'argv', 'argc', 'class',
 		));
 		
 		// bring out the above variables for convenience
@@ -49,7 +42,7 @@ class PinqDb implements ConfigurablePackage {
 		// if $argv[0] also doesn't exist then the isset will fail, which is
 		// nice
 		if(!isset($info[$argv[0]])) {
-			throw new UnexpectedValueException(
+			throw new ConfigurationException(
 				"No configuration information exists for the [{$argv[0]}] ".
 				"database. Please check the [package.db.php] file."
 			);
@@ -58,12 +51,7 @@ class PinqDb implements ConfigurablePackage {
 		// make sure that the config array has the information that we expect 
 		// to extract from it
 		PINQ_DEBUG && expect_array_keys($info[$argv[0]], array(
-			'driver',
-			'host',
-			'user',
-			'pass',
-			'name',
-			'port',
+			'driver', 'host', 'user', 'pass', 'name', 'port',
 		));
 		
 		// bring the database config info into the current scope
@@ -71,65 +59,99 @@ class PinqDb implements ConfigurablePackage {
 
 		// figure out the driver name and the file its located in
 		$driver = strtolower($driver);
-		$file = DIR_PACKAGE_DATABASE ."/data-source/{$driver}/__init__.php";
-
-		// uh oh, the driver file doesn't exist, error
-		if(!file_exists($file)) {
-			throw new ConfigurationException(
-				"Error in [package.db.php], database driver [{$driver}] ".
-				"does not exist or is not supported."
-			);
-		}
-
-		// bring in the database-specific classes
-		require_once $file;
-
-		// figure out the class name for this database. It's not suffixed with
-		// PinqDatabase because that caused problems for SQLite.
-		$class = class_name($driver) . 'DataSource';
+		
+		// create a new package loader for this database driver
+		$packages = self::getPackageLoader($config, $driver);
 
 		// connect to the database
-		$database = new $class($host, $user, $pass);
-		$database->open($name);
+		$packages->load('model.relational.definition');
+		$database = $packages->loadNew('resource', array($packages));
+		$database->connect($host, $user, $pass, $name);
 		
-		$relations = new ModelRelations;
-		$gateway = new PinqDatabaseModelGateway(
-			$database, 
-			self::createTypeHandlers()
-		);		
+		// get a relations object, this stores up relations
+		$relations = $loader->loadNew('model.relational.relations');
 		
-		$gateway->setRelations($relations);
-		$gateway->setModelDictionary(new RelationalModelDictionary(
-			DIR_APPLICATION ."/models/db/{$argv[0]}", 
-			$relations
+		// set up the gateway
+		$gateway = $packages->loadNew('model.relational.gateway', array(
+			$database,
+			self::getTypeHandler($loader),
 		));
+		$gateway->setRelations($relations);
+		$gateway->setModelDictionary(
+			$loader->loadNew('model.relational.dictionary', array(
+				DIR_APPLICATION ."/models/db/{$argv[0]}", 
+				$relations,
+			))
+		);
 		
 		return $gateway;
 	}
 	
-	static protected function createTypeHandlers() {
-		$type_handlers = new TypeHandler;
+	/**
+	 * PinqDb::getTypeHandler(PackageLoader) -> PinqTypeHandler
+	 *
+	 * Create a type handler for input to gateways and add various types
+	 * to it.
+	 */
+	static protected function getTypeHandler(Loader $loader) {
+		$handler = $loader->loadNew('type-handler');
 		
-		$type_handlers->handleClass(
-			'Query',
-			new RelationalGatewayQueryHandler
+		$handler->handleObject(
+			'Query', $loader->load('model.relational.handler.query')
 		);
 		
-		$type_handlers->handleClass(
-			'QueryPredicates',
-			new RelationalGatewayQueryPredicatesHandler
+		$handler->handleObject(
+			'QueryPredicates', $loader->load(
+				'model.relational.handler.query-predicates'
+			)
 		);
 		
-		$type_handlers->handleInterface(
-			'Record',
-			new RelationalGatewayRecordHandler
+		$handler->handleObject(
+			'Record', $loader->load('model.relational.handler.record')
 		);
 		
-		$type_handlers->handleScalar(
-			'string',
-			new GatewayStringHandler
+		$handler->handleScalar(
+			'string', $loader->load('model.handler.string')
 		);
 		
-		return $type_handlers;
+		return $handler;
+	}
+	
+	/**
+	 * PinqDb::getPackageLoader(ConfigLoader, string $driver) -> PackageLoader
+	 *
+	 * Return a new package loader that will query the sub-package structure
+	 * of the db package and also get top-level packages when possible.
+	 */
+	static protected function getPackageLoader(Loader $config, $driver) {
+		
+		$driver_class = class_name($driver);
+		
+		return new PackageLoader(
+			$config,
+			// where to look for the files
+			array(
+				DIR_APPLICATION ."/packages/db/{$driver}",
+				DIR_SYSTEM ."/packages/db/{$driver}",
+		
+				DIR_APPLICATION ."/packages/db/packages",
+				DIR_SYSTEM ."/packages/db/packages",
+		
+				DIR_APPLICATION .'/packages/',
+				DIR_SYSTEM .'/packages/',
+			),
+			
+			// how to prefix any classes found
+			array(
+				"App{$driver_class}Db",
+				"Pinq{$driver_class}Db",
+		
+				'AppDb',
+				'PinqDb',
+		
+				'App',
+				'Pinq',
+			)
+		);
 	}
 }

@@ -90,7 +90,9 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		
 		// load the router configuration file, and pass it the router as
 		// context
-		$config->load('package.route-parser', array('routes' => &$router));
+		$config->load('package.route-parser', array(
+			'routes' => &$router
+		));
 		
 		return $router;
 	}

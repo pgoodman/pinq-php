@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-class UsersDefinition extends PinqDatabaseModelDefinition {
+class UsersDefinition extends PinqModelRelationalDefinition {
 	
 	public function describe() {
 		
@@ -43,7 +43,7 @@ class UsersDefinition extends PinqDatabaseModelDefinition {
 	}
 }
 
-class UsersGateway extends PinqDatabaseModelGateway {
+class UsersGateway extends PinqModelRelationalGateway {
 	public function register(Dictionary $post) {
 		
 		$errors = array();
@@ -58,7 +58,7 @@ class UsersGateway extends PinqDatabaseModelGateway {
 	}
 }
 
-class UsersRecord extends PinqDatabaseRecord {
+class UsersRecord extends InnerRecord {
 	public function __init__() {
 		$this['display_id'] = base36_encode($this['id']);
 		$this['perma_link'] = url('users', $this['display_id']);

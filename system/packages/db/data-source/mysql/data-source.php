@@ -73,7 +73,7 @@ class MysqlDataSource extends PinqDatabase {
 	/**
 	 * Get the last insert id from mysql.
 	 */
-	protected function insertId() {
+	protected function getInsertId() {
 		return mysql_insert_id($this->conn);
 	}
 	

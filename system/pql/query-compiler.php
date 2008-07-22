@@ -26,9 +26,9 @@ abstract class QueryCompiler {
 	          $query_type;
 	
 	/**
-	 * QueryCompiler(ModelDictionary, ModelRelations)
+	 * QueryCompiler(PinqModelDictionary, PinqModelRelationalRelations)
 	 */
-	public function __construct(Dictionary $models, ModelRelations $relations) {
+	public function __construct(Dictionary $models, PinqModelRelationalRelations $relations) {
 		$this->models = $models;
 		$this->relations = $relations;
 	}
@@ -57,7 +57,7 @@ abstract class QueryCompiler {
 	}
 	
 	/**
-	 * $c->getDefinitionByModelAlias(string $model_alias) -> ModelDefinition
+	 * $c->getDefinitionByModelAlias(string $model_alias) -> PinqModelDefinition
 	 *
 	 * Get a model definition given its external name or an alias to its
 	 * external name.

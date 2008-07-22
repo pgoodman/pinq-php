@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-class PostTagsDefinition extends PinqDatabaseModelDefinition {
+class PostTagsDefinition extends PinqModelRelationalDefinition {
 	
 	public function describe() {
 		$this->tag_id = array('type' => 'int');

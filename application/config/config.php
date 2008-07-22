@@ -2,7 +2,6 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-$config['class_prefix'] = 'App';
 $config['compress_output'] = TRUE;
 
 // host name, this only needs to be the domain name. for example, if PINQ is

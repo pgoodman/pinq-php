@@ -2,7 +2,7 @@
 
 !defined('DIR_APPLICATION') && exit();
 
-class TagsDefinition extends PinqDatabaseModelDefinition {
+class TagsDefinition extends PinqModelRelationalDefinition {
 	
 	public function describe() {
 		
@@ -29,7 +29,7 @@ class TagsDefinition extends PinqDatabaseModelDefinition {
 	}
 }
 
-class TagsGateway extends PinqDatabaseModelGateway {
+class TagsGateway extends PinqModelRelationalGateway {
 	
 	public function getPopular() {
 		return $this->selectAll(
@@ -40,7 +40,7 @@ class TagsGateway extends PinqDatabaseModelGateway {
 	}
 }
 
-class TagsRecord extends PinqDatabaseRecord {
+class TagsRecord extends InnerRecord {
 	public function __init__() {
 		$this['perma_link'] = url('tags', $this['name']);
 	}

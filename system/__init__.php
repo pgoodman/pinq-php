@@ -48,8 +48,8 @@ define('ERROR_405', '/error/405');
 define('ERROR_500', '/error/500');
 
 // exceptions
-require_once DIR_SYSTEM .'/exceptions.php';
 require_once DIR_SYSTEM .'/interfaces.php';
+require_once DIR_SYSTEM .'/exceptions.php';
 require_once DIR_SYSTEM .'/response.php';
 
 // core classes that stand on their own without pinq-defined interfaces/
@@ -58,20 +58,17 @@ require_once DIR_SYSTEM .'/stack.php';
 require_once DIR_SYSTEM .'/queue.php';
 require_once DIR_SYSTEM .'/dictionary.php';
 require_once DIR_SYSTEM .'/gateway.php';
-require_once DIR_SYSTEM .'/type-handler.php';
 require_once DIR_SYSTEM .'/loader.php';
 
 // bring in the core stuff that's used everywhere
 require_once DIR_SYSTEM .'/spl/__init__.php';
 require_once DIR_SYSTEM .'/pql/__init__.php';
-require_once DIR_SYSTEM .'/model/__init__.php';
-require_once DIR_SYSTEM .'/data-source/__init__.php';
 
 // stuff needed to get up and running
-require_once DIR_SYSTEM .'/output-buffer.php';
 require_once DIR_SYSTEM .'/config-loader.php';
 require_once DIR_SYSTEM .'/package-loader.php';
 require_once DIR_SYSTEM .'/resource.php';
+require_once DIR_SYSTEM .'/record.php';
 require_once DIR_SYSTEM .'/functions/__init__.php';
 
 /**
@@ -112,7 +109,18 @@ function pinq($script_file, $app_dir) {
 		require_once DIR_SYSTEM .'/globals.php';	
 
 		// bring in the package loader
-		$packages = new PackageLoader($config);
+		$packages = new PackageLoader(
+			$config,
+			array(
+				DIR_APPLICATION .'/packages/', 
+				DIR_SYSTEM .'/packages/'
+			),
+			array(
+				'App', 
+				'Pinq'
+			)
+		);
+		
 		$packages->load('input-dictionary');
 		$router = $packages->load('route-parser', array(
 			'resources_dir' => DIR_APPLICATION .'/resources/',
