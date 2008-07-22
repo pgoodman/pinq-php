@@ -439,25 +439,4 @@ abstract class PinqModelDefinition implements Named, Package {
 	public function hasField($field) {
 		return isset($this->_fields[$field]);
 	}
-	
-	/**
-	 * $d->getRecordClass(void) -> string
-	 *
-	 * Get the class name of the record that will be used to represent 
-	 * individual result rows from a query on the data source. This method 
-	 * first tries to find model-specific record class, identified by the 
-	 * mixed-case version of the external model name with 'Record' appended 
-	 * on the end. For example:
-	 *     model_name -> ModelNameRecord
-	 * If a custom record class does not exist then this method will use the 
-	 * record class name returned from getDefaultRecordClass().
-	 *
-	 * @internal
-	 */
-	final public function getRecordClass() {
-		$class = $this->_extenal_name_as_class .'Record';
-		return class_exists($class, FALSE) 
-		       ? $class 
-		       : $this->getDefaultRecordClass();
-	}
 }

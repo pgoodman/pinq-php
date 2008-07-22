@@ -74,7 +74,7 @@ class PinqDb implements ConfigurablePackage {
 		// set up the gateway
 		$gateway = $packages->loadNew('model.relational.gateway', array(
 			$database,
-			self::getTypeHandler($loader),
+			self::getTypeHandler($packages),
 		));
 		$gateway->setRelations($relations);
 		$gateway->setModelDictionary(

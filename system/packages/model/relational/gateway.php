@@ -70,7 +70,7 @@ class PinqModelRelationalGateway extends PinqModelGateway {
 	public function getPqlQueryCompiler() {
 		
 		if($this->_compiler === NULL) {
-			$this->_compiler = $this->_data_source->getQueryCompiler(
+			$this->_compiler = $this->_resource->getPqlQueryCompiler(
 				$this->_model_dict,
 				$this->_relations
 			);
