@@ -15,23 +15,19 @@ abstract class PinqDbResource extends Resource
 	}
 	
 	/**
-	 * $d->GET(string $query[, array $args]) -> RecordIterator
+	 * $r->GET(string $query) -> RecordIterator
 	 */
 	public function GET($query) {
-		return $this->select($query);
+		$result = $this->select($query);
+		return $this->_packages->loadNew('record-iterator',	array($result));
 	}
 	
 	/**
-	 * Update rows in the database.
+	 * $r->PUT(string $query) -> {int, bool(FALSE)}
+	 *
+	 * Insert data into the database.
 	 */
 	public function PUT($query) {
-		return (bool)$this->update($query);
-	}
-	
-	/**
-	 * Insert rows into the database.
-	 */
-	public function POST($query) {
 		if($this->update($query))
 			return $this->getInsertId();
 		
@@ -39,6 +35,17 @@ abstract class PinqDbResource extends Resource
 	}
 	
 	/**
+	 * $r->POST(string $query) -> bool
+	 *
+	 * Update data in the database.
+	 */
+	public function POST($query) {
+		return (bool)$this->update($query);
+	}
+	
+	/**
+	 * $r->DELETE(string $query) -> bool
+	 *
 	 * Delete rows from the database.
 	 */
 	public function DELETE($query) {
@@ -62,8 +69,26 @@ abstract class PinqDbResource extends Resource
 	}
 	
 	/**
-	 * The bare bones of what's needed to abstract a database.
+	 * $r->queryError(string $query, string $error) ! PinqDbException
 	 */
+	protected function queryError($query, $error) {
+		
+		$last_error = $this->error();
+
+		if(0 != strcmp($last_error, $error))
+			$error .= "\n{$last_error}";
+		
+		// usually the result of a malformed query. This won't reveal too much
+		// assuming proper use of the $args array because the query has not
+		// had its substitutes replaced
+		throw new PinqDbException(
+			"The following database query failed:\n".
+			"<pre>{$query}</pre>\n".
+			"The error reported was:\n".
+			"<pre>{$error}</pre>"
+		);
+	}
+	
 	abstract public function connect($host, $user = '', $pass = '', $db = '');
 	abstract protected function disconnect();
 	

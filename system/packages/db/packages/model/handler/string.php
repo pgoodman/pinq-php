@@ -45,6 +45,9 @@ class PinqDbModelHandlerString extends GatewayTypeHandler
 		// do after tokenization
 		$stmt = preg_replace('~;.*$~s', '', $stmt);
 		
+		// TODO: this isn't necessary, just for aesthetics
+		$stmt = preg_replace('~\s+~', " ", $stmt);
+		
 		// the arguments array is associative. assume then that the substitutes
 		// in the query are also associative and turn them into question marks		
 		while(is_string(key($args))) {

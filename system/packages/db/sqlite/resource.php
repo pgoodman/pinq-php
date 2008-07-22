@@ -8,7 +8,7 @@
  * An instance of a SQLite database connection.
  * @author Peter Goodman
  */
-class PinqSqliteDbResource extends PinqDbResource {
+class PinqDbSqliteResource extends PinqDbResource {
 	
 	protected $conn;
 	
@@ -69,24 +69,6 @@ class PinqSqliteDbResource extends PinqDbResource {
 		unset($this->conn);
 	}
 	
-	protected function queryError($query, $error) {
-		
-		$last_error = $this->error();
-
-		if(0 != strcmp($last_error, $error))
-			$error .= "\n{$last_error}";
-		
-		// usually the result of a malformed query. This won't reveal too much
-		// assuming proper use of the $args array because the query has not
-		// had its substitutes replaced
-		throw new PinqDbException(
-			"The following database query failed:\n".
-			"<pre>{$query}</pre>\n".
-			"The error reported was:\n".
-			"<pre>{$error}</pre>"
-		);
-	}
-	
 	/**
 	 * Query the database and return a result.
 	 */
@@ -105,7 +87,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 		if(FALSE === $result)
 			$this->queryError($query, $error);
 		
-		return $this->_packages->loadNew('record-iterator',	array($result));
+		return $result;
 	}
 	
 	/**

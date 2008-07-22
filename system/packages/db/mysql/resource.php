@@ -8,22 +8,17 @@
  * An instance of a MySQL database connection.
  * @author Peter Goodman
  */
-class MysqlDataSource extends PinqDatabase {
+class MysqlDataSource extends PinqDbResource {
 	
 	protected $conn;
 	
 	/**
 	 * Constructor, Connect to the database.
 	 */
-	public function __construct($host, $user = '', $pass = '') {
+	public function connect($host, $user = '', $pass = '', $name = '') {
 		if(!($this->conn = mysql_connect($host, $user, $pass, FALSE)))
 			throw new PinqDbException("Could not connect to the database.");
-	}
-	
-	/**
-	 * Open a database, this is a method for DataSource.
-	 */
-	public function open($name) {
+		
 		if(!mysql_select_db($name, $this->conn)) {
 			throw new PinqDbException(
 				"Could not connect to the database [{$name}]. ".
@@ -35,32 +30,32 @@ class MysqlDataSource extends PinqDatabase {
 	/**
 	 * Close the database connection.
 	 */
-	public function close() {
+	public function disconnect() {
 		mysql_close($this->conn);
 	}
 	
 	/**
 	 * Query a MySQL database and return a result.
 	 */
-	protected function query($query, array $args) {
-		$result = mysql_query(
-			$this->substituteArgs($query, $args), 
-			$this->conn
-		);
+	protected function select($query) {
+		$result = mysql_query($query, $this->conn);
 		
-		// usually the result of a malformed query. This won't reveal too much
-		// assuming proper use of the $args array because the query has not
-		// had its substitutes replaced
-		if(FALSE === $result) {
-			throw new PinqDbException(
-				"The following database query failed:".
-				"<pre>{$query}</pre>".
-				"The error reported was: ".
-				"<pre>". $this->error() ."</pre>"
-			);
-		}
+		if(FALSE === $result)
+			$this->queryError($query, $error);
 		
 		return $result;
+	}
+	
+	/**
+	 * Query a MySQL database and return a result.
+	 */
+	protected function update($query) {
+		$result = mysql_query($query, $this->conn);
+		
+		if(FALSE === $result)
+			$this->queryError($query, $error);
+		
+		return is_resource($result);
 	}
 	
 	/**

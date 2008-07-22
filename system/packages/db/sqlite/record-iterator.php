@@ -6,16 +6,17 @@
 
 /**
  * A SQLite result set.
+ *
  * @author Peter Goodman
  */
-class PinqSqliteDbRecordIterator extends PinqDbRecordIterator {
+class PinqDbSqliteRecordIterator extends PinqDbRecordIterator {
 	
 	// the number of rows in this result set
 	protected $_count,
 	          $_result;
 	
 	/**
-	 * Constructor, bring in the result.
+	 * PinqDbSqliteRecordIterator(SQLiteResult)
 	 */
 	public function __construct(SQLiteResult $result) {
 		
@@ -29,6 +30,8 @@ class PinqSqliteDbRecordIterator extends PinqDbRecordIterator {
 	}
 	
 	/**
+	 * $i->count(void) <==> count($i) -> int
+	 *
 	 * Return how many rows there are in the result set.
 	 */
 	public function count() {
@@ -36,6 +39,8 @@ class PinqSqliteDbRecordIterator extends PinqDbRecordIterator {
 	}
 	
 	/**
+	 * $i->seek(int) -> void
+	 *
 	 * Seek to an arbitrary place in the mysql result set.
 	 */
 	public function seek($key) {
@@ -47,7 +52,7 @@ class PinqSqliteDbRecordIterator extends PinqDbRecordIterator {
 	}
 	
 	/**
-	 * Return a record for the current result row.
+	 * $i->fetch(void) -> array
 	 */
 	protected function fetch() {
 		return $this->_result->fetch();

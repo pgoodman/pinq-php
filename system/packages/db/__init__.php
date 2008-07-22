@@ -143,8 +143,8 @@ class PinqDb implements ConfigurablePackage {
 			
 			// how to prefix any classes found
 			array(
-				"App{$driver_class}Db",
-				"Pinq{$driver_class}Db",
+				"AppDb{$driver_class}",
+				"PinqDb{$driver_class}",
 		
 				'AppDb',
 				'PinqDb',
