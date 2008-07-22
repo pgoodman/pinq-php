@@ -148,17 +148,4 @@ class PinqSqliteDbResource extends PinqDbResource {
 	public function quote($str) {
 		return sqlite_escape_string($str);
 	}
-	
-	/**
-	 * Get the query compiler.
-	 */
-	public function getQueryCompiler(Dictionary $models, 
-	               PinqModelRelationalManager $relations) {
-	
-		return $this->_packages->load('pql.query-compiler', array(
-			$models,
-			$relations,
-			$this
-		));
-	}
 }

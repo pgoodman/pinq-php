@@ -13,14 +13,14 @@
 abstract class Gateway {
 
 	protected $_type_handler,
-	          $_data_source;
+	          $_resource;
 	
 	/**
 	 * Gateway(Resource, TypeHandle)
 	 */
-	public function __construct(Resource $ds, PinqTypeHandler $types) {
+	public function __construct(Resource $resource, PinqTypeHandler $types) {
 		$this->_type_handler = $types;
-		$this->_data_source = $ds;
+		$this->_resource = $resource;
 		$this->__init__();
 	}
 	
@@ -30,7 +30,7 @@ abstract class Gateway {
 		$this->__del__();
 		unset(
 			$this->_type_handler,
-			$this->_data_source
+			$this->_resource
 		);
 	}
 	
@@ -67,7 +67,7 @@ abstract class Gateway {
 	 * Get a single record from the data source.
 	 */
 	public function select($what, array $using = array()) {
-		$record_iterator = $this->_data_source->GET(
+		$record_iterator = $this->_resource->GET(
 			$this->handleInput($what, 'select', $using),
 			$using
 		);
@@ -85,45 +85,8 @@ abstract class Gateway {
 	 * Get a record set from the data source and wrap it in a record iterator.
 	 */
 	public function selectAll($what, array $using = array()) {
-		return $this->_data_source->GET(
-			$this->handleInput($what, 'selectAll', $using),
-			$using
-		);
-	}
-	
-	/**
-	 * $g->delete(mixed $what[, array $using]) -> mixed
-	 *
-	 * Delete a record from the data source.
-	 */
-	public function delete($what, array $using = array()) {
-		return $this->_data_source->DELETE(
-			$this->handleInput($what, 'delete', $using),
-			$using
-		);
-	}
-	
-	/**
-	 * $g->insert(mixed $what[, array $using]) -> mixed
-	 *
-	 * Insert a record into the data source.
-	 */
-	public function insert($what, array $using = array()) {
-		return $this->_data_source->POST(
-			$this->handleInput($what, 'insert', $using),
-			$using
-		);
-	}
-	
-	/**
-	 * $g->update(mixed $what[, array $using]) -> mixed
-	 *
-	 * Modify a record in the data source.
-	 */
-	public function update($what, array $using = array()) {
-		return $this->_data_source->PUT(
-			$this->handleInput($what, 'update', $using),
-			$using
+		return $this->_resource->GET(
+			$this->handleInput($what, 'selectAll', $using)
 		);
 	}
 	
@@ -161,6 +124,52 @@ abstract class Gateway {
 			return NULL;
 		
 		return $row[0];
+	}
+	
+	/**
+	 * $g->delete(mixed $what[, array $using]) -> mixed
+	 *
+	 * Delete a record from the data source.
+	 */
+	public function delete($what, array $using = array()) {
+		return $this->_resource->DELETE(
+			$this->handleInput($what, 'delete', $using)
+		);
+	}
+	
+	/**
+	 * $g->insert(mixed $what[, array $using]) -> mixed
+	 *
+	 * Insert a record into the data source.
+	 */
+	public function insert($what, array $using = array()) {
+		return $this->_resource->POST(
+			$this->handleInput($what, 'insert', $using)
+		);
+	}
+	
+	/**
+	 * $g->update(mixed $what[, array $using]) -> mixed
+	 *
+	 * Modify a record in the data source.
+	 */
+	public function update($what, array $using = array()) {
+		return $this->_resource->PUT(
+			$this->handleInput($what, 'update', $using)
+		);
+	}
+	
+	/**
+	 * $g->quote(string) -> string
+	 *
+	 * Make this string safe for the resource.
+	 *
+	 * @todo This is the one left-over of moving argument substitution into
+	 *       the type handlers. It would be nice to get rid of this, although
+	 *       this might have practical uses.
+	 */
+	public function quote($str) {
+		return $this->_resource->quote($str);
 	}
 	
 	/**
@@ -275,7 +284,7 @@ abstract class GatewayGateway extends Gateway implements Named {
 			$class = $temp;
 		
 		return new $class(
-			$this->_data_source, 
+			$this->_resource, 
 			$this->_type_handler
 		);
 	}

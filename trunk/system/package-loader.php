@@ -116,7 +116,6 @@ class PackageLoader extends Loader {
 		$class_prefixes = (array)$this->class_prefixes;
 		
 		$package_file = NULL;
-		$class = '';
 		
 		while(!empty($search_where)) {
 			
@@ -125,6 +124,7 @@ class PackageLoader extends Loader {
 			
 			$base_dir = '/';
 			$path = explode('.', $key);
+			$class = '';
 			
 			// this seems redundant, but the separation of $folder and $base_
 			// dir is actually useful for later if we want to include a system
