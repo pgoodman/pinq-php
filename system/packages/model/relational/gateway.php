@@ -35,10 +35,10 @@ class PinqModelRelationalGateway extends PinqModelGateway {
 	}
 	
 	/**
-	 * @see GatewayGateway::createGateway(...)
+	 * @see GatewayGateway::getGateway(...)
 	 */
-	protected function createGateway($gateway_name) {
-		$gateway = parent::createGateway($gateway_name);
+	protected function getGateway($gateway_name) {
+		$gateway = parent::getGateway($gateway_name);
 		$gateway->setRelations($this->_relations);
 		
 		return $gateway;

@@ -24,10 +24,10 @@ class PinqModelGateway extends GatewayGateway
 	}
 	
 	/**
-	 * @see GatewayGateway::createGateway(...)
+	 * @see GatewayGateway::getGateway(...)
 	 */
-	protected function createGateway($name) {		
-		$gateway = parent::createGateway($name);
+	protected function getGateway($name) {		
+		$gateway = parent::getGateway($name);
 		$gateway->setModelDictionary($this->_model_dict);
 		return $gateway;
 	}

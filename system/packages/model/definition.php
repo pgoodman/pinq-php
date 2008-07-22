@@ -313,39 +313,42 @@ abstract class PinqModelDefinition implements Named, Package {
 			return NULL;
 		}
 		
-		switch($context['type']) {
+		$type = $context['type'];
+		$enum = FALSE;
+		if($type & self::TYPE_ENUM) {
+			$type &= ~self::TYPE_ENUM;
+			$enum = TRUE;
+		}
+		
+		$ret = NULL;
+		switch($type) {
 			
 			case self::TYPE_INT:				
-				return (int)$value;
+				$ret = (int)$value;
+				break;
 			
 			case self::TYPE_BOOLEAN:
-				return (int)(bool)$value;
+				$ret = (int)(bool)$value;
+				break;
 			
 			case self::TYPE_FLOAT:
-				return (float)$value;
+				$ret = (float)$value;
+				break;
 			
 			case self::TYPE_BINARY:
 			case self::TYPE_STRING:
-				
 				if(is_object($value) || is_array($value))
 					$value = serialize($value);
 				
-				return (string)$value;
-			
-			case self::TYPE_ENUM:
-				return in_array(
-					$value, 
-					$context['validate']['default']
-				) ? $value : NULL;
-			
-			default:
-				throw new InvalidArgumentException(
-					"PinqModelDefinition::coerceValueForField() cannot cast a ".
-					"value of an unknown or complex type."
-				);
+				$ret = (string)$value;
+				break;
 		}
 		
-		return NULL;
+		// todo: better checking on ENUMs?
+		if($enum && !in_array($ret, $context['validate']['default']))
+			$ret = NULL;
+		
+		return $ret;
 	}
 	
 	/**

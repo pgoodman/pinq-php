@@ -19,7 +19,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 	public function connect($host, $user = '', $pass = '', $db = '') {
 		
 		if(!class_exists('SQLiteDatabase', FALSE)) {
-			throw new PinqDatabaseException(
+			throw new PinqDbException(
 				"SQLite does not appear to be installed or configured  on ".
 				"this server."
 			);
@@ -28,7 +28,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 		if(!file_exists($host)) {
 			
 			if(!($fp = fopen($host, "w"))) {
-				throw new PinqDatabaseException(
+				throw new PinqDbException(
 					"SQLite database file [{$host}] could not be ".
 					"automatically created. Please check folder permissions."
 				);
@@ -40,7 +40,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 		
 		// the db file isnt readable/writable
 		if(!is_readable($host) || !is_writable($host)) {
-			throw new PinqDatabaseException(
+			throw new PinqDbException(
 				"SQLite database file [{$host}] cannot be read."
 			);
 		}
@@ -56,7 +56,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 		
 		// connection failed
 		if(!empty($error)) {
-			throw new PinqDatabaseException(
+			throw new PinqDbException(
 				"Unable to connect to the SQLite database [{$error}]."
 			);
 		}
@@ -79,7 +79,7 @@ class PinqSqliteDbResource extends PinqDbResource {
 		// usually the result of a malformed query. This won't reveal too much
 		// assuming proper use of the $args array because the query has not
 		// had its substitutes replaced
-		throw new PinqDatabaseException(
+		throw new PinqDbException(
 			"The following database query failed:\n".
 			"<pre>{$query}</pre>\n".
 			"The error reported was:\n".
