@@ -66,7 +66,7 @@ abstract class PinqModelDefinition implements Named, Package {
 	 * PinqModelDefinition(string $name)
 	 *
 	 * Brings in the external name (how this model will be referred to in the
-	 * code) and a PinqModelRelationalRelations instance to specify how this model relates
+	 * code) and a PinqModelRelationalManager instance to specify how this model relates
 	 * to all others.
 	 *
 	 * @note By default the external and internal names are the same. To change
