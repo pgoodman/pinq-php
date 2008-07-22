@@ -14,6 +14,6 @@
  *
  * @author Peter Goodman
  */
-class PinqDatabaseException extends ModelException {
+class PinqDbException extends InternalErrorResponse {
 	
 }

@@ -56,15 +56,21 @@ class InvalidPackageException extends InternalErrorResponse {
  */
 class PackageLoader extends Loader {
 	
-	protected $config;
+	protected $config,
+	          $search_where,
+	          $class_prefixes;
 	
 	/**
 	 * PackageLoader(Loader $config)
 	 *
 	 * Required a Loader instance to load configuration files.
 	 */
-	public function __construct(Loader $config) {
+	public function __construct(Loader $config, 
+	                             array $search_where,
+	                             array $class_prefixes) {
 		$this->config = $config;
+		$this->search_where = $search_where;
+		$this->class_prefixes = $class_prefixes;
 	}
 	
 	/**
@@ -106,19 +112,18 @@ class PackageLoader extends Loader {
 		
 		// search in both the system and application directories. this will
 		// look first in the applications directory
-		$search_where = array(DIR_APPLICATION, DIR_SYSTEM);
-		$class_prefixes = array(
-			$this->config['config']['class_prefix'], 
-			'Pinq',
-		);
+		$search_where = (array)$this->search_where;
+		$class_prefixes = (array)$this->class_prefixes;
 		
 		$package_file = NULL;
 		$class = '';
 		
-		do {
+		while(!empty($search_where)) {
+			
 			$folder = array_shift($search_where);
-			$base_dir = '/packages/';
 			$prefix = array_shift($class_prefixes);
+			
+			$base_dir = '/';
 			$path = explode('.', $key);
 			
 			// this seems redundant, but the separation of $folder and $base_
@@ -128,39 +133,37 @@ class PackageLoader extends Loader {
 			
 			// go as deep as we can into the directory structure based on the
 			// path to the package given
-			while(!empty($path) && is_dir($abs_dir .'/'. $path[0])) {
+			while(!empty($path) && is_dir("{$abs_dir}/{$path[0]}")) {
 				$part = array_shift($path);
 				$class .= "_{$part}";
 				
-				$base_dir .= '/'. $part;
-				$abs_dir .= '/'. $part;
+				$base_dir .= "/{$part}";
+				$abs_dir .= "/{$part}";
 			}
 						
 			// see if we can configure a multi-file package using an
 			// __init__ file
-			if(file_exists($abs_dir .'/__init__.php')) {
-				$package_file = $base_dir .'/__init__.php';
+			if(file_exists("{$abs_dir}/__init__.php")) {
+				$package_file = "{$base_dir}/__init__.php";
 				break;
 			
 			// the package wasn't spread across multiple files, is it a
 			// single file package?
-			} else if(!empty($path) && file_exists($abs_dir ."/{$path[0]}.php")) {
-				$package_file = $base_dir ."/{$path[0]}.php";
+			} else if(!empty($path) && file_exists("{$abs_dir}/{$path[0]}.php")) {
+				$package_file = "{$base_dir}/{$path[0]}.php";
 				$class .= "_{$path[0]}";
 				
 				// we don't want the package id to be left in $argv
-				
 				array_shift($path);
 				break;
 			}
-		
-		} while(!empty($search_where));
+		}
 		
 		// we might have included a package in the applications dir. it might
 		// be dependent on the package of the same name from inside the system
 		// dir, so we will include it but not configure/instantiate it.
-		if(!empty($search_where)) {
-			$sys_file = array_shift($search_where) . $package_file;
+		while(!empty($search_where)) {
+			$sys_file = array_pop($search_where) . $package_file;
 			if(file_exists($sys_file))
 				require_once $sys_file;
 		}
@@ -187,7 +190,7 @@ class PackageLoader extends Loader {
 		
 		// if the package configures itself it might change this
 		$package = NULL;
-		
+				
 		// the interfaces that this class implements
 		$interfaces = class_implements($class, FALSE);
 		if(FALSE === $interfaces || !in_array('Package', $interfaces)) {
@@ -195,6 +198,14 @@ class PackageLoader extends Loader {
 				"Class [{$class}] must implement interface [Package] or one ".
 				"of its extending interfaces."
 			);
+		}
+		
+		// if the class implements Factory then tell it what class its factory
+		// method should instantiate
+		if(in_array('Factory', $interfaces) && property_exists($class, '_class')) {
+			$property = new ReflectionProperty($class, '_class');
+			if($property->isStatic() && $property->isPublic())
+				$property->setValue(NULL, $class);
 		}
 		
 		// the package has a configuration function. Call it.
@@ -220,15 +231,7 @@ class PackageLoader extends Loader {
 		
 		// the package is directly instantiatied
 		} else if(in_array('InstantiablePackage', $interfaces))
-			$package = new $class;
-		
-		// if the class implements Factory then tell it what class its factory
-		// method should instantiate
-		if(in_array('Factory', $interfaces) && property_exists($class, '_class')) {
-			$property = new ReflectionProperty($class, '_class');
-			if($property->isStatic() && $property->isPublic())
-				$property->setValue(NULL, $class);
-		}
+			$package = call_user_class_array($class, $context);
 		
 		$this->offsetSet($key, $package);		
 		return $package;

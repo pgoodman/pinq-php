@@ -7,7 +7,7 @@
  *
  * @author Peter Goodman
  */
-class PostsDefinition extends PinqDatabaseModelDefinition {
+class PostsDefinition extends PinqModelRelationalDefinition {
 	
 	const DRAFT = 0,
 	      PUBLISHED = 1,
@@ -68,7 +68,7 @@ class PostsDefinition extends PinqDatabaseModelDefinition {
  *
  * @author Peter Goodman
  */
-class PostsRecord extends PinqDatabaseRecord {
+class PostsRecord extends InnerRecord {
 	
 	/**
 	 * Constructor hook.
@@ -93,7 +93,7 @@ class PostsRecord extends PinqDatabaseRecord {
  *
  * @author Peter Goodman
  */
-class PostsGateway extends PinqDatabaseModelGateway {
+class PostsGateway extends PinqModelRelationalGateway {
 	
 	/**
 	 * Extend the partial query of the model gateway. This lets us do some

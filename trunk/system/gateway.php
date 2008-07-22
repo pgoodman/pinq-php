@@ -16,9 +16,9 @@ abstract class Gateway {
 	          $_data_source;
 	
 	/**
-	 * Gateway(DataSource, TypeHandle)
+	 * Gateway(Resource, TypeHandle)
 	 */
-	public function __construct(DataSource $ds, TypeHandler $types) {
+	public function __construct(Resource $ds, PinqTypeHandler $types) {
 		$this->_type_handler = $types;
 		$this->_data_source = $ds;
 		$this->__init__();
@@ -39,7 +39,7 @@ abstract class Gateway {
 	 * -> mixed
 	 * ! InvalidArgumentException
 	 * 
-	 * Given input, find handlers within the TypeHandler that can transform
+	 * Given input, find handlers within the PinqTypeHandler that can transform
 	 * it. The input will be transformed until an EndpointHandler is used.
 	 */
 	protected function handleInput($input, $query_type, array &$args = array()) {
@@ -67,10 +67,16 @@ abstract class Gateway {
 	 * Get a single record from the data source.
 	 */
 	public function select($what, array $using = array()) {
-		return $this->getRecord($this->_data_source->select(
+		$record_iterator = $this->_data_source->GET(
 			$this->handleInput($what, 'select', $using),
 			$using
-		));
+		);
+		
+		if(0 === count($record_iterator))
+			return NULL;
+				
+		$record_iterator->rewind();
+		return $record_iterator->current();
 	}
 	
 	/**
@@ -79,10 +85,10 @@ abstract class Gateway {
 	 * Get a record set from the data source and wrap it in a record iterator.
 	 */
 	public function selectAll($what, array $using = array()) {
-		return $this->getRecordIterator($this->_data_source->select(
+		return $this->_data_source->GET(
 			$this->handleInput($what, 'selectAll', $using),
 			$using
-		));
+		);
 	}
 	
 	/**
@@ -91,7 +97,7 @@ abstract class Gateway {
 	 * Delete a record from the data source.
 	 */
 	public function delete($what, array $using = array()) {
-		return $this->_data_source->update(
+		return $this->_data_source->DELETE(
 			$this->handleInput($what, 'delete', $using),
 			$using
 		);
@@ -103,7 +109,7 @@ abstract class Gateway {
 	 * Insert a record into the data source.
 	 */
 	public function insert($what, array $using = array()) {
-		return $this->_data_source->update(
+		return $this->_data_source->POST(
 			$this->handleInput($what, 'insert', $using),
 			$using
 		);
@@ -115,7 +121,7 @@ abstract class Gateway {
 	 * Modify a record in the data source.
 	 */
 	public function update($what, array $using = array()) {
-		return $this->_data_source->update(
+		return $this->_data_source->PUT(
 			$this->handleInput($what, 'update', $using),
 			$using
 		);
@@ -146,9 +152,9 @@ abstract class Gateway {
 		
 		// we are now likely dealing with a InnerRecord that is also a dictionary
 		if($row instanceof Dictionary)
-			$row = array_values($row->toArray());
-		else
-			$row = array_values((array)$row);
+			$row = $row->toArray();
+		
+		$row = array_values($row);
 		
 		// does no first element exist?
 		if(!isset($row[0]))
@@ -156,20 +162,6 @@ abstract class Gateway {
 		
 		return $row[0];
 	}
-	
-	/**
-	 * $g->getRecord(resource) -> Record
-	 *
-	 * Return a Record object.
-	 */
-	abstract protected function getRecord($result_resource);
-	
-	/**
-	 * $g->getRecordIterator(resource) -> RecordIterator
-	 *
-	 * Return a RecordIterator object.
-	 */
-	abstract protected function getRecordIterator($result_resource);
 	
 	/**
 	 * $g->__init__(void) -> void
@@ -289,3 +281,35 @@ abstract class GatewayGateway extends Gateway implements Named {
 	}
 }
 
+/**
+ * Class to handle incoming types to a gateway.
+ *
+ * @author Peter Goodman
+ */
+abstract class GatewayTypeHandler implements IntermediateHandler {
+	
+	protected $_gateway;
+	
+	public function __destruct() {
+		unset($this->_gateway);
+	}
+	
+	public function setGateway(Gateway $gateway) {
+		$this->_gateway = $gateway;
+	}
+	
+	abstract public function handle($query, $type, array &$args);
+}
+
+/**
+ * Handle an endpoint type that returns itself.
+ * 
+ * @author Peter Goodman
+ */
+abstract class GatewayIdentityHandler extends GatewayTypeHandler
+                                      implements EndpointHandler {
+	
+	final public function handle($item, $type, array &$args) { 
+		return $item; 
+	}
+}

@@ -14,3 +14,4 @@ require_once DIR_SYSTEM_FUNCTIONS .'/php.php';
 require_once DIR_SYSTEM_FUNCTIONS .'/reflection.php';
 require_once DIR_SYSTEM_FUNCTIONS .'/date.php';
 require_once DIR_SYSTEM_FUNCTIONS .'/filter.php';
+require_once DIR_SYSTEM_FUNCTIONS .'/output.php';
