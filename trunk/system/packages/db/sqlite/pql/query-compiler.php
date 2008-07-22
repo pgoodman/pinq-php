@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-class PinqSqliteDbPqlQueryCompiler extends PinqDbPqlQueryCompiler {
+class PinqDbSqlitePqlQueryCompiler extends PinqDbPqlQueryCompiler {
 	
 	/**
 	 * Compile an INSERT query. SQLite doesn't allow us to use SET syntax for

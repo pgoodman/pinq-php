@@ -143,8 +143,8 @@ abstract class Gateway {
 	 * Insert a record into the data source.
 	 */
 	public function insert($what, array $using = array()) {
-		return $this->_resource->POST(
-			$this->handleInput($what, 'insert', $using)
+		return $this->_resource->PUT(
+			$this->handleInput($what, 'update', $using)
 		);
 	}
 	
@@ -154,8 +154,8 @@ abstract class Gateway {
 	 * Modify a record in the data source.
 	 */
 	public function update($what, array $using = array()) {
-		return $this->_resource->PUT(
-			$this->handleInput($what, 'update', $using)
+		return $this->_resource->POST(
+			$this->handleInput($what, 'insert', $using)
 		);
 	}
 	
