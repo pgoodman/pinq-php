@@ -10,14 +10,7 @@
  *
  * @author Peter Goodman
  */
-abstract class QueryCompiler {
-	//implements Compiler
-	
-	// query types
-	const SELECT = 1,
-	      INSERT = 2,
-	      UPDATE = 4,
-	      DELETE = 8;
+abstract class PinqPqlQueryCompiler implements InstantiablePackage {
 		
 	// the query and models
 	protected $query,
@@ -26,9 +19,11 @@ abstract class QueryCompiler {
 	          $query_type;
 	
 	/**
-	 * QueryCompiler(PinqModelDictionary, PinqModelRelationalManager)
+	 * PinqPqlQueryCompiler(PinqModelDictionary, PinqModelRelationalManager)
 	 */
-	public function __construct(Dictionary $models, PinqModelRelationalManager $relations) {
+	public function __construct(Dictionary $models, 
+	            PinqModelRelationalManager $relations) {
+		
 		$this->models = $models;
 		$this->relations = $relations;
 	}
@@ -346,20 +341,20 @@ abstract class QueryCompiler {
 		
 		$this->query = $query;
 		
-		$query_types = self::SELECT | self::UPDATE | self::INSERT | self::DELETE;
+		$query_types = Query::SELECT | Query::UPDATE | Query::INSERT | Query::DELETE;
 		$this->query_type = $flags & $query_types;
 		
 		switch($flags) {
-			case self::SELECT:
+			case Query::SELECT:
 				return $this->compileSelect();
 			
-			case self::UPDATE:
+			case Query::UPDATE:
 				return $this->compileUpdate($args);
 			
-			case self::INSERT:
+			case Query::INSERT:
 				return $this->compileInsert($args);
 			
-			case self::DELETE:
+			case Query::DELETE:
 				return $this->compileDelete();
 		}
 	}

@@ -35,7 +35,7 @@ class PinqModelRelationalGateway extends PinqModelGateway {
 	}
 	
 	/**
-	 * @see GatewayGateway::getGateway(...)
+	 * @see GatewayAggregate::getGateway(...)
 	 */
 	protected function getGateway($gateway_name) {
 		$gateway = parent::getGateway($gateway_name);
@@ -62,7 +62,7 @@ class PinqModelRelationalGateway extends PinqModelGateway {
 	}
 	
 	/**
-	 * $g->getPqlQueryCompiler(void) -> QueryCompiler
+	 * $g->getPqlQueryCompiler(void) -> PinqPqlQueryCompiler
 	 *
 	 * Get the data-source specific query compiler for PQL queries handled by
 	 * this gateway.

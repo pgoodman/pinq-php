@@ -75,6 +75,12 @@ class Query {
 	const PIVOT_LEFT = 1,
 	      PIVOT_RIGHT = 2;
 	
+	// query types
+	const SELECT = 1,
+	      INSERT = 2,
+	      UPDATE = 4,
+	      DELETE = 8;
+	
 	// query id
 	static protected $query_id = 0;
 	
@@ -370,10 +376,8 @@ class Query {
 		$args = func_get_args();
 		
 		// we're dealing with some 
-		if(count($args) == 1) {
-			if(is_array($args[0]))
-				$args = $args[0];
-		}
+		if(1 == count($args) && is_array($args[0]))
+			$args = $args[0];
 		
 		if(empty($args))
 			return $this;

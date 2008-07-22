@@ -102,7 +102,7 @@ class PostsGateway extends PinqModelRelationalGateway {
 	public function createPqlQuery() {
 		return (
 			parent::createPqlQuery()->
-			from('users', 'u')->select(ALL)->
+			from('users', 'u')->select('id', 'display_name')->
 			link('posts', 'u')->
 			order()->posts('created')->desc->
 			where()->posts('status')->is(PostsDefinition::PUBLISHED)

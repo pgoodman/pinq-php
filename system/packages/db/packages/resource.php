@@ -54,7 +54,7 @@ abstract class PinqDbResource extends Resource
 	
 	/**
 	 * $r->getPqlQueryCompiler(Dictionary, PinqModelRelationalManager)
-	 * -> QueryCompiler
+	 * -> PinqPqlQueryCompiler
 	 *
 	 * Get a PQL query compiler.
 	 */
