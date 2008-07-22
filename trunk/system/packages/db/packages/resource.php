@@ -6,22 +6,7 @@
 
 abstract class PinqDbResource extends Resource
                               implements InstantiablePackage {
-	
-	protected $_tokens = array();
-	
-	/**
-	 * The bare bones of what's needed to abstract a database.
-	 */
-	abstract public function connect($host, $user = '', $pass = '', $db = '');
-	abstract protected function disconnect();
-	
-	abstract protected function select($query);
-	abstract protected function update($query);
-	
-	abstract protected function error();
-	abstract protected function getInsertId();
-	abstract public function quote($str);
-	
+		
 	/**
 	 * Close the database connection.
 	 */
@@ -75,4 +60,17 @@ abstract class PinqDbResource extends Resource
 			$this
 		));
 	}
+	
+	/**
+	 * The bare bones of what's needed to abstract a database.
+	 */
+	abstract public function connect($host, $user = '', $pass = '', $db = '');
+	abstract protected function disconnect();
+	
+	abstract protected function select($query);
+	abstract protected function update($query);
+	
+	abstract protected function error();
+	abstract protected function getInsertId();
+	abstract public function quote($str);
 }
