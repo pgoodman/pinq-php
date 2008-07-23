@@ -43,7 +43,7 @@ class UsersDefinition extends PinqModelRelationalDefinition {
 	}
 }
 
-class UsersGateway extends PinqModelRelationalGateway {
+class UsersGateway extends PinqDbModelRelationalGateway {
 	public function register(Dictionary $post) {
 		
 		$errors = array();

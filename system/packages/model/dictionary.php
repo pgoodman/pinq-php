@@ -47,7 +47,7 @@ class PinqModelDictionary extends Dictionary implements InstantiablePackage {
 		
 		// we replace periods because this could be a heirarchical model
 		$file = str_replace('.', '/', $model_name);
-		$file_name = "{$this->_model_dir}/{$file}". EXT;
+		$file_name = "{$this->_model_dir}/{$file}.php";
 		
 		// no models defined for this key, ignore it (models aren't required)
 		if(!file_exists($file_name)) {

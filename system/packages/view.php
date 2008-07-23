@@ -46,6 +46,7 @@ function layout_view($id) {
 
 /**
  * Represents a single view.
+ *
  * @author Peter Goodman
  */
 class PinqView extends Dictionary implements InstantiablePackage, Factory {

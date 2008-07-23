@@ -29,7 +29,7 @@ class TagsDefinition extends PinqModelRelationalDefinition {
 	}
 }
 
-class TagsGateway extends PinqModelRelationalGateway {
+class TagsGateway extends PinqDbModelRelationalGateway {
 	
 	public function getPopular() {
 		return $this->selectAll(

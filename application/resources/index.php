@@ -11,9 +11,7 @@ class IndexResource extends AppResource {
 	public function ANY() {
 		
 		$posts = $this->db->posts->selectAll(limit(11));
-		
-		echo help($posts);
-		
+				
 		$view = array(
 			'post' => NULL,
 			'posts' => NULL,
@@ -46,7 +44,7 @@ class IndexResource extends AppResource {
 		
 		// highlight the file
 		$this->view['source'] = highlight_file(
-			$path[0] .'/'. $path[2] . EXT,
+			"{$path[0]}/{$path[2]}.php",
 			TRUE
 		);
 		

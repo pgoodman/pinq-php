@@ -66,6 +66,7 @@ function help($thing, $method = NULL) {
  * class.
  *
  * @author Peter Goodman
+ * @internal
  */
 abstract class Doc {
 	
@@ -74,8 +75,8 @@ abstract class Doc {
 	 *
 	 * Gets a nicely formatted doc-block for a function/method/class/object. To
 	 * get the documentation for a class/method, do: 
-	 *     __doc__('class name', 'methodname')
-	 *     __doc__($obj, 'method name')
+	 *     Doc::get('class name', 'methodname')
+	 *     Doc::get($obj, 'method name')
 	 *
 	 * @author Peter Goodman
 	 */

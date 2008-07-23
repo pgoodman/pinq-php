@@ -93,7 +93,7 @@ class PostsRecord extends InnerRecord {
  *
  * @author Peter Goodman
  */
-class PostsGateway extends PinqModelRelationalGateway {
+class PostsGateway extends PinqDbModelRelationalGateway {
 	
 	/**
 	 * Extend the partial query of the model gateway. This lets us do some

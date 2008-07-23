@@ -44,8 +44,8 @@ define('PHP_IS_BEING_DUMB', (bool)get_magic_quotes_gpc());
 define('ERROR_401', '/error/401');
 define('ERROR_403', '/error/403');
 define('ERROR_404', '/error/404');
-define('ERROR_405', '/error/405');
 define('ERROR_500', '/error/500');
+define('ERROR_501', '/error/501');
 
 // exceptions
 require_once DIR_SYSTEM .'/interfaces.php';
@@ -88,7 +88,6 @@ function pinq($script_file, $app_dir) {
 	$app_dir = realpath(dirname($script_file) .'/'. $app_dir) .'/';
 	
 	!defined('DIR_APPLICATION')
-	 && define('EXT', '.'. pathinfo($script_file, PATHINFO_EXTENSION))
 	 && define('PINQ_SCRIPT_FILENAME', $script_file)
 	 && define('DIR_APPLICATION', $app_dir);
 		
@@ -111,20 +110,13 @@ function pinq($script_file, $app_dir) {
 		// bring in the package loader
 		$packages = new PackageLoader(
 			$config,
-			array(
-				DIR_APPLICATION .'/packages/', 
-				DIR_SYSTEM .'/packages/'
-			),
-			array(
-				'App', 
-				'Pinq'
-			)
+			array(DIR_APPLICATION .'/packages/', DIR_SYSTEM .'/packages/'),
+			array('App', 'Pinq')
 		);
 		
 		$packages->load('input-dictionary');
 		$router = $packages->load('route-parser', array(
 			'resources_dir' => DIR_APPLICATION .'/resources/',
-			'file_extension' => EXT,
 		));
 		$packages->load("resource");
 		
@@ -147,10 +139,7 @@ function pinq($script_file, $app_dir) {
 		
 		$i = 0;
 		do {
-			// look for a yield or a flush buffer
 			try {
-				
-				// parse the URI, if it can't be parsed a 404 error will occur.
 				if(!($path_info = $router->parse($route)))
 					yield(ERROR_404);
 				
@@ -161,16 +150,16 @@ function pinq($script_file, $app_dir) {
 				// get the class name and clean up the method name
 				$class = class_name("{$pdir} {$controller} resource");
 				
-				// bring in the controller file, we know it exists because the 
-				// route parser figured that out.
+				// attempt to bring in the controller file
 				if(!class_exists($class, FALSE)) {
 					
-					if(!file_exists($dir .'/'. $controller . EXT))
+					$resource_file = "{$dir}/{$controller}.php";
+					
+					if(!file_exists($resource_file))
 						yield(ERROR_404);
 				
-					require_once $dir .'/'. $controller . EXT;
-				
-					// if we're not working with a valid controller then error
+					require_once $resource_file;
+					
 					if(!class_exists($class, FALSE) || 
 					   !is_subclass_of($class, 'Resource'))
 						yield(ERROR_404);
@@ -205,7 +194,8 @@ function pinq($script_file, $app_dir) {
 				
 				// if the inputs are the same then rethrow the exception to
 				// avoid an infinite loop
-				if($route == $new_route && $request_method == $new_request_method)
+				if($route == $new_route && 
+				  $request_method == $new_request_method)
 					throw $y;
 				
 				// change the next route that will be parsed and abort the
@@ -229,14 +219,6 @@ function pinq($script_file, $app_dir) {
 		$redirect_url = $r->getLocation();
 		if($event)
 			$event->abort();
-
-	// catch ALL exceptions that have bubbled up this far. We hope there are 
-	// none but there's no guarantee.
-	} catch(Exception $e) {
-		echo $e->getMessage();
-		echo '<pre>';
-		print_r(array_slice($e->getTrace(), 0, 3));
-		echo '</pre>';
 	}
 	
 	// call all of the after-action hooks built up through yielding

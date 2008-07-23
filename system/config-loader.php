@@ -35,7 +35,7 @@ class ConfigLoader extends Loader {
 		
 		// the possible file names for this configuration file
 		$files = array(
-			DIR_APPLICATION ."/config/{$key}". EXT,
+			DIR_APPLICATION ."/config/{$key}.php",
 			DIR_SYSTEM ."/config/{$key}.php",
 		);
 				

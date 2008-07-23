@@ -50,8 +50,8 @@ class ErrorResource extends AppResource {
 		return $this->render(); 
 	}
 	
-	public function ANY_405() { 
-		Http::setStatus(405); 
+	public function ANY_501() { 
+		Http::setStatus(501); 
 		return $this->render(); 
 	}
 	

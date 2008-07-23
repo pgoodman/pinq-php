@@ -9,7 +9,7 @@
  *
  * @author Peter Goodman
  */
-abstract class Resource {
+class Resource {
 	
 	protected $_packages,
 	          $_aborted = FALSE;
@@ -47,7 +47,7 @@ abstract class Resource {
 		else if(method_exists($this, "ANY{$action}"))
 			return "ANY{$action}";
 		
-		yield(ERROR_405);
+		yield(ERROR_501);
 	}
 	
 	/**
