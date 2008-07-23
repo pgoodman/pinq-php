@@ -74,19 +74,18 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	static public function configure(Loader $loader, 
 	                                 Loader $config, 
 	                                  array $args) {
-		
 		extract($args);
 		
-		// require these array keys in the $args array
-		PINQ_DEBUG && expect_array_keys($args, array(
-			'resources_dir', 
-			'file_extension', 
-			'key'
-		));
-				
+		if(!isset($resources_dir)) {
+			throw new DomainException(
+				"PinqRouteParser::configure() expects first parameter to be ".
+				"directory. None given."
+			);
+		}
+		
 		// get the router. this could be this class or an extending class,
 		// hence the new $class
-		$router = new $class($resources_dir, $file_extension);
+		$router = new $class($resources_dir);
 		
 		// load the router configuration file, and pass it the router as
 		// context
@@ -100,7 +99,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 	/**
 	 * PinqRouteParser(string $base_dir, string $php_file_extension)
 	 */
-	final public function __construct($base_dir, $php_file_extension) {
+	final public function __construct($base_dir) {
 		$this->addMacro('alpha',	'[a-zA-Z]+');
 		$this->addMacro('num',		'[0-9]+');
 		$this->addMacro('alphanum', '[a-zA-Z0-9]+');
@@ -114,7 +113,6 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$this->addMacro('hex',      '[a-fA-F0-9]+');
 		
 		$this->base_dir = $base_dir;
-		$this->ext = $php_file_extension;
 		
 		$this->__init__(); // hook
 	}
@@ -347,7 +345,7 @@ class PinqRouteParser extends Dictionary implements Parser, ConfigurablePackage 
 		$method = function_name($method);
 		
 		// does the controller file exist?
-		if(!file_exists("{$directory}/{$controller}{$this->ext}"))
+		if(!file_exists("{$directory}/{$controller}.php"))
 			return FALSE;
 		
 		// return path info

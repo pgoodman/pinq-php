@@ -43,7 +43,7 @@ class PinqModelRelationalDictionary extends PinqModelDictionary {
 	 * @internal
 	 */
 	protected function getDefinition($model_name, $class) {
-		
+
 		$definition = new $class($model_name, $this->_relations);
 		
 		if(!($definition instanceof PinqModelRelationalDefinition)) {

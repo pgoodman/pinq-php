@@ -12,7 +12,7 @@ class PostsResource extends AppResource {
 		
 		// get the post and if it doesn't exist or is a comment then error
 		$post = $this->db->posts->selectBy('nice_title', $nice_title);
-		
+				
 		if(!$post || $post['parent_id'] > 0)
 			yield(ERROR_404);
 		

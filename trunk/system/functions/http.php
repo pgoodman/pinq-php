@@ -112,7 +112,7 @@ class Http {
 				402 => "Payment Required",
 				403 => "Forbidden",
 				404 => "Not Found",
-				405 => "Method Not Allowed",
+				501 => "Method Not Allowed",
 				406 => "Not Acceptable",
 				407 => "Proxy Authentication Required",
 				408 => "Request Time-out",
@@ -321,8 +321,8 @@ class Http {
 
 		$methods = array(
 			'GET', 'HEAD',
-			'PUT', 'POST', 'DELETE',
-			'OPTIONS', 'TRACE',
+			'PUT', 'POST', 
+			'DELETE',
 		);
 
 		// default to a GET request
