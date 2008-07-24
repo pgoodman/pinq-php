@@ -16,9 +16,9 @@ abstract class PinqModelRelationalDefinition extends PinqModelDefinition {
 	protected $_relations;
 	
 	/**
-	 * PinqModelRelationalDefinition(string $name, PinqModelRelationalManager)
+	 * PinqModelRelationalDefinition(string $name, PinqModelRelationalMap)
 	 */
-	public function __construct($name, PinqModelRelationalManager $relations) {
+	public function __construct($name, PinqModelRelationalMap $relations) {
 		
 		// relations stuff
 		$this->_relations = $relations;

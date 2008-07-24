@@ -69,7 +69,7 @@ class PinqDb implements ConfigurablePackage {
 		$database->connect($host, $user, $pass, $name);
 		
 		// get a relations object, this stores up relations
-		$relations = $loader->loadNew('model.relational.manager');
+		$relations = $loader->loadNew('model.relational.map');
 		
 		// set up the gateway
 		$gateway = $packages->loadNew('model.relational.gateway', array(

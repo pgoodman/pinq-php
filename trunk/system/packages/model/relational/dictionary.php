@@ -16,13 +16,13 @@ class PinqModelRelationalDictionary extends PinqModelDictionary {
 	protected $_relations;
 	
 	/**
-	 * PinqModelDictionary(string $dir, PinqModelRelationalManager)
+	 * PinqModelDictionary(string $dir, PinqModelRelationalMap)
 	 *
-	 * Bring in an instance of the PinqModelRelationalManager class to manage all data-
+	 * Bring in an instance of the PinqModelRelationalMap class to manage all data-
 	 * souce/model specific relations and an absolute path to the directory
 	 * where model definition files are located.
 	 */
-	public function __construct($dir, PinqModelRelationalManager $relations) {
+	public function __construct($dir, PinqModelRelationalMap $relations) {
 		$this->_relations = $relations;
 		parent::__construct($dir);
 	}
