@@ -19,10 +19,10 @@ abstract class PinqPqlQueryCompiler implements InstantiablePackage {
 	          $query_type;
 	
 	/**
-	 * PinqPqlQueryCompiler(PinqModelDictionary, PinqModelRelationalManager)
+	 * PinqPqlQueryCompiler(PinqModelDictionary, PinqModelRelationalMap)
 	 */
 	public function __construct(Dictionary $models, 
-	            PinqModelRelationalManager $relations) {
+	            PinqModelRelationalMap $relations) {
 		
 		$this->models = $models;
 		$this->relations = $relations;

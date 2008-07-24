@@ -53,13 +53,13 @@ abstract class PinqDbResource extends Resource
 	}
 	
 	/**
-	 * $r->getPqlQueryCompiler(Dictionary, PinqModelRelationalManager)
+	 * $r->getPqlQueryCompiler(Dictionary, PinqModelRelationalMap)
 	 * -> PinqPqlQueryCompiler
 	 *
 	 * Get a PQL query compiler.
 	 */
 	public function getPqlQueryCompiler(Dictionary $models, 
-	                    PinqModelRelationalManager $relations) {
+	                    PinqModelRelationalMap $relations) {
 	
 		return $this->_packages->load('pql.query-compiler', array(
 			$models,
