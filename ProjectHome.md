@@ -1,0 +1,1 @@
+The PINQ PHP Framework is an object-oriented PHP5 framework.
